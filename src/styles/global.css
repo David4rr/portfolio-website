@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-glow: var(--accent-glow);
+
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer base {
+  :root, .theme-dark {
+    --bg: #0A0A0A;
+    --bg-elevated: #141414;
+    --bg-subtle: #1A1A1A;
+    --text-main: #E8E8E8;
+    --text-muted: #888888;
+    --border-subtle: #2A2A2A;
+    --accent: #6366F1;
+    --accent-hover: #818CF8;
+    --accent-glow: rgba(99,102,241,0.15);
+  }
+
+  :root.light, .theme-light {
+    --bg: #FAFAFA;
+    --bg-elevated: #FFFFFF;
+    --bg-subtle: #F4F4F5;
+    --text-main: #18181B;
+    --text-muted: #71717A;
+    --border-subtle: #E4E4E7;
+    --accent: #4F46E5;
+    --accent-hover: #4338CA;
+    --accent-glow: rgba(79,70,229,0.15);
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-main);
+  }
+
+  /* Morphing Theme Icon */
+  .theme-icon .sun-core {
+    transition: r 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .theme-icon .moon-mask-circle {
+    transition: cx 0.5s cubic-bezier(0.4, 0, 0.2, 1), cy 0.5s cubic-bezier(0.4, 0, 0.2, 1), r 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .theme-icon .sun-rays {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+  }
+
+  :root.light .theme-icon .sun-core {
+    r: 5px;
+  }
+  :root.light .theme-icon .moon-mask-circle {
+    cx: 24px;
+    cy: 10px;
+    r: 6px;
+  }
+  :root.light .theme-icon .sun-rays {
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+
+  :root:not(.light) .theme-icon .sun-core {
+    r: 9px;
+  }
+  :root:not(.light) .theme-icon .moon-mask-circle {
+    cx: 15px;
+    cy: 9px;
+    r: 9px;
+  }
+  :root:not(.light) .theme-icon .sun-rays {
+    transform: rotate(90deg);
+    opacity: 0;
+  }
+
+  /* View transition customization for theme toggle */
+  .theme-transitioning::view-transition-old(root),
+  .theme-transitioning::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+}

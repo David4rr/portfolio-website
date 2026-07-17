@@ -1,0 +1,32 @@
+---
+// ponytail: project detail page
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map(project => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+// Wait, rendering content in Astro 5 is different, but markdown is usually rendered with `const { Content } = await render(project);`
+import { render } from 'astro:content';
+const { Content } = await render(project);
+---
+<BaseLayout title={project.data.title}>
+  <Nav />
+  <main class="max-w-[800px] mx-auto px-8 pt-32 pb-[clamp(4rem,8vw,8rem)]">
+    <a href="/#projects" class="text-accent hover:underline mb-8 inline-block">← Back to projects</a>
+    <h1 class="text-[clamp(2rem,5vw,4rem)] font-bold mb-4">{project.data.title}</h1>
+    {project.data.description && <p class="text-text-muted text-xl mb-12">{project.data.description}</p>}
+    <div class="prose prose-invert prose-p:text-text-muted prose-headings:text-text-main max-w-none">
+      <Content />
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
