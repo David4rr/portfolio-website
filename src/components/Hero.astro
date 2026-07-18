@@ -1,11 +1,151 @@
 ---
-// ponytail: hero section with GSAP timeline class target
+// ponytail: hero section with interactive Matrix ASCII avatar
+import sharp from 'sharp';
+import fs from 'fs';
+
+let framesData = '[]';
+let initialArt = '';
+
+try {
+  const githubUser = import.meta.env.GITHUB_USERNAME || 'David4rr';
+  const gens = [`https://avatars.githubusercontent.com/${githubUser}`, './public/assets/mypic.png'];
+  const charsArray = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split('');
+  
+  const frames = await Promise.all(gens.map(async (src) => {
+    const buf = src.startsWith('http') 
+      ? Buffer.from(await (await fetch(src)).arrayBuffer())
+      : await fs.promises.readFile(src);
+      
+    // The CSS leading-[0.6] makes characters form a perfect 1:1 square grid.
+    // Therefore, we MUST use a 1:1 resize (80x80) otherwise the image gets flattened!
+    const { data, info } = await sharp(buf)
+      .resize(80, 80, { fit: 'cover' })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+      
+    const rows = [];
+    for (let y = 0; y < info.height; y++) {
+      let row = '';
+      for (let x = 0; x < info.width; x++) {
+        const offset = (y * info.width + x) * info.channels;
+        const alpha = data[offset + info.channels - 1];
+        
+        // Handle transparency
+        if (alpha < 128) {
+          row += ' ';
+        } else {
+          // Calculate grayscale brightness
+          const r = data[offset];
+          const g = data[offset + 1];
+          const b = data[offset + 2];
+          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          
+          const idx = Math.floor((brightness / 255) * (charsArray.length - 1));
+          row += charsArray[idx];
+        }
+      }
+      rows.push(row);
+    }
+    return rows;
+  }));
+  
+  framesData = JSON.stringify(frames);
+  initialArt = frames[0].join('\n');
+} catch (e) {
+  console.error("Failed to generate ASCII frames:", e);
+}
 ---
 <section class="min-h-screen flex flex-col justify-center section-padding pt-32" id="hero">
-  <p class="text-accent font-mono mb-4 animate-slide-up" style="animation-delay: 0s;">Hi, my name is</p>
-  <h1 class="text-[clamp(2.5rem,6vw,5rem)] font-bold leading-tight mb-4 animate-slide-up" style="animation-delay: 0.1s;">Software Engineer.</h1>
-  <p class="text-text-muted text-xl max-w-2xl mb-8 animate-slide-up" style="animation-delay: 0.2s;">I build exceptional digital experiences with a focus on performance, minimalist design, and smooth interactions.</p>
-  <div class="animate-slide-up" style="animation-delay: 0.3s;">
-    <a href="/#projects" class="inline-block bg-accent text-white px-6 py-3 rounded hover:bg-accent-hover transition-colors font-medium">View my work</a>
+  <div class="flex flex-col md:flex-row md:items-center justify-center gap-12 max-w-5xl mx-auto w-full">
+    
+    <!-- ASCII Avatar -->
+    <div class="animate-slide-up flex-shrink-0" style="animation-delay: 0s;">
+      <pre id="ascii-avatar" class="font-mono text-[7px] leading-[0.6] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" data-frames={framesData}>{initialArt}</pre>
+    </div>
+
+    <!-- Name and Role -->
+    <div class="max-w-xl">
+      <p class="text-accent font-mono mb-4 animate-slide-up" style="animation-delay: 0.1s;">Hi, my name is</p>
+      <h1 class="text-[clamp(2.5rem,6vw,5rem)] font-bold leading-tight mb-4 animate-slide-up" style="animation-delay: 0.2s;">David.</h1>
+      <h2 class="text-[clamp(2rem,4vw,4rem)] font-bold leading-tight text-text-muted mb-4 animate-slide-up" style="animation-delay: 0.3s;">Software Engineer.</h2>
+      <p class="text-text-muted text-lg mb-8 animate-slide-up" style="animation-delay: 0.4s;">I build exceptional digital experiences with a focus on performance, minimalist design, and smooth interactions.</p>
+      <div class="animate-slide-up" style="animation-delay: 0.5s;">
+        <a href="/#projects" class="inline-block bg-accent text-white px-6 py-3 rounded hover:bg-accent-hover transition-colors font-medium">View my work</a>
+      </div>
+    </div>
+    
   </div>
 </section>
+
+<script>
+  // Matrix decode shuffle effect
+  document.addEventListener('astro:page-load', () => {
+    const el = document.getElementById('ascii-avatar');
+    if (!el || !el.dataset.frames) return;
+
+    let frames;
+    try {
+      frames = JSON.parse(el.dataset.frames);
+    } catch(e) { return; }
+    
+    if (frames.length < 2) return;
+
+    let currentFrame = 0;
+    let isAnimating = false;
+    const charsArray = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split('');
+
+    el.addEventListener('click', () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      
+      const targetFrame = currentFrame === 0 ? 1 : 0;
+      const targetRows = frames[targetFrame];
+      let currentRows = frames[currentFrame].slice();
+      
+      const rows = targetRows.length;
+      const cols = targetRows[0].length;
+      const totalChars = rows * cols;
+      let charsResolved = 0;
+      
+      // Keep track of which characters have reached their target
+      const resolved = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+      const interval = setInterval(() => {
+        // Swap 5-10% of total characters per tick
+        const swaps = Math.floor(totalChars * (0.05 + Math.random() * 0.05));
+        
+        for (let i = 0; i < swaps; i++) {
+          const r = Math.floor(Math.random() * rows);
+          const c = Math.floor(Math.random() * cols);
+          
+          if (!resolved[r][c]) {
+            // Chance to just become a random matrix character, or chance to settle on target
+            if (Math.random() > 0.5) {
+              const rowArr = currentRows[r].split('');
+              // Always use a random numeric char for the shuffle matrix effect!
+              rowArr[c] = charsArray[Math.floor(Math.random() * charsArray.length)];
+              currentRows[r] = rowArr.join('');
+            } else {
+              const rowArr = currentRows[r].split('');
+              rowArr[c] = targetRows[r][c];
+              currentRows[r] = rowArr.join('');
+              resolved[r][c] = true;
+              charsResolved++;
+            }
+          }
+        }
+        
+        el.textContent = currentRows.join('\n');
+        
+        // Finish condition (~90% resolved, just snap the rest to avoid tail lag)
+        if (charsResolved > totalChars * 0.9) {
+          clearInterval(interval);
+          el.textContent = frames[targetFrame].join('\n');
+          currentFrame = targetFrame;
+          isAnimating = false;
+        }
+      }, 30); // 30ms tick
+    });
+  });
+</script>

@@ -3,7 +3,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
-import About from '../components/About.astro';
 import Timeline from '../components/Timeline.astro';
 import TechStack from '../components/TechStack.astro';
 import Contact from '../components/Contact.astro';
@@ -17,8 +16,6 @@ const projects = await getCollection('projects');
   <Nav />
   <main class="max-w-[1200px] mx-auto px-8">
     <Hero />
-    
-    <About />
     
     <section id="projects" class="py-[clamp(4rem,8vw,8rem)]">
       <h2 class="text-[clamp(1.5rem,4vw,2.5rem)] font-bold mb-8 scroll-reveal opacity-0">Projects</h2>
