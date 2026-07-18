@@ -17,11 +17,24 @@ const projects = await getCollection('projects');
   <main class="max-w-[1200px] mx-auto px-8">
     <Hero />
     
-    <section id="projects" class="py-[clamp(4rem,8vw,8rem)]">
-      <h2 class="text-[clamp(1.5rem,4vw,2.5rem)] font-bold mb-8 scroll-reveal opacity-0">Projects</h2>
+    <!-- Poetic Intermission 1 (Laurel Wreath) -->
+    <div class="w-full max-w-xl mx-auto py-24 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
+      <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
+      <img 
+        src="/assets/laurel_wreath.jpg" 
+        alt="Classical Roman Laurel Wreath" 
+        class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-90 dark:opacity-80 transition-all duration-1000"
+      />
+    </div>
+
+    <section id="projects" class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 mt-12">
+      <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
+        Selected Works<span class="text-accent">.</span>
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {projects.map((project) => (
-          <a href={`/projects/${project.id}`} class="block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] scroll-reveal opacity-0 hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none">
+          <a href={`/projects/${project.id}`} class="block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] scroll-reveal opacity-0 hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group">
             <h3 class="text-2xl font-bold mb-2 text-text-main group-hover:text-accent transition-colors">{project.data.title}</h3>
             {project.data.description && <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)]">{project.data.description}</p>}
           </a>
@@ -29,8 +42,31 @@ const projects = await getCollection('projects');
       </div>
     </section>
 
+    <!-- Poetic Intermission 2 (Astrolabe) -->
+    <div class="w-full max-w-xl mx-auto py-24 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
+      <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
+      <img 
+        src="/assets/astrolabe.jpg" 
+        alt="Classical Astrolabe and Compass" 
+        class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-90 dark:opacity-80 transition-all duration-1000"
+      />
+    </div>
+
     <Timeline />
     <TechStack />
+    
+    <!-- Poetic Intermission -->
+    <div class="w-full max-w-2xl mx-auto py-24 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
+      <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
+      <img 
+        src="/assets/rome_illustration.jpg" 
+        alt="Timeless Roman Architecture" 
+        class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-90 dark:opacity-80 transition-all duration-1000"
+      />
+    </div>
+
     <Contact />
   </main>
   <Footer />

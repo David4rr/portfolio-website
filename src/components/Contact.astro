@@ -1,8 +1,10 @@
 ---
 // ponytail: Contact section
 ---
-<section id="contact" class="py-[clamp(4rem,8vw,8rem)] text-center max-w-2xl mx-auto">
-  <h2 class="text-[clamp(1.5rem,4vw,2.5rem)] font-bold mb-4 scroll-reveal opacity-0">Get In Touch</h2>
+<section id="contact" class="py-[clamp(4rem,8vw,8rem)] text-center max-w-2xl mx-auto relative border-t border-border-subtle/50 mt-12">
+  <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-8 scroll-reveal opacity-0 font-normal tracking-tight">
+    Get In Touch<span class="text-accent">.</span>
+  </h2>
   <p class="text-text-muted mb-8 scroll-reveal opacity-0">Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-  <a href={`mailto:${import.meta.env.CONTACT_EMAIL || 'hello@example.com'}`} class="inline-block bg-[#111111] text-white px-6 py-3 rounded-[4px] hover:scale-[0.98] active:scale-[0.98] transition-transform scroll-reveal opacity-0 font-medium">Say Hello</a>
+  <a href={`mailto:${import.meta.env.CONTACT_EMAIL || 'hello@example.com'}`} class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 scroll-reveal opacity-0">Say Hello</a>
 </section>

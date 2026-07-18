@@ -1,14 +1,69 @@
 ---
-// ponytail: TechStack section
-const tech = ["JavaScript", "TypeScript", "React", "Astro", "Tailwind CSS", "Node.js", "GSAP"];
+// ponytail: TechStack section (Editorial style)
+const stack = [
+  {
+    category: "Languages",
+    items: ["JavaScript", "HTML5", "Kotlin", "Java", "Python", "Dart", "PHP"],
+  },
+  {
+    category: "Frameworks",
+    items: [
+      "Flutter",
+      "React Native",
+      "React",
+      "Laravel",
+      "WordPress",
+      "Vite",
+      "TailwindCSS",
+    ],
+  },
+  {
+    category: "AI, Data & Design",
+    items: [
+      "scikit-learn",
+      "TensorFlow",
+      "SciPy",
+      "PyTorch",
+      "NumPy",
+      "Matplotlib",
+      "Figma",
+    ],
+  },
+];
 ---
-<section id="tech" class="py-[clamp(4rem,8vw,8rem)]">
-  <h2 class="text-[clamp(1.5rem,4vw,2.5rem)] font-bold mb-8 scroll-reveal opacity-0">Tech Stack</h2>
-  <div class="flex flex-wrap gap-4">
-    {tech.map((item) => (
-      <div class="px-4 py-2 bg-bg-elevated border border-border-subtle rounded text-text-muted hover:text-accent hover:border-accent transition-colors scroll-reveal opacity-0">
-        {item}
-      </div>
-    ))}
+
+<section
+  id="tech"
+  class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 mt-12"
+>
+  <div class="max-w-4xl mx-auto w-full">
+    <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
+      Toolkit & Expertise<span class="text-accent">.</span>
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+      {
+        stack.map((group, i) => (
+          <div
+            class="scroll-reveal opacity-0 flex flex-col items-center md:items-start text-center md:text-left"
+            style={`animation-delay: ${i * 0.1}s`}
+          >
+            <h3 class="font-serif text-[1.2rem] text-text-main mb-6 italic">
+              {group.category}
+            </h3>
+            <ul class="flex flex-col gap-3 font-sans text-sm tracking-wide text-text-muted">
+              {group.items.map((item) => (
+                <li class="flex items-center gap-4 group cursor-default">
+                  <span class="w-[4px] h-[4px] bg-border-subtle rounded-full transition-colors group-hover:bg-accent" />
+                  <span class="transition-colors group-hover:text-text-main">
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
   </div>
 </section>
