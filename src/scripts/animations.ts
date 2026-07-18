@@ -1,33 +1,15 @@
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
-
-// Global animations
+// Global animations (native IntersectionObserver)
 const initAnimations = () => {
-  let mm = gsap.matchMedia();
-  mm.add("(prefers-reduced-motion: no-preference)", () => {
-    
-    if (document.querySelector('.hero-anim')) {
-      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-      tl.fromTo('.hero-anim', 
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8, stagger: 0.2 }
-      );
-    }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
 
-    if (document.querySelectorAll('.scroll-reveal').length > 0) {
-      ScrollTrigger.batch('.scroll-reveal', {
-        start: 'top 85%',
-        onEnter: (elements) => {
-          gsap.fromTo(elements, 
-            { opacity: 0, y: 30 },
-            { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out', overwrite: true }
-          );
-        }
-      });
-    }
-  });
+  document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
 };
 
 // Theme toggle via Event Delegation (View Transitions API with randomized edges)
