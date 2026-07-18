@@ -1,151 +1,348 @@
 ---
 // ponytail: hero section with interactive Matrix ASCII avatar
-import sharp from 'sharp';
-import fs from 'fs';
+import sharp from "sharp";
+import fs from "fs";
 
-let framesData = '[]';
-let initialArt = '';
+let framesData = "[]";
+let initialArt = "";
 
 try {
-  const githubUser = import.meta.env.GITHUB_USERNAME || 'David4rr';
-  const gens = [`https://avatars.githubusercontent.com/${githubUser}`, './public/assets/mypic.png'];
-  const charsArray = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split('');
-  
-  const frames = await Promise.all(gens.map(async (src) => {
-    const buf = src.startsWith('http') 
-      ? Buffer.from(await (await fetch(src)).arrayBuffer())
-      : await fs.promises.readFile(src);
-      
-    // The CSS leading-[0.6] makes characters form a perfect 1:1 square grid.
-    // Therefore, we MUST use a 1:1 resize (80x80) otherwise the image gets flattened!
-    const { data, info } = await sharp(buf)
-      .resize(80, 80, { fit: 'cover' })
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-      
-    const rows = [];
-    for (let y = 0; y < info.height; y++) {
-      let row = '';
-      for (let x = 0; x < info.width; x++) {
-        const offset = (y * info.width + x) * info.channels;
-        const alpha = data[offset + info.channels - 1];
-        
-        // Handle transparency
-        if (alpha < 128) {
-          row += ' ';
-        } else {
-          // Calculate grayscale brightness
-          const r = data[offset];
-          const g = data[offset + 1];
-          const b = data[offset + 2];
-          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          
-          const idx = Math.floor((brightness / 255) * (charsArray.length - 1));
-          row += charsArray[idx];
+  const githubUser = import.meta.env.GITHUB_USERNAME || "David4rr";
+  const gens = [
+    `https://avatars.githubusercontent.com/${githubUser}`,
+    "./public/assets/mypic.png",
+  ];
+  const charsArray =
+    '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split(
+      "",
+    );
+
+  const frames = await Promise.all(
+    gens.map(async (src) => {
+      const buf = src.startsWith("http")
+        ? Buffer.from(await (await fetch(src)).arrayBuffer())
+        : await fs.promises.readFile(src);
+
+      // The CSS leading-[0.6] makes characters form a perfect 1:1 square grid.
+      // Therefore, we MUST use a 1:1 resize (80x80) otherwise the image gets flattened!
+      const { data, info } = await sharp(buf)
+        .resize(80, 80, { fit: "cover" })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+
+      const rows = [];
+      for (let y = 0; y < info.height; y++) {
+        let row = "";
+        for (let x = 0; x < info.width; x++) {
+          const offset = (y * info.width + x) * info.channels;
+          const alpha = data[offset + info.channels - 1];
+
+          // Handle transparency
+          if (alpha < 128) {
+            row += " ";
+          } else {
+            // Calculate grayscale brightness
+            const r = data[offset];
+            const g = data[offset + 1];
+            const b = data[offset + 2];
+            const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            const idx = Math.floor(
+              (brightness / 255) * (charsArray.length - 1),
+            );
+            row += charsArray[idx];
+          }
         }
+        rows.push(row);
       }
-      rows.push(row);
-    }
-    return rows;
-  }));
-  
+      return rows;
+    }),
+  );
+
   framesData = JSON.stringify(frames);
-  initialArt = frames[0].join('\n');
+  initialArt = frames[0].join("\n");
 } catch (e) {
   console.error("Failed to generate ASCII frames:", e);
 }
 ---
-<section class="min-h-screen flex flex-col justify-center section-padding pt-32" id="hero">
-  <div class="flex flex-col md:flex-row md:items-center justify-center gap-12 max-w-5xl mx-auto w-full">
-    
-    <!-- ASCII Avatar -->
-    <div class="animate-slide-up flex-shrink-0" style="animation-delay: 0s;">
-      <pre id="ascii-avatar" class="font-mono text-[7px] leading-[0.6] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity" data-frames={framesData}>{initialArt}</pre>
+
+<section
+  class="min-h-screen flex flex-col justify-center section-padding pt-20 pb-8 relative"
+  id="hero"
+>
+  <!-- Decorative subtle grid/lines for paper feel -->
+  <div
+    class="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02]"
+    style="background-image: linear-gradient(var(--color-border-subtle) 1px, transparent 1px); background-size: 100% 4rem;"
+  >
+  </div>
+
+  <div
+    class="flex flex-col items-center text-center max-w-4xl mx-auto w-full relative z-10"
+  >
+    <!-- ASCII Emblem -->
+    <div
+      class="animate-slide-up mb-6 flex flex-col items-center"
+      style="animation-delay: 0s;"
+    >
+      <div
+        class="p-3 border border-border-subtle/50 bg-bg-elevated/30 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]"
+      >
+        <pre
+          id="ascii-avatar"
+          class="font-mono text-[8px] leading-[0.55] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+          data-frames={framesData}>{initialArt}</pre>
+      </div>
+      <div class="w-[1px] h-6 bg-border-subtle mt-4"></div>
     </div>
 
-    <!-- Name and Role -->
-    <div class="max-w-xl">
-      <p class="text-accent font-mono mb-4 animate-slide-up" style="animation-delay: 0.1s;">Hi, my name is</p>
-      <h1 class="text-[clamp(2.5rem,6vw,5rem)] font-bold leading-tight mb-4 animate-slide-up" style="animation-delay: 0.2s;">David.</h1>
-      <h2 class="text-[clamp(2rem,4vw,4rem)] font-bold leading-tight text-text-muted mb-4 animate-slide-up" style="animation-delay: 0.3s;">Software Engineer.</h2>
-      <p class="text-text-muted text-lg mb-8 animate-slide-up" style="animation-delay: 0.4s;">I build exceptional digital experiences with a focus on performance, minimalist design, and smooth interactions.</p>
-      <div class="animate-slide-up" style="animation-delay: 0.5s;">
-        <a href="/#projects" class="inline-block bg-accent text-white px-6 py-3 rounded hover:bg-accent-hover transition-colors font-medium">View my work</a>
+    <!-- The Title -->
+    <h1
+      class="font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-none tracking-tight mb-2 animate-slide-up whitespace-nowrap text-text-main"
+      style="animation-delay: 0.1s;"
+    >
+      David Arrozaqi<span class="text-accent">.</span>
+    </h1>
+
+    <!-- The Role (Typewriter) -->
+    <h2
+      class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-6 animate-slide-up"
+      style="animation-delay: 0.2s;"
+    >
+      <span id="typewriter">Software Engineer</span>
+    </h2>
+
+    <!-- The Prose -->
+    <div
+      class="max-w-2xl mx-auto animate-slide-up"
+      style="animation-delay: 0.3s;"
+    >
+      <p
+        class="font-serif text-text-muted text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed mb-4 px-4"
+      >
+        I weave logic and design into seamless digital experiences across the
+        modern web, mobile platforms, and artificial intelligence. My focus is
+        on crafting interfaces that feel less like software, and more like an
+        intuitive extension of human thought.
+      </p>
+
+      <!-- The Aside -->
+      <div class="flex justify-center items-center gap-4 mb-8 opacity-80">
+        <span class="w-6 h-[1px] bg-border-subtle"></span>
+        <p class="font-serif text-[0.8rem] italic text-text-muted">
+          "I firmly believe that the most elegant algorithms are fueled by
+          strong coffee."
+        </p>
+        <span class="w-6 h-[1px] bg-border-subtle"></span>
       </div>
     </div>
-    
+
+    <!-- Actions -->
+    <div
+      class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 animate-slide-up"
+      style="animation-delay: 0.4s;"
+    >
+      <a
+        href="/#projects"
+        class="inline-block bg-[#111111] text-white px-8 py-3 rounded-[4px] hover:scale-[0.98] active:scale-[0.98] transition-transform font-sans uppercase tracking-widest text-[11px]"
+      >
+        Explore the Work
+      </a>
+      <a
+        href="mailto:hello@example.com"
+        class="font-serif italic text-text-muted hover:text-accent transition-colors text-sm"
+      >
+        Or send a letter &rarr;
+      </a>
+    </div>
+
+    <!-- GitHub Telegraph (Live Feed) -->
+    <div
+      id="github-activity-feed"
+      class="w-full max-w-lg border-t border-border-subtle pt-4 animate-slide-up"
+      style="animation-delay: 0.5s;"
+      data-username={import.meta.env.GITHUB_USERNAME || "David4rr"}
+    >
+      <h3
+        class="font-sans uppercase tracking-[0.2em] text-[9px] text-text-muted/60 mb-2 text-center"
+      >
+        Live Telegraph
+      </h3>
+      <ul
+        class="flex flex-col gap-1 font-serif text-[clamp(0.8rem,1vw,0.9rem)] text-text-muted text-left"
+      >
+        <li class="flex items-center justify-between">
+          <span class="flex items-center gap-3"
+            ><span class="text-[9px] text-accent/50">◍</span> Awaiting transmission...</span
+          >
+        </li>
+      </ul>
+    </div>
   </div>
 </section>
 
 <script>
   // Matrix decode shuffle effect
-  document.addEventListener('astro:page-load', () => {
-    const el = document.getElementById('ascii-avatar');
+  document.addEventListener("astro:page-load", () => {
+    const el = document.getElementById("ascii-avatar");
     if (!el || !el.dataset.frames) return;
 
     let frames;
     try {
       frames = JSON.parse(el.dataset.frames);
-    } catch(e) { return; }
-    
+    } catch (e) {
+      return;
+    }
+
     if (frames.length < 2) return;
 
     let currentFrame = 0;
     let isAnimating = false;
-    const charsArray = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split('');
+    const charsArray =
+      '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split(
+        "",
+      );
 
-    el.addEventListener('click', () => {
+    el.addEventListener("click", () => {
       if (isAnimating) return;
       isAnimating = true;
-      
+
       const targetFrame = currentFrame === 0 ? 1 : 0;
       const targetRows = frames[targetFrame];
       let currentRows = frames[currentFrame].slice();
-      
+
       const rows = targetRows.length;
       const cols = targetRows[0].length;
       const totalChars = rows * cols;
       let charsResolved = 0;
-      
+
       // Keep track of which characters have reached their target
-      const resolved = Array.from({ length: rows }, () => Array(cols).fill(false));
+      const resolved = Array.from({ length: rows }, () =>
+        Array(cols).fill(false),
+      );
 
       const interval = setInterval(() => {
         // Swap 5-10% of total characters per tick
         const swaps = Math.floor(totalChars * (0.05 + Math.random() * 0.05));
-        
+
         for (let i = 0; i < swaps; i++) {
           const r = Math.floor(Math.random() * rows);
           const c = Math.floor(Math.random() * cols);
-          
+
           if (!resolved[r][c]) {
             // Chance to just become a random matrix character, or chance to settle on target
             if (Math.random() > 0.5) {
-              const rowArr = currentRows[r].split('');
+              const rowArr = currentRows[r].split("");
               // Always use a random numeric char for the shuffle matrix effect!
-              rowArr[c] = charsArray[Math.floor(Math.random() * charsArray.length)];
-              currentRows[r] = rowArr.join('');
+              rowArr[c] =
+                charsArray[Math.floor(Math.random() * charsArray.length)];
+              currentRows[r] = rowArr.join("");
             } else {
-              const rowArr = currentRows[r].split('');
+              const rowArr = currentRows[r].split("");
               rowArr[c] = targetRows[r][c];
-              currentRows[r] = rowArr.join('');
+              currentRows[r] = rowArr.join("");
               resolved[r][c] = true;
               charsResolved++;
             }
           }
         }
-        
-        el.textContent = currentRows.join('\n');
-        
+
+        el.textContent = currentRows.join("\n");
+
         // Finish condition (~90% resolved, just snap the rest to avoid tail lag)
         if (charsResolved > totalChars * 0.9) {
           clearInterval(interval);
-          el.textContent = frames[targetFrame].join('\n');
+          el.textContent = frames[targetFrame].join("\n");
           currentFrame = targetFrame;
           isAnimating = false;
         }
       }, 30); // 30ms tick
     });
   });
+
+  // Client-side GitHub Activity Fetch
+  document.addEventListener("astro:page-load", async () => {
+    const feedContainer = document.getElementById("github-activity-feed");
+    if (!feedContainer) return;
+
+    const username = feedContainer.dataset.username;
+    if (!username) return;
+
+    try {
+      const res = await fetch(
+        `https://api.github.com/users/${username}/events/public`,
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const events = data
+        .filter((ev: any) =>
+          [
+            "PushEvent",
+            "WatchEvent",
+            "CreateEvent",
+            "PullRequestEvent",
+            "IssuesEvent",
+          ].includes(ev.type),
+        )
+        .slice(0, 3);
+
+      const ul = feedContainer.querySelector("ul");
+      if (!ul) return;
+      ul.innerHTML = "";
+
+      if (events.length === 0) {
+        ul.innerHTML = `<li class="flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0"><span class="flex items-center gap-3"><span class="text-[10px]">◍</span> No recent activity found.</span></li>`;
+        return;
+      }
+
+      events.forEach((ev: any) => {
+        const diff = Date.now() - new Date(ev.created_at).getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        let timeStr = `${hours}h ago`;
+        if (hours === 0) timeStr = `just now`;
+        else if (hours >= 24 && hours < 48) timeStr = `yesterday`;
+        else if (hours >= 48) timeStr = `${Math.floor(hours / 24)}d ago`;
+
+        let action = "Contributed to";
+        if (ev.type === "PushEvent") action = "Pushed to";
+        else if (ev.type === "WatchEvent") action = "Starred";
+        else if (ev.type === "CreateEvent") action = "Created";
+        else if (ev.type === "PullRequestEvent") action = "Opened PR on";
+        else if (ev.type === "IssuesEvent") action = "Opened issue on";
+
+        const li = document.createElement("li");
+        li.className =
+          "flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0";
+        li.innerHTML = `<span class="flex items-center gap-3"><span class="text-[10px]">◍</span> ${action} ${ev.repo.name}</span><span class="opacity-60 text-sm">· ${timeStr}</span>`;
+        ul.appendChild(li);
+      });
+    } catch (e) {
+      console.error("Failed to load GitHub activity:", e);
+    }
+  });
 </script>
+
+<style>
+  /* Explicitly target dark mode (when .light class is absent) */
+  :root:not(.light) #ascii-avatar {
+    color: var(--color-accent);
+    text-shadow: 0 0 6px var(--color-accent-glow);
+  }
+
+  #typewriter::after {
+    content: "|";
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+</style>

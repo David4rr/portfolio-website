@@ -11,7 +11,8 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-glow: var(--accent-glow);
 
-  --font-sans: "Inter", sans-serif;
+  --font-sans: "Geist", sans-serif;
+  --font-serif: "Fraunces", serif;
   --font-mono: "JetBrains Mono", monospace;
 
   --animate-slide-up: slide-up 0.8s cubic-bezier(0.25, 1, 0.3, 1) both;
@@ -43,32 +44,36 @@
 
 @layer base {
   :root, .theme-dark {
-    --bg: #0A0A0A;
-    --bg-elevated: #141414;
-    --bg-subtle: #1A1A1A;
-    --text-main: #E8E8E8;
-    --text-muted: #888888;
-    --border-subtle: #2A2A2A;
-    --accent: #6366F1;
-    --accent-hover: #818CF8;
-    --accent-glow: rgba(99,102,241,0.15);
+    --bg: #1C1613;
+    --bg-elevated: #2A221E;
+    --bg-subtle: #231C18;
+    --text-main: #E8D5C4;
+    --text-muted: #A09080;
+    --border-subtle: #3D322C;
+    --accent: #FF7A00;
+    --accent-hover: #FF9333;
+    --accent-glow: rgba(255,122,0,0.25);
   }
 
   :root.light, .theme-light {
-    --bg: #FAFAFA;
+    --bg: #F8F4EC;
     --bg-elevated: #FFFFFF;
-    --bg-subtle: #F4F4F5;
-    --text-main: #18181B;
-    --text-muted: #71717A;
-    --border-subtle: #E4E4E7;
-    --accent: #4F46E5;
-    --accent-hover: #4338CA;
-    --accent-glow: rgba(79,70,229,0.15);
+    --bg-subtle: #F0EBE0;
+    --text-main: #2C1810;
+    --text-muted: #8B7355;
+    --border-subtle: #EAEAEA;
+    --accent: #FF6B35;
+    --accent-hover: #FF8C5A;
+    --accent-glow: rgba(255,107,53,0.15);
   }
 
   body {
-    background-color: var(--color-bg);
+    background: radial-gradient(ellipse at 20% 50%, rgba(255,107,53,0.03) 0%, transparent 60%), var(--color-bg);
     color: var(--color-text-main);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
   }
 
   /* Morphing Theme Icon */
