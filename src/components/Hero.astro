@@ -141,11 +141,11 @@ try {
     <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 animate-slide-up" style="animation-delay: 0.4s;">
       <a
         href="/#projects"
-        class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500"
+        class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
         >
         Explore the Work
       </a>
-      <a href="mailto:hello@example.com" class="font-serif italic text-text-muted hover:text-accent transition-colors text-sm">
+      <a href="mailto:hello@example.com" class="font-serif italic text-text-muted hover:text-accent active:text-accent active:scale-95 transition-all duration-300 text-sm">
         Or send a letter &rarr;
       </a>
     </div>
@@ -264,7 +264,7 @@ try {
 
     try {
       const res = await fetch(
-        `https://api.github.com/users/${username}/events/public`,
+        `https://api.github.com/users/${username}/events/public?t=${Date.now()}`,
       );
       if (!res.ok) return;
       const data = await res.json();

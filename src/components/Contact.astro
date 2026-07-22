@@ -1,5 +1,7 @@
 ---
 // ponytail: Contact section
+import { Image } from 'astro:assets';
+import romeImg from '../assets/rome_illustration.jpg';
 ---
 <section id="contact" class="min-h-screen flex flex-col justify-center py-[clamp(4rem,8vw,8rem)] text-center md:text-left max-w-5xl mx-auto relative border-t border-border-subtle/50 px-4 md:px-0">
   <div class="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-24 w-full">
@@ -9,15 +11,15 @@
         Get In Touch<span class="text-accent">.</span>
       </h2>
       <p class="text-text-muted mb-8 scroll-reveal opacity-0 max-w-md mx-auto md:mx-0 text-[1.05rem] leading-relaxed">Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-      <a href={`mailto:${import.meta.env.CONTACT_EMAIL || 'hello@example.com'}`} class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 scroll-reveal opacity-0">Say Hello</a>
+      <a href={`mailto:${import.meta.env.CONTACT_EMAIL || 'hello@example.com'}`} class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500 scroll-reveal opacity-0">Say Hello</a>
     </div>
     
     <!-- Poetic Intermission 3 (Rome Architecture) - Placed in the right column -->
     <div class="w-full md:w-1/2 max-w-md mx-auto md:mx-0 scroll-reveal opacity-0 pointer-events-none relative z-10 text-right md:-mr-12">
       <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
       <div class="absolute inset-0 bg-gradient-to-l from-bg via-transparent to-bg z-10 opacity-90"></div>
-      <img 
-        src="/assets/rome_illustration.jpg" 
+      <Image 
+        src={romeImg} 
         alt="Timeless Roman Architecture" 
         class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000 origin-right"
       />

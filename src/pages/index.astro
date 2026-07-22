@@ -1,5 +1,6 @@
 ---
 // ponytail: Home page composing all sections
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
@@ -9,6 +10,9 @@ import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
 import { getCollection } from 'astro:content';
 
+import laurelWreathImg from '../assets/laurel_wreath.jpg';
+import astrolabeImg from '../assets/astrolabe.jpg';
+
 const projects = await getCollection('projects');
 ---
 
@@ -16,27 +20,32 @@ const projects = await getCollection('projects');
   <Nav />
   <main class="w-full relative">
     <!-- 1. Hero -->
-    <div class="sticky top-0 min-h-screen w-full bg-bg z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+    <div class="sticky bottom-0 min-h-screen w-full bg-bg z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
       <div class="max-w-[1200px] mx-auto px-8 w-full">
         <Hero />
       </div>
     </div>
-    
+    <!-- Anchor for Projects -->
+    <div id="projects" class="absolute w-full h-0 pointer-events-none"></div>
+
     <!-- 2. Projects -->
     <div class="sticky top-0 min-h-screen w-full bg-bg z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
       <div class="max-w-[1200px] mx-auto px-8 w-full">
-        <section id="projects" class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100vh-3rem)]">
+        <section class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100vh-3rem)]">
           <div>
             <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
               Selected Works<span class="text-accent">.</span>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {projects.map((project) => (
-                <a href={`/projects/${project.id}`} class="block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] scroll-reveal opacity-0 hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group">
-                  <h3 class="text-2xl font-bold mb-2 text-text-main group-hover:text-accent transition-colors">{project.data.title}</h3>
-                  {project.data.description && <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)]">{project.data.description}</p>}
-                </a>
-              ))}
+              {projects.map((project, i) => {
+                const isOrphan = projects.length % 2 !== 0 && i === projects.length - 1;
+                return (
+                  <a href={`/projects/${project.id}`} class={`block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] scroll-reveal opacity-0 hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group flex flex-col justify-center ${isOrphan ? 'md:col-span-2 md:min-h-[200px]' : ''}`}>
+                    <h3 class={`font-bold mb-2 text-text-main group-hover:text-accent transition-colors ${isOrphan ? 'text-3xl' : 'text-2xl'}`}>{project.data.title}</h3>
+                    {project.data.description && <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)] max-w-3xl">{project.data.description}</p>}
+                  </a>
+                );
+              })}
             </div>
           </div>
           
@@ -44,8 +53,8 @@ const projects = await getCollection('projects');
           <div class="w-full max-w-sm mx-auto mt-24 mb-8 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
             <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
             <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
-            <img 
-              src="/assets/laurel_wreath.jpg" 
+            <Image 
+              src={laurelWreathImg} 
               alt="Classical Roman Laurel Wreath" 
               class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-60 transition-all duration-1000"
             />
@@ -62,8 +71,8 @@ const projects = await getCollection('projects');
         <!-- Poetic Intermission 2 (Astrolabe) - Placed as a bridge between timeline and techstack -->
         <div class="w-full max-w-sm mx-auto py-8 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative border-t border-border-subtle/30 mt-4">
           <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-80"></div>
-          <img 
-            src="/assets/astrolabe.jpg" 
+          <Image 
+            src={astrolabeImg} 
             alt="Classical Astrolabe and Compass" 
             class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000"
           />
