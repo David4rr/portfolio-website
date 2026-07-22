@@ -133,11 +133,13 @@ const updateTearOff = () => {
       sec.style.transform = ty !== 0 ? `translateY(${ty}px)` : 'none';
       sec.style.opacity = '1';
       sec.style.filter = 'none';
+      sec.style.pointerEvents = '';
     } else if (progress === 1) {
       sec.style.opacity = '0';
       sec.style.clipPath = 'none';
       sec.style.transform = 'none';
       sec.style.filter = 'none';
+      sec.style.pointerEvents = 'none';
     } else {
       const topStickyOffset = parseFloat(sec.style.top) || 0;
       const visibleStart = (-topStickyOffset / h) * 100;
