@@ -2,6 +2,9 @@
 // ponytail: hero section with interactive Matrix ASCII avatar
 import sharp from "sharp";
 import fs from "fs";
+import GithubActivity from "./GithubActivity";
+import AsciiAvatar from "./AsciiAvatar";
+import Typewriter from "./Typewriter";
 
 let framesData = "[]";
 let initialArt = "";
@@ -68,7 +71,7 @@ try {
 ---
 
 <section
-  class="min-h-screen flex flex-col justify-center section-padding pt-20 pb-8 relative"
+  class="min-h-screen flex flex-col justify-center section-padding pt-20 pb-24 relative"
   id="hero"
 >
   <!-- Decorative subtle grid/lines for paper feel -->
@@ -82,42 +85,27 @@ try {
     class="flex flex-col items-center text-center max-w-4xl mx-auto w-full relative z-10"
   >
     <!-- ASCII Emblem -->
-    <div
-      class="animate-slide-up mb-6 flex flex-col items-center"
-      style="animation-delay: 0s;"
-    >
+    <div class="mb-6 flex flex-col items-center">
       <div
         class="p-3 border border-border-subtle/50 bg-bg-elevated/30 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]"
       >
-        <pre
-          id="ascii-avatar"
-          class="font-mono text-[8px] leading-[0.55] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-          data-frames={framesData}>{initialArt}</pre>
+        <AsciiAvatar initialArt={initialArt} framesData={framesData} client:idle />
       </div>
       <div class="w-[1px] h-6 bg-border-subtle mt-4"></div>
     </div>
 
     <!-- The Title -->
-    <h1
-      class="font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-none tracking-tight mb-2 animate-slide-up whitespace-nowrap text-text-main"
-      style="animation-delay: 0.1s;"
-    >
+    <h1 class="font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-none tracking-tight mb-2 whitespace-nowrap text-text-main">
       David Arrozaqi<span class="text-accent">.</span>
     </h1>
 
     <!-- The Role (Typewriter) -->
-    <h2
-      class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-6 animate-slide-up"
-      style="animation-delay: 0.2s;"
-    >
-      <span id="typewriter">Software Engineer</span>
+    <h2 class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-6">
+      <Typewriter client:idle />
     </h2>
 
     <!-- The Prose -->
-    <div
-      class="max-w-2xl mx-auto animate-slide-up"
-      style="animation-delay: 0.3s;"
-    >
+    <div class="max-w-2xl mx-auto">
       <p
         class="font-serif text-text-muted text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed mb-4 px-4"
       >
@@ -138,7 +126,7 @@ try {
     </div>
 
     <!-- Actions -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 animate-slide-up" style="animation-delay: 0.4s;">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
       <a
         href="/#projects"
         class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
@@ -150,192 +138,17 @@ try {
       </a>
     </div>
 
-    <!-- GitHub Telegraph (Live Feed) -->
-    <div
-      id="github-activity-feed"
-      class="w-full max-w-lg border-t border-border-subtle pt-4 animate-slide-up"
-      style="animation-delay: 0.5s;"
-      data-username={import.meta.env.GITHUB_USERNAME || "David4rr"}
-    >
-      <h3
-        class="font-sans uppercase tracking-[0.2em] text-[9px] text-text-muted/60 mb-2 text-center"
-      >
-        Live Telegraph
-      </h3>
-      <ul
-        class="flex flex-col gap-1 font-serif text-[clamp(0.8rem,1vw,0.9rem)] text-text-muted text-left"
-      >
-        <li class="flex items-center justify-between">
-          <span class="flex items-center gap-3"
-            ><span class="text-[9px] text-accent/50">◍</span> Awaiting transmission...</span
-          >
-        </li>
-      </ul>
-    </div>
+    <!-- GitHub Telegraph (Live Feed) - Now an Astro Island! -->
+    <GithubActivity username={import.meta.env.GITHUB_USERNAME || "David4rr"} client:visible />
   </div>
 </section>
 
-<script>
-  // Matrix decode shuffle effect
-  document.addEventListener("astro:page-load", () => {
-    const el = document.getElementById("ascii-avatar");
-    if (!el || !el.dataset.frames) return;
 
-    let frames;
-    try {
-      frames = JSON.parse(el.dataset.frames);
-    } catch (e) {
-      return;
-    }
-
-    if (frames.length < 2) return;
-
-    let currentFrame = 0;
-    let isAnimating = false;
-    const charsArray =
-      '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split(
-        "",
-      );
-
-    el.addEventListener("click", () => {
-      if (isAnimating) return;
-      isAnimating = true;
-
-      const targetFrame = currentFrame === 0 ? 1 : 0;
-      const targetRows = frames[targetFrame];
-      let currentRows = frames[currentFrame].slice();
-
-      const rows = targetRows.length;
-      const cols = targetRows[0].length;
-      const totalChars = rows * cols;
-      let charsResolved = 0;
-
-      // Keep track of which characters have reached their target
-      const resolved = Array.from({ length: rows }, () =>
-        Array(cols).fill(false),
-      );
-
-      const interval = setInterval(() => {
-        // Swap 5-10% of total characters per tick
-        const swaps = Math.floor(totalChars * (0.05 + Math.random() * 0.05));
-
-        for (let i = 0; i < swaps; i++) {
-          const r = Math.floor(Math.random() * rows);
-          const c = Math.floor(Math.random() * cols);
-
-          if (!resolved[r][c]) {
-            // Chance to just become a random matrix character, or chance to settle on target
-            if (Math.random() > 0.5) {
-              const rowArr = currentRows[r].split("");
-              // Always use a random numeric char for the shuffle matrix effect!
-              rowArr[c] =
-                charsArray[Math.floor(Math.random() * charsArray.length)];
-              currentRows[r] = rowArr.join("");
-            } else {
-              const rowArr = currentRows[r].split("");
-              rowArr[c] = targetRows[r][c];
-              currentRows[r] = rowArr.join("");
-              resolved[r][c] = true;
-              charsResolved++;
-            }
-          }
-        }
-
-        el.textContent = currentRows.join("\n");
-
-        // Finish condition (~90% resolved, just snap the rest to avoid tail lag)
-        if (charsResolved > totalChars * 0.9) {
-          clearInterval(interval);
-          el.textContent = frames[targetFrame].join("\n");
-          currentFrame = targetFrame;
-          isAnimating = false;
-        }
-      }, 30); // 30ms tick
-    });
-  });
-
-  // Client-side GitHub Activity Fetch
-  document.addEventListener("astro:page-load", async () => {
-    const feedContainer = document.getElementById("github-activity-feed");
-    if (!feedContainer) return;
-
-    const username = feedContainer.dataset.username;
-    if (!username) return;
-
-    try {
-      const res = await fetch(
-        `https://api.github.com/users/${username}/events/public?t=${Date.now()}`,
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-
-      const events = data
-        .filter((ev: any) =>
-          [
-            "PushEvent",
-            "WatchEvent",
-            "CreateEvent",
-            "PullRequestEvent",
-            "IssuesEvent",
-          ].includes(ev.type),
-        )
-        .slice(0, 3);
-
-      const ul = feedContainer.querySelector("ul");
-      if (!ul) return;
-      ul.innerHTML = "";
-
-      if (events.length === 0) {
-        ul.innerHTML = `<li class="flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0"><span class="flex items-center gap-3"><span class="text-[10px]">◍</span> No recent activity found.</span></li>`;
-        return;
-      }
-
-      events.forEach((ev: any) => {
-        const diff = Date.now() - new Date(ev.created_at).getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        let timeStr = `${hours}h ago`;
-        if (hours === 0) timeStr = `just now`;
-        else if (hours >= 24 && hours < 48) timeStr = `yesterday`;
-        else if (hours >= 48) timeStr = `${Math.floor(hours / 24)}d ago`;
-
-        let action = "Contributed to";
-        if (ev.type === "PushEvent") action = "Pushed to";
-        else if (ev.type === "WatchEvent") action = "Starred";
-        else if (ev.type === "CreateEvent") action = "Created";
-        else if (ev.type === "PullRequestEvent") action = "Opened PR on";
-        else if (ev.type === "IssuesEvent") action = "Opened issue on";
-
-        const li = document.createElement("li");
-        li.className =
-          "flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0";
-        li.innerHTML = `<span class="flex items-center gap-3"><span class="text-[10px]">◍</span> ${action} ${ev.repo.name}</span><span class="opacity-60 text-sm">· ${timeStr}</span>`;
-        ul.appendChild(li);
-      });
-    } catch (e) {
-      console.error("Failed to load GitHub activity:", e);
-    }
-  });
-</script>
 
 <style>
   /* Explicitly target dark mode (when .light class is absent) */
   :root:not(.light) #ascii-avatar {
     color: var(--color-accent);
     text-shadow: 0 0 6px var(--color-accent-glow);
-  }
-
-  #typewriter::after {
-    content: "|";
-    animation: blink 1s step-end infinite;
-  }
-
-  @keyframes blink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
   }
 </style>

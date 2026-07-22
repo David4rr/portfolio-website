@@ -37,17 +37,14 @@ const stack = [
   class="pb-[clamp(4rem,8vw,8rem)] pt-12 relative border-t border-border-subtle/50"
 >
   <div class="max-w-4xl mx-auto w-full">
-    <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
+    <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight">
       Toolkit & Expertise<span class="text-accent">.</span>
     </h2>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
       {
         stack.map((group, i) => (
-          <div
-            class="scroll-reveal opacity-0 flex flex-col items-center md:items-start text-center md:text-left"
-            style={`animation-delay: ${i * 0.1}s`}
-          >
+          <div class="flex flex-col items-center md:items-start text-center md:text-left">
             <h3 class="font-serif text-[1.2rem] text-text-main mb-6 italic">
               {group.category}
             </h3>

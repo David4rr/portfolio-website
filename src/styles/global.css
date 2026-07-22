@@ -11,7 +11,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-glow: var(--accent-glow);
 
-  --font-sans: "Geist", sans-serif;
+  --font-sans: "Geist Sans", "Geist", sans-serif;
   --font-serif: "Fraunces", serif;
   --font-mono: "JetBrains Mono", monospace;
 
@@ -27,18 +27,40 @@
       transform: translateY(0);
     }
   }
-}
 
-@layer utilities {
-  .scroll-reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s cubic-bezier(0.25, 1, 0.3, 1), transform 0.8s cubic-bezier(0.25, 1, 0.3, 1);
+  --animate-type-blink: type-blink 1s steps(2, start) infinite;
+
+  @keyframes type-blink {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
-  
-  .scroll-reveal.revealed {
-    opacity: 1;
-    transform: translateY(0);
+}
+@layer utilities {
+  main {
+    perspective: 1200px;
+  }
+  [data-section] {
+    will-change: transform, clip-path;
+  }
+
+  /* Anime.js Initial States */
+  [data-reveal="ink-bloom"] [data-animate] {
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0;
+  }
+  [data-reveal="word-cascade"] [data-word],
+  [data-reveal="word-cascade"] [data-card] {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  [data-reveal="letter-unfold"] [data-animate] {
+    transform: scaleY(0);
+    opacity: 0;
+    transform-origin: top center;
   }
 }
 

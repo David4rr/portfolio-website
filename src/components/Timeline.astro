@@ -33,12 +33,12 @@ const education = {
 <section id="timeline" class="pt-[clamp(4rem,8vw,8rem)] pb-8 relative border-t border-border-subtle/50 mt-12">
   <div class="max-w-4xl mx-auto w-full">
     
-    <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
+    <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight">
       Journey & Education<span class="text-accent">.</span>
     </h2>
     
     <!-- Education Block -->
-    <div class="mb-20 scroll-reveal opacity-0">
+    <div class="mb-20">
       <h3 class="font-serif text-[clamp(1.5rem,3vw,2.5rem)] text-text-main mb-8 italic border-b border-border-subtle/50 pb-4">Academic Backgrounds</h3>
       
       <!-- Unified Styling -->
@@ -67,7 +67,7 @@ const education = {
     </div>
 
     <!-- Experience Timeline -->
-    <div class="scroll-reveal opacity-0">
+    <div>
       <h3 class="font-serif text-[clamp(1.5rem,3vw,2.5rem)] text-text-main mb-8 italic border-b border-border-subtle/50 pb-4">Professional Experience</h3>
       
       <div class="relative pl-6 ml-2 md:pl-8 md:ml-4">
@@ -76,7 +76,7 @@ const education = {
         
         <div class="space-y-12">
           {experiences.map((exp, i) => (
-            <div class="relative scroll-reveal opacity-0" style={`animation-delay: ${i * 0.1}s`}>
+            <div class="relative">
               <!-- Timeline dot -->
               <div class="absolute -left-[28px] md:-left-[36px] top-1.5 w-[10px] h-[10px] bg-bg border-2 border-accent rounded-full transition-transform hover:scale-150 cursor-pointer"></div>
             
@@ -94,7 +94,7 @@ const education = {
     </div>
 
     <!-- Resume Download Button -->
-    <div class="mt-12 flex justify-center scroll-reveal opacity-0 relative">
+    <div class="mt-12 flex justify-center relative">
       <!-- The poetic connector line bridging the timeline to the button -->
       <div class="absolute left-[8px] md:left-[16px] top-[-3rem] bottom-[50%] right-[50%] border-l-2 border-b-2 border-border-subtle rounded-bl-[48px] pointer-events-none"></div>
 

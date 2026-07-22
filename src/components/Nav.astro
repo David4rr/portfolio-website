@@ -1,7 +1,22 @@
 ---
 // ponytail: sticky nav with top center toggle
+const numPoints = 80;
+const points = [];
+// Top-left and Top-right
+points.push('100% 0%', '0% 0%');
+
+// Bottom jagged edge from left to right
+for (let i = 0; i <= numPoints; i++) {
+  const x = (i / numPoints) * 100;
+  // Depth varies between 85% and 100% of the nav height
+  const isDeep = Math.random() > 0.8;
+  const y = isDeep ? (Math.random() * 5 + 85) : (Math.random() * 5 + 95);
+  points.push(`${x}% ${y}%`);
+}
+
+const navClipPath = `polygon(${points.join(', ')})`;
 ---
-<nav class="fixed top-0 left-0 right-0 p-6 grid grid-cols-3 items-center z-50 bg-bg/80 backdrop-blur-sm border-b border-border-subtle">
+<nav class="fixed top-0 left-0 right-0 pt-6 pb-8 px-6 grid grid-cols-3 items-center z-50 bg-bg/90 backdrop-blur-md drop-shadow-sm" style={`clip-path: ${navClipPath};`}>
   <div class="flex justify-start">
     <a href="/" class="font-bold text-xl tracking-tighter">Portfolio.</a>
   </div>
