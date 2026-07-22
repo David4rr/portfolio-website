@@ -75,7 +75,7 @@ let ticking = false;
 // Pre-generate jagged edge patterns for a natural paper tear look
 const jaggedPatterns = Array.from({ length: 10 }, () => {
   const points = [];
-  const numPoints = 60; 
+  const numPoints = 25; // Reduced from 60 to 25 for better performance
   for (let i = 0; i <= numPoints; i++) {
     const isDeep = Math.random() > 0.8;
     const depth = isDeep ? (Math.random() * 80 + 30) : (Math.random() * 15);
@@ -84,43 +84,43 @@ const jaggedPatterns = Array.from({ length: 10 }, () => {
   return points;
 });
 
-const updateTearOff = () => {
+// Cache section heights and offsets to avoid layout thrashing
+let sectionData = [];
+const updateSectionData = () => {
   const sections = document.querySelectorAll('[data-section]');
-  const wh = window.innerHeight;
-
-  // 1. Temporarily remove transforms to get perfect native sticky positions
-  // This completely eliminates bounding-box distortions caused by 3D rotateX!
-  const oldTransforms = [];
-  sections.forEach(sec => {
-    oldTransforms.push(sec.style.transform);
-    sec.style.transform = 'none';
+  let currentTop = 0;
+  sectionData = Array.from(sections).map(sec => {
+    const height = sec.offsetHeight;
+    const data = { el: sec, height, topOffset: currentTop };
+    currentTop += height;
+    return data;
   });
+};
 
-  const trueTops = Array.from(sections).map(sec => sec.getBoundingClientRect().top);
+const updateTearOff = () => {
+  if (sectionData.length === 0) updateSectionData();
+  const wh = window.innerHeight;
+  const scrollY = window.scrollY;
 
-  sections.forEach((sec, i) => {
-    // Restore transform immediately before we calculate the new one
-    sec.style.transform = oldTransforms[i];
-
-    // 2. Set dynamic sticky top for tall sections
-    const h = sec.offsetHeight;
+  sectionData.forEach((data, i) => {
+    const { el: sec, height: h, topOffset } = data;
+    
     if (h > wh) {
       sec.style.top = `${wh - h}px`;
     } else {
       sec.style.top = '0px';
     }
 
-    // 3. Determine Pinning (Make next section stack statically behind instead of sliding up)
+    const myTop = topOffset - scrollY;
     let ty = 0;
-    const myTop = trueTops[i]; // This is now exactly the native sticky position
     if (i > 0 && myTop > 0 && myTop <= wh) {
       ty = -myTop;
     }
 
-    // 4. Calculate progress of NEXT section tearing THIS section
     let progress = 0;
-    const nextTop = trueTops[i + 1];
-    if (nextTop !== undefined) {
+    const nextData = sectionData[i + 1];
+    if (nextData) {
+      const nextTop = nextData.topOffset - scrollY;
       if (nextTop < wh && nextTop > 0) {
         progress = 1 - (nextTop / wh);
       } else if (nextTop <= 0) {
@@ -128,42 +128,36 @@ const updateTearOff = () => {
       }
     }
 
-    // 5. Apply tear & fall logic
     if (progress === 0) {
       sec.style.clipPath = 'none';
       sec.style.transform = ty !== 0 ? `translateY(${ty}px)` : 'none';
       sec.style.opacity = '1';
       sec.style.filter = 'none';
     } else if (progress === 1) {
-      // Fully torn away
       sec.style.opacity = '0';
       sec.style.clipPath = 'none';
       sec.style.transform = 'none';
       sec.style.filter = 'none';
     } else {
-      // Tearing in progress
-      const topOffset = parseFloat(sec.style.top) || 0;
-      const visibleStart = (-topOffset / h) * 100;
-      const visibleEnd = ((-topOffset + wh) / h) * 100;
+      const topStickyOffset = parseFloat(sec.style.top) || 0;
+      const visibleStart = (-topStickyOffset / h) * 100;
+      const visibleEnd = ((-topStickyOffset + wh) / h) * 100;
 
-      // Sweep the tear line across the currently visible portion synchronously
       const tearY = visibleStart + progress * (visibleEnd - visibleStart) - 5;
       
       let rotateZ = 0;
       let rotateX = 0;
       let opacity = 1;
 
-      // Start falling earlier so the paper drops completely off screen
       if (progress > 0.15) {
-        const fall = (progress - 0.15) / 0.85; // 0 -> 1
+        const fall = (progress - 0.15) / 0.85; 
         
-        // Massive downward acceleration so it clears the viewport
-        ty += Math.pow(fall, 1.2) * (wh * 1.8); 
+        ty += Math.pow(fall, 1.5) * (wh * 1.8); 
         rotateZ = (i % 2 === 0 ? -1 : 1) * fall * 5; 
-        rotateX = fall * -70; // Tilt heavily away
+        rotateX = fall * -15; // Max 15 degree flip instead of 70
         
         if (fall > 0.8) {
-          opacity = 1 - ((fall - 0.8) * 5); // Smooth fade at the very bottom
+          opacity = 1 - ((fall - 0.8) * 5); 
         }
       }
 
@@ -178,7 +172,6 @@ const updateTearOff = () => {
       }
       
       sec.style.clipPath = `polygon(${points.join(', ')}, 100% 100%, 0% 100%)`;
-      // Hinge the 3D rotation exactly at the tear line for realistic peeling
       sec.style.transformOrigin = `50% ${tearY}%`;
       sec.style.transform = `perspective(1200px) translateY(${ty}px) rotateZ(${rotateZ}deg) rotateX(${rotateX}deg)`;
       sec.style.opacity = opacity.toString();
@@ -188,9 +181,6 @@ const updateTearOff = () => {
       } else {
         sec.style.filter = `drop-shadow(0 -5px 15px rgba(0,0,0,0.3))`;
       }
-
-      
-      sec.dataset.ty = ty;
     }
   });
 };
