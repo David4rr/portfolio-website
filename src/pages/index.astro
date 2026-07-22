@@ -14,61 +14,70 @@ const projects = await getCollection('projects');
 
 <BaseLayout title="Portfolio">
   <Nav />
-  <main class="max-w-[1200px] mx-auto px-8">
-    <Hero />
-    
-    <!-- Poetic Intermission 1 (Laurel Wreath) -->
-    <div class="w-full max-w-xl mx-auto py-24 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
-      <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
-      <img 
-        src="/assets/laurel_wreath.jpg" 
-        alt="Classical Roman Laurel Wreath" 
-        class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-90 dark:opacity-80 transition-all duration-1000"
-      />
-    </div>
-
-    <section id="projects" class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 mt-12">
-      <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
-        Selected Works<span class="text-accent">.</span>
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {projects.map((project) => (
-          <a href={`/projects/${project.id}`} class="block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] scroll-reveal opacity-0 hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group">
-            <h3 class="text-2xl font-bold mb-2 text-text-main group-hover:text-accent transition-colors">{project.data.title}</h3>
-            {project.data.description && <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)]">{project.data.description}</p>}
-          </a>
-        ))}
+  <main class="w-full relative">
+    <!-- 1. Hero -->
+    <div class="sticky top-0 min-h-screen w-full bg-bg z-10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+      <div class="max-w-[1200px] mx-auto px-8 w-full">
+        <Hero />
       </div>
-    </section>
-
-    <!-- Poetic Intermission 2 (Astrolabe) -->
-    <div class="w-full max-w-xl mx-auto py-24 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
-      <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
-      <img 
-        src="/assets/astrolabe.jpg" 
-        alt="Classical Astrolabe and Compass" 
-        class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-90 dark:opacity-80 transition-all duration-1000"
-      />
     </div>
-
-    <Timeline />
-    <TechStack />
     
-    <!-- Poetic Intermission -->
-    <div class="w-full max-w-2xl mx-auto py-24 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
-      <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
-      <img 
-        src="/assets/rome_illustration.jpg" 
-        alt="Timeless Roman Architecture" 
-        class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-90 dark:opacity-80 transition-all duration-1000"
-      />
+    <!-- 2. Projects -->
+    <div class="sticky top-0 min-h-screen w-full bg-bg z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+      <div class="max-w-[1200px] mx-auto px-8 w-full">
+        <section id="projects" class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100vh-3rem)]">
+          <div>
+            <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center scroll-reveal opacity-0 font-normal tracking-tight">
+              Selected Works<span class="text-accent">.</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {projects.map((project) => (
+                <a href={`/projects/${project.id}`} class="block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] scroll-reveal opacity-0 hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group">
+                  <h3 class="text-2xl font-bold mb-2 text-text-main group-hover:text-accent transition-colors">{project.data.title}</h3>
+                  {project.data.description && <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)]">{project.data.description}</p>}
+                </a>
+              ))}
+            </div>
+          </div>
+          
+          <!-- Poetic Intermission 1 (Laurel Wreath) - Moved to bottom of Projects -->
+          <div class="w-full max-w-sm mx-auto mt-24 mb-8 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative">
+            <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
+            <img 
+              src="/assets/laurel_wreath.jpg" 
+              alt="Classical Roman Laurel Wreath" 
+              class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-60 transition-all duration-1000"
+            />
+          </div>
+        </section>
+      </div>
     </div>
 
-    <Contact />
-  </main>
-  <Footer />
+    <!-- 3. Activity -->
+    <div class="min-h-screen w-full bg-bg z-30 shadow-[0_-20px_50px_rgba(0,0,0,0.3)] relative">
+      <div class="max-w-[1200px] mx-auto px-8 w-full">
+        <Timeline />
+        
+        <!-- Poetic Intermission 2 (Astrolabe) - Placed as a bridge between timeline and techstack -->
+        <div class="w-full max-w-sm mx-auto py-8 flex flex-col items-center justify-center scroll-reveal opacity-0 pointer-events-none relative border-t border-border-subtle/30 mt-4">
+          <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-80"></div>
+          <img 
+            src="/assets/astrolabe.jpg" 
+            alt="Classical Astrolabe and Compass" 
+            class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000"
+          />
+        </div>
 
+        <TechStack />
+      </div>
+    </div>
+
+    <!-- 4. Contact -->
+    <div class="min-h-screen w-full bg-bg z-40 shadow-[0_-20px_50px_rgba(0,0,0,0.3)] relative">
+      <div class="max-w-[1200px] mx-auto px-8 w-full">
+        <Contact />
+      </div>
+    </div>
+  </main>
 </BaseLayout>
