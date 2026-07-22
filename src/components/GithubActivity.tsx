@@ -43,6 +43,20 @@ export default function GithubActivity({ username }: GithubActivityProps) {
       }
     }
     fetchActivity();
+    
+    // Refresh tiap 60 detik
+    const interval = setInterval(fetchActivity, 60000);
+    
+    // Refresh pas user balik ke tab
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') fetchActivity();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [username]);
 
   function getTimeString(createdAt: string) {
