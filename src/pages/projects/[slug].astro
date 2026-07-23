@@ -1,9 +1,10 @@
 ---
-// ponytail: project detail page
+// ponytail: luxurious museum-print project detail page
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import { getCollection } from 'astro:content';
+import { render } from 'astro:content';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -14,19 +15,95 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-// Wait, rendering content in Astro 5 is different, but markdown is usually rendered with `const { Content } = await render(project);`
-import { render } from 'astro:content';
 const { Content } = await render(project);
 ---
 <BaseLayout title={project.data.title}>
   <Nav />
-  <main class="max-w-[800px] mx-auto px-8 pt-32 pb-[clamp(4rem,8vw,8rem)]">
-    <a href="/#projects" class="text-accent hover:underline mb-8 inline-block">← Back to projects</a>
-    <h1 class="text-[clamp(2rem,5vw,4rem)] font-bold mb-4">{project.data.title}</h1>
-    {project.data.description && <p class="text-text-muted text-xl mb-12">{project.data.description}</p>}
-    <div class="prose prose-invert prose-p:text-text-muted prose-headings:text-text-main max-w-none">
-      <Content />
+  
+  <main class="min-h-screen pt-40 pb-32 bg-bg">
+    <div class="max-w-[1200px] mx-auto px-6 md:px-12">
+      
+      {/* Elegant Back Button */}
+      <a id="back-button" href="/#projects" class="inline-flex items-center gap-4 text-text-muted hover:text-text-main transition-colors uppercase font-sans text-[11px] tracking-[0.2em] mb-20 group">
+        <span class="w-12 h-[1px] bg-border-subtle group-hover:bg-text-main transition-colors duration-500"></span>
+        <span id="back-text">Return to Index</span>
+      </a>
+
+      {/* Hero Title Section */}
+      <div class="mb-20 max-w-4xl">
+        <h1 class="font-serif text-[clamp(3.5rem,7vw,6.5rem)] leading-[1.05] text-text-main mb-8 font-normal tracking-tight">{project.data.title}</h1>
+        {project.data.description && (
+          <p class="text-text-muted text-xl md:text-2xl font-serif italic leading-relaxed">
+            "{project.data.description}"
+          </p>
+        )}
+      </div>
+
+      {/* Massive Hero Image (Gallery Canvas) */}
+      {project.data.image && (
+        <div class="w-full relative mb-32 aspect-[21/9] overflow-hidden border border-border-subtle shadow-[0_30px_60px_rgba(0,0,0,0.08)] bg-text-main/5">
+          <img 
+            src={project.data.image} 
+            alt={project.data.title} 
+            class="w-full h-full object-cover brightness-[0.92]" 
+          />
+        </div>
+      )}
+
+      {/* Content Layout */}
+      <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-16 lg:gap-32 relative">
+        
+        {/* Left Column: Museum Placard (Sticky) */}
+        <aside class="relative hidden md:block">
+          <div class="sticky top-40 bg-bg-elevated p-8 border border-border-subtle shadow-sm">
+            <h3 class="font-sans uppercase tracking-[0.25em] text-[10px] text-text-muted mb-6 border-b border-border-subtle pb-4">
+              Curator's Note
+            </h3>
+            
+            <div class="space-y-6 text-sm">
+              <div>
+                <span class="block text-text-muted text-[11px] uppercase tracking-widest mb-1.5">Collection</span>
+                <span class="text-text-main font-serif italic text-lg capitalize">{project.data.type || 'Digital Archive'}</span>
+              </div>
+              <div>
+                <span class="block text-text-muted text-[11px] uppercase tracking-widest mb-1.5">Format</span>
+                <span class="text-text-main font-serif italic text-lg">Interactive Media</span>
+              </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-border-subtle text-text-muted text-xs font-sans leading-relaxed">
+              Exhibited in the permanent collection. All rights reserved.
+            </div>
+          </div>
+        </aside>
+
+        {/* Right Column: Markdown Content */}
+        <article class="prose prose-invert prose-p:text-text-muted prose-p:font-sans prose-p:leading-[2] prose-p:text-[1.05rem] prose-headings:font-serif prose-headings:text-text-main prose-headings:font-normal prose-h2:text-4xl prose-h3:text-2xl max-w-none">
+          {/* Fallback placard for mobile */}
+          <div class="md:hidden bg-bg-elevated p-6 border border-border-subtle mb-12">
+            <span class="block text-text-muted text-[10px] uppercase tracking-[0.2em] mb-2">Collection</span>
+            <span class="text-text-main font-serif italic text-xl capitalize">{project.data.type || 'Digital Archive'}</span>
+          </div>
+          
+          <Content />
+        </article>
+      </div>
+      
     </div>
   </main>
+  
   <Footer />
+
+  <script>
+    document.addEventListener('astro:page-load', () => {
+      if (new URLSearchParams(window.location.search).get('from') === 'explore') {
+        const btn = document.getElementById('back-button');
+        const text = document.getElementById('back-text');
+        if (btn && text) {
+          btn.href = '/explore';
+          text.innerText = 'Return to Gallery';
+        }
+      }
+    });
+  </script>
 </BaseLayout>

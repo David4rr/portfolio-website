@@ -1,0 +1,78 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import InfiniteCanvas from "../components/InfiniteCanvas.tsx";
+import { getCollection } from "astro:content";
+import type { Project } from '../components/InfiniteCanvas.tsx';
+
+const realProjects = await getCollection("projects");
+
+// Generate varied dummy data alongside real projects
+const dummyImages = [
+  "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=600&h=400", // Wide web
+  "https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&q=80&w=400&h=800", // Tall mobile
+  "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=600&h=600", // Square
+  "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800&h=500", // Wide branding
+  "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=400&h=700", // Tall mobile
+];
+
+const allProjects: Project[] = [];
+
+// Special center node for poetry and instructions
+allProjects.push({
+  id: "center-poetry",
+  title: "Poetry",
+  description: "Centerpiece",
+  image: "",
+  type: "center",
+  isReal: false,
+});
+
+// First push the real projects
+realProjects.forEach((p, i) => {
+  allProjects.push({
+    id: p.id,
+    title: p.data.title,
+    description: p.data.description,
+    image: dummyImages[i % dummyImages.length], // We'll just assign a dummy image for now
+    type:
+      dummyImages[i % dummyImages.length].includes("h=800") ||
+      dummyImages[i % dummyImages.length].includes("h=700")
+        ? "mobile"
+        : "web",
+    isReal: true,
+  });
+});
+
+// Then push 100 dummy projects to create a dense, massive cluster
+for (let i = 0; i < 10; i++) {
+  const imgUrl = dummyImages[Math.floor(Math.random() * dummyImages.length)];
+  const isMobile = imgUrl.includes("h=800") || imgUrl.includes("h=700");
+
+  allProjects.push({
+    id: `dummy-${i}`,
+    title: `Project Concept ${i + 1}`,
+    description:
+      "An experimental exploration into interaction design and spatial UI.",
+    image: imgUrl,
+    type: isMobile ? "mobile" : "web",
+    isReal: false,
+  });
+}
+---
+
+<BaseLayout title="Infinite Project Explorer">
+  <main class="w-screen h-[100dvh] overflow-hidden bg-bg relative">
+    <!-- UI Overlay -->
+    <div class="absolute top-8 left-8 z-50 pointer-events-auto">
+      <a
+        href="/#projects"
+        class="inline-flex items-center gap-3 text-text-muted hover:text-text-main transition-colors uppercase font-sans text-[10px] tracking-widest bg-bg/80 backdrop-blur-md px-4 py-2 rounded-full border border-border-subtle"
+      >
+        <span>&larr; Return to Home</span>
+      </a>
+    </div>
+
+    <!-- The Infinite Canvas Island -->
+    <InfiniteCanvas projects={allProjects} client:only="preact" />
+  </main>
+</BaseLayout>

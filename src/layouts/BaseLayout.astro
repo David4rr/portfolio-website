@@ -32,10 +32,17 @@ const { title } = Astro.props;
     <ClientRouter />
 
     <script is:inline>
-      const theme = localStorage.getItem('theme');
-      if (theme === 'light' || (!theme && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-        document.documentElement.classList.add('light');
-      }
+      const initTheme = () => {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'light' || (!theme && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.remove('light');
+        }
+      };
+      
+      initTheme();
+      document.addEventListener('astro:after-swap', initTheme);
     </script>
   </head>
   <body class="bg-bg text-text-main font-sans antialiased">
