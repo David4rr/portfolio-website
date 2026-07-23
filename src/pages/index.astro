@@ -16,6 +16,13 @@ import laurelWreathImg from "../assets/laurel_wreath.jpg";
 import astrolabeImg from "../assets/astrolabe.jpg";
 
 const projects = await getCollection("projects");
+
+const dummyImages = [
+  "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=600&h=400", 
+  "https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&q=80&w=400&h=800", 
+  "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=600&h=600", 
+  "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800&h=500", 
+];
 ---
 
 <BaseLayout title="Portfolio">
@@ -59,27 +66,65 @@ const projects = await getCollection("projects");
               Selected Works<span class="text-accent">.</span>
             </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 auto-rows-[350px] md:auto-rows-[320px] gap-4">
               {
                 projects.map((project, i) => {
-                  const isOrphan =
-                    projects.length % 2 !== 0 && i === projects.length - 1;
+                  const getBentoClass = (index) => {
+                    const mod = index % 4;
+                    if (mod === 0) return "md:col-span-2 md:row-span-1"; // Wide banner (Top Left)
+                    if (mod === 1) return "md:col-span-1 md:row-span-2"; // Tall feature (Right Side)
+                    if (mod === 2) return "md:col-span-1 md:row-span-1"; // Small square (Bottom Left)
+                    if (mod === 3) return "md:col-span-1 md:row-span-1"; // Small square (Bottom Middle)
+                    return "md:col-span-1 md:row-span-1";
+                  };
+                  
                   return (
                     <a
                       data-card
                       href={`/projects/${project.id}`}
-                      class={`block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group flex flex-col justify-center ${isOrphan ? "md:col-span-2 md:min-h-[200px]" : ""}`}
+                      class={`group relative block w-full p-6 md:p-10 border border-border-subtle bg-bg hover:border-transparent transition-colors duration-700 overflow-hidden flex flex-col justify-between h-full ${getBentoClass(i)}`}
                     >
-                      <h3
-                        class={`font-bold mb-2 text-text-main group-hover:text-accent transition-colors ${isOrphan ? "text-3xl" : "text-2xl"}`}
-                      >
-                        {project.data.title}
-                      </h3>
-                      {project.data.description && (
-                        <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)] max-w-3xl">
-                          {project.data.description}
-                        </p>
-                      )}
+                      <!-- Front Layer: Image (Starts full, shrinks to center on hover) -->
+                      <div class="absolute inset-0 w-full h-full z-10 transition-all duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)] [clip-path:inset(0_0_0_0)] group-hover:[clip-path:inset(50%_50%_50%_50%)] pointer-events-none">
+                        <img 
+                          src={dummyImages[i % dummyImages.length]} 
+                          alt={project.data.title} 
+                          class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
+                        />
+                      </div>
+                      
+                      <!-- Base Layer: Content (Always there, revealed when image shrinks) -->
+                      <div class="relative flex flex-col justify-between h-full z-0">
+                        <div class="flex items-start justify-between w-full relative z-10">
+                          <span class="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+                            Idx. 0{i + 1}
+                          </span>
+                          <span class="font-mono text-[10px] uppercase tracking-[0.1em] text-accent flex items-center gap-2 opacity-0 -translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-[900ms] ease-out delay-100">
+                            Click to Explore <span class="text-lg leading-none">&rarr;</span>
+                          </span>
+                        </div>
+                        
+                        <!-- Empty Space Poetry SVG Illustration (Only on Item 2) -->
+                        {i === 1 && (
+                          <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 -translate-y-8 md:-translate-y-12">
+                            <svg viewBox="0 0 100 100" class="w-32 h-32 md:w-48 md:h-48 stroke-current text-text-main/15 stroke-[1.5] fill-none opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-[1200ms] ease-out delay-200">
+                              <path d="M50 10 Q50 50 10 50 Q50 50 50 90 Q50 50 90 50 Q50 50 50 10" />
+                              <circle cx="50" cy="50" r="12" />
+                            </svg>
+                          </div>
+                        )}
+
+                        <div class="mt-auto pt-16 relative z-10">
+                          <h3 class="font-serif text-3xl md:text-4xl text-text-main mb-4 italic">
+                            {project.data.title}
+                          </h3>
+                          {project.data.description && (
+                            <p class="font-sans text-sm md:text-base leading-relaxed text-text-muted max-w-[90%]">
+                              {project.data.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </a>
                   );
                 })
@@ -95,26 +140,6 @@ const projects = await getCollection("projects");
               <span>View More Projects</span>
               <span class="text-[14px]">&rarr;</span>
             </a>
-          </div>
-
-          <!-- Poetic Intermission 1 (Laurel Wreath) - Moved to bottom of Projects -->
-          <div
-            data-word
-            class="w-full max-w-sm mx-auto mt-24 mb-8 flex flex-col items-center justify-center pointer-events-none relative"
-          >
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"
-            >
-            </div>
-            <div
-              class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"
-            >
-            </div>
-            <Image
-              src={laurelWreathImg}
-              alt="Classical Roman Laurel Wreath"
-              class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-60 transition-all duration-1000"
-            />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 ---
 import RocketLoader from "./RocketLoader.tsx";
 ---
-<div id="preloader-overlay" class="fixed inset-0 z-[9999] bg-bg flex flex-col items-center justify-center transition-opacity duration-1000">
+<div id="preloader-overlay" class="fixed inset-0 z-[9999] bg-bg flex flex-col items-center justify-center transition-opacity duration-1000" style="display: none;">
   <div class="mb-4 flex items-center justify-center scale-150">
     <RocketLoader client:load text="" />
   </div>
@@ -14,27 +14,33 @@ import RocketLoader from "./RocketLoader.tsx";
   </div>
 </div>
 
+<script is:inline>
+  // Runs synchronously before paint.
+  // If window.hasPlayedPreloader is NOT set, this is a hard load (F5), so we show it!
+  if (!window.hasPlayedPreloader) {
+    const el = document.getElementById('preloader-overlay');
+    if (el) {
+      el.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+</script>
+
 <script>
   // In Astro, module scripts are executed exactly once per page load.
-  // This state will be reset on hard refresh, but preserved across client-side navigations (ViewTransitions).
-  let hasPlayed = false;
-
   document.addEventListener('astro:page-load', () => {
     const preloader = document.getElementById('preloader-overlay');
     const percentEl = document.getElementById('preloader-percent');
     
     if (preloader && percentEl) {
-      if (hasPlayed) {
-        // Client-side navigation (e.g. coming back from /explore)
-        preloader.style.display = 'none';
-        preloader.style.opacity = '0';
-        preloader.style.pointerEvents = 'none';
-        document.body.style.overflow = '';
+      if (window.hasPlayedPreloader) {
+        // Client-side navigation (e.g. coming back from /explore). 
+        // Inline script kept it hidden. Do nothing.
         return;
       }
       
       // First load or hard refresh
-      hasPlayed = true;
+      window.hasPlayedPreloader = true;
       document.body.style.overflow = 'hidden';
       let pct = 0;
       
