@@ -16,14 +16,29 @@ interface PlacedProject extends Project {
   h: number;
 }
 
+const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div class="relative w-full h-full bg-bg-elevated overflow-hidden">
+      <div class={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
+         <div class="font-serif text-accent/40 text-xl animate-pulse">
+           ✧
+         </div>
+      </div>
+      <img 
+        src={src} 
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        class={`absolute inset-0 w-full h-full object-cover pointer-events-none brightness-[0.95] transition-opacity duration-[1500ms] ease-out ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        loading="lazy"
+        draggable={false}
+      />
+    </div>
+  );
+};
+
 export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 }); // Center of viewport
-  const [viewport, setViewport] = useState({ w: 1000, h: 1000 });
-  const [isDragging, setIsDragging] = useState(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const startPos = useRef({ x: 0, y: 0 });
-  const hasDraggedRef = useRef(false);
 
   // 1. Calculate Layout (Dense Grid Oval Packing)
   const laidOutProjects = useMemo(() => {
@@ -39,33 +54,40 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
       }
     }
     coords.sort((a, b) => {
-      // Use 2.0 multiplier for X to create a much more pronounced eclipse/oval shape
-      const distA = Math.pow(a.x / 2.0, 2) + Math.pow(a.y, 2);
-      const distB = Math.pow(b.x / 2.0, 2) + Math.pow(b.y, 2);
+      // Scale y down to make the distribution an oval/rectangle wider than tall
+      const distA = Math.sqrt(a.x * a.x + (a.y * 1.5) * (a.y * 1.5));
+      const distB = Math.sqrt(b.x * b.x + (b.y * 1.5) * (b.y * 1.5));
       return distA - distB;
     });
 
+    const result: PlacedProject[] = [];
     const occupied = new Set<string>();
-    const isFree = (x: number, y: number, w: number, h: number) => {
-      for (let i = 0; i < w; i++) {
-        for (let j = 0; j < h; j++) {
-          if (occupied.has(`${x + i},${y + j}`)) return false;
+
+    const checkFit = (startX: number, startY: number, w: number, h: number) => {
+      for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+          if (occupied.has(`${startX + x},${startY + y}`)) return false;
         }
       }
       return true;
     };
-    const markOccupied = (x: number, y: number, w: number, h: number) => {
-      for (let i = 0; i < w; i++) {
-        for (let j = 0; j < h; j++) {
-          occupied.add(`${x + i},${y + j}`);
+
+    const markOccupied = (startX: number, startY: number, w: number, h: number) => {
+      for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+          occupied.add(`${startX + x},${startY + y}`);
         }
       }
     };
 
-    const result: PlacedProject[] = [];
+    // Sort projects so 'center-poetry' is placed first
+    const sorted = [...projects].sort((a, b) => {
+      if (a.id === 'center-poetry') return -1;
+      if (b.id === 'center-poetry') return 1;
+      return 0; // maintain original order for rest
+    });
 
-    projects.forEach((p, i) => {
-      // Determine grid spans based on project type
+    sorted.forEach((p, index) => {
       let gw = 1;
       let gh = 1;
       
@@ -81,26 +103,21 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
       }
       
       // Randomly make some concepts 2x2 for dramatic scale
-      if (!p.isReal && i % 11 === 0) {
+      if (!p.isReal && index % 7 === 0 && p.type !== 'center') {
         gw = 2;
         gh = 2;
       }
 
-      // Find first free coordinate closest to center
-      for (const coord of coords) {
-        if (isFree(coord.x, coord.y, gw, gh)) {
-          markOccupied(coord.x, coord.y, gw, gh);
-          
-          const px = coord.x * (CELL + GAP);
-          const py = coord.y * (CELL + GAP);
-          const pw = gw * CELL + (gw - 1) * GAP;
-          const ph = gh * CELL + (gh - 1) * GAP;
-          
-          // Convert top-left to center for translate3d
-          const centerX = px + pw / 2;
-          const centerY = py + ph / 2;
-          
-          result.push({ ...p, x: centerX, y: centerY, w: pw, h: ph });
+      for (const c of coords) {
+        if (checkFit(c.x, c.y, gw, gh)) {
+          markOccupied(c.x, c.y, gw, gh);
+          result.push({
+            ...p,
+            x: c.x * (CELL + GAP) + ((gw - 1) * (CELL + GAP)) / 2,
+            y: c.y * (CELL + GAP) + ((gh - 1) * (CELL + GAP)) / 2,
+            w: gw * CELL + (gw - 1) * GAP,
+            h: gh * CELL + (gh - 1) * GAP,
+          });
           break;
         }
       }
@@ -109,15 +126,34 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
     return result;
   }, [projects]);
 
-  // 2. Setup initial position and window size
+  const [pos, setPos] = useState(() => {
+    const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
+    const cy = typeof window !== 'undefined' ? window.innerHeight / 2 : 500;
+    
+    if (laidOutProjects.length > 0) {
+      return { 
+        x: cx - laidOutProjects[0].x, 
+        y: cy - laidOutProjects[0].y 
+      };
+    }
+    return { x: cx, y: cy };
+  }); // Absolute viewport coordinate offset
+
+
+
+  const [isDragging, setIsDragging] = useState(false);
+  const lastPos = useRef({ x: 0, y: 0 });
+  const startPos = useRef({ x: 0, y: 0 });
+  const hasDraggedRef = useRef(false);
+
+  // 2. Setup initial window size
+  const [viewport, setViewport] = useState({ w: 1000, h: 1000 });
   useEffect(() => {
     const updateSize = () => {
       setViewport({ w: window.innerWidth, h: window.innerHeight });
     };
     
     updateSize();
-    setPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-    
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
@@ -188,21 +224,22 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   }, [isDragging]);
 
   // 4. Virtualization
-  const visibleProjects = laidOutProjects.filter(p => {
-    const viewMinX = -pos.x;
-    const viewMaxX = -pos.x + viewport.w;
-    const viewMinY = -pos.y;
-    const viewMaxY = -pos.y + viewport.h;
+  const visibleProjects = useMemo(() => {
+    // Only render projects that are within or near the viewport
+    const margin = 1500; // Render a bit outside to prevent pop-in
     
-    const buffer = 400; // Render slightly outside viewport for smooth dragging
-    
-    return !(
-      p.x + p.w/2 < viewMinX - buffer ||
-      p.x - p.w/2 > viewMaxX + buffer ||
-      p.y + p.h/2 < viewMinY - buffer ||
-      p.y - p.h/2 > viewMaxY + buffer
-    );
-  });
+    // Viewport bounding box (in canvas coordinates) assuming wrapper is at center (top-1/2 left-1/2)
+    const minX = -pos.x - viewport.w/2 - margin;
+    const maxX = -pos.x + viewport.w/2 + margin;
+    const minY = -pos.y - viewport.h/2 - margin;
+    const maxY = -pos.y + viewport.h/2 + margin;
+
+    return laidOutProjects.filter(p => {
+      // Check if project overlaps with viewport bounding box
+      return (p.x + p.w/2) > minX && (p.x - p.w/2) < maxX &&
+             (p.y + p.h/2) > minY && (p.y - p.h/2) < maxY;
+    });
+  }, [laidOutProjects, pos, viewport]);
 
   // 5. Flip State & Anime.js Sequences
   const animMap = useRef(new Map<string, any>());
@@ -321,7 +358,7 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   return (
     <div 
       ref={containerRef}
-      class="w-full h-full cursor-grab active:cursor-grabbing touch-none overflow-hidden bg-bg"
+      class="w-full h-full cursor-grab active:cursor-grabbing touch-none overflow-hidden bg-bg relative"
     >
       <div 
         class="absolute top-0 left-0 will-change-transform"
@@ -378,13 +415,7 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
               >
                 {/* FRONT FACE (DOM Image - acts as placeholder when WebGL is active) */}
                 <div id={`card-front-${p.id}`} class="absolute inset-0 w-full h-full overflow-hidden bg-bg border border-border-subtle opacity-100" style={{ transform: 'rotateY(0deg) translateZ(1px)' }}>
-                  <img 
-                    src={p.image} 
-                    alt={p.title}
-                    class="w-full h-full object-cover pointer-events-none brightness-[0.95]"
-                    loading="lazy"
-                    draggable={false}
-                  />
+                  <ImageWithLoader src={p.image} alt={p.title} />
                 </div>
 
                 {/* BACK FACE (Poetry / Details) */}
