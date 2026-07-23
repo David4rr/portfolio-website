@@ -8,6 +8,7 @@ import Timeline from '../components/Timeline.astro';
 import TechStack from '../components/TechStack.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
+import LiveClock from '../components/LiveClock.astro';
 import { getCollection } from 'astro:content';
 
 import laurelWreathImg from '../assets/laurel_wreath.jpg';
@@ -20,12 +21,15 @@ const projects = await getCollection('projects');
   <Nav />
   <main class="w-full relative">
     <!-- 1. Hero -->
-    <section data-section class="sticky top-0 min-h-screen w-full bg-bg z-40">
+    <section data-section class="sticky top-0 h-[100dvh] overflow-hidden w-full bg-bg z-40">
       <div data-reveal="letter-unfold" class="h-full max-w-[1200px] mx-auto px-8 w-full">
         <div data-animate class="h-full">
           <Hero />
         </div>
       </div>
+      
+      <!-- Live Clock outside max-w-[1200px] to be truly at screen edge -->
+      <LiveClock />
     </section>
     <!-- Anchor for Projects -->
     <div id="projects" class="absolute w-full h-0 pointer-events-none"></div>
@@ -87,9 +91,9 @@ const projects = await getCollection('projects');
     </section>
 
     <!-- 4. Contact -->
-    <section data-section class="sticky top-0 min-h-screen w-full bg-bg z-10" id="contact">
-      <div data-reveal="ink-bloom" class="h-full max-w-[1200px] mx-auto px-8 w-full flex flex-col justify-center">
-        <div data-animate>
+    <section data-section class="sticky top-0 h-screen w-full bg-bg z-10 flex flex-col" id="contact">
+      <div data-reveal="ink-bloom" class="w-full max-w-[1200px] mx-auto px-8 flex flex-col justify-center h-full flex-1">
+        <div data-animate class="h-full flex flex-col">
           <Contact />
         </div>
       </div>

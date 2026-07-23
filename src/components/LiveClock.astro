@@ -1,0 +1,44 @@
+---
+// LiveClock.astro
+const { location = "Jakarta, ID" } = Astro.props;
+---
+<div class="absolute bottom-8 right-8 text-right flex-col items-end gap-1 opacity-60 hover:opacity-100 transition-opacity z-20 pointer-events-auto hidden md:flex">
+  <p class="font-sans text-[9px] uppercase tracking-[0.2em] text-text-muted">{location}</p>
+  <p id="live-clock-display" class="font-serif text-sm text-text-main tabular-nums tracking-wider">...</p>
+</div>
+
+<script>
+  function initClock() {
+    const display = document.getElementById('live-clock-display');
+    if (!display) return;
+    
+    const updateTime = () => {
+      try {
+        display.textContent = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Asia/Jakarta',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        }).format(new Date());
+      } catch (e) {
+        display.textContent = new Date().toLocaleTimeString('en-US');
+      }
+    };
+    
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    
+    // Store interval ID on the element to clear it later if needed (e.g. view transitions)
+    // @ts-ignore
+    display._clockInterval = interval;
+  }
+  
+  // Initialize immediately
+  initClock();
+  
+  // Also initialize on Astro view transitions if they are added later
+  document.addEventListener('astro:page-load', () => {
+    initClock();
+  });
+</script>

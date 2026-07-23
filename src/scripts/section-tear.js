@@ -111,20 +111,28 @@ const updateTearOff = () => {
       sec.style.top = '0px';
     }
 
+    // 3. Determine Pinning (Make next section stack statically behind instead of sliding up)
     const myTop = topOffset - scrollY;
     let ty = 0;
     if (i > 0 && myTop > 0 && myTop <= wh) {
-      ty = -myTop;
+      // Pin tall sections to the top (0), short sections to the bottom (wh - h)
+      const pinTarget = h < wh ? wh - h : 0;
+      ty = pinTarget - myTop;
     }
 
+    // 4. Calculate progress of NEXT section tearing THIS section
     let progress = 0;
     const nextData = sectionData[i + 1];
     if (nextData) {
       const nextTop = nextData.topOffset - scrollY;
-      if (nextTop < wh && nextTop > 0) {
-        progress = 1 - (nextTop / wh);
-      } else if (nextTop <= 0) {
+      const hNext = nextData.height;
+      const maxScroll = Math.max(0, wh - hNext); // The minimum nextTop can reach natively
+      
+      if (nextTop <= maxScroll) {
         progress = 1;
+      } else if (nextTop < wh) {
+        // Map nextTop from `wh` (progress=0) down to `maxScroll` (progress=1)
+        progress = 1 - ((nextTop - maxScroll) / (wh - maxScroll));
       }
     }
 
@@ -198,9 +206,13 @@ const onScroll = () => {
 };
 
 window.addEventListener('scroll', onScroll, { passive: true });
-window.addEventListener('resize', () => requestAnimationFrame(updateTearOff), { passive: true });
-// trigger once on load to set initial state
+window.addEventListener('resize', () => {
+  sectionData = []; // clear cache to recalculate new layout heights
+  requestAnimationFrame(updateTearOff);
+}, { passive: true });
+// trigger on load and on Astro view transition navigation
 document.addEventListener('astro:page-load', () => {
+  sectionData = []; // clear old DOM nodes from previous page instance
   updateTearOff();
 });
 

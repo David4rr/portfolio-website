@@ -17,7 +17,7 @@ export default function GithubActivity({ username }: GithubActivityProps) {
   useEffect(() => {
     async function fetchActivity() {
       try {
-        const res = await fetch(`https://api.github.com/users/${username}/events/public?t=${Date.now()}`);
+        const res = await fetch(`https://api.github.com/users/${username}/events/public`);
         if (!res.ok) {
           setError(true);
           return;
@@ -37,6 +37,7 @@ export default function GithubActivity({ username }: GithubActivityProps) {
           .slice(0, 3);
           
         setEvents(filtered);
+        setError(false);
       } catch (e) {
         console.error("Failed to load GitHub activity:", e);
         setError(true);
@@ -44,18 +45,11 @@ export default function GithubActivity({ username }: GithubActivityProps) {
     }
     fetchActivity();
     
-    // Refresh tiap 60 detik
-    const interval = setInterval(fetchActivity, 60000);
-    
-    // Refresh pas user balik ke tab
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') fetchActivity();
-    };
-    document.addEventListener('visibilitychange', onVisible);
+    // Refresh tiap 10 menit (menghindari rate limit 60 req/jam)
+    const interval = setInterval(fetchActivity, 600000);
     
     return () => {
       clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [username]);
 
