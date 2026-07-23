@@ -42,6 +42,7 @@ const projects = await getCollection('projects');
             <h2 data-word class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight">
               Selected Works<span class="text-accent">.</span>
             </h2>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               {projects.map((project, i) => {
                 const isOrphan = projects.length % 2 !== 0 && i === projects.length - 1;

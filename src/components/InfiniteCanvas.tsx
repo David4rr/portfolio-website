@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import anime from 'animejs/lib/anime.es.js';
+import RocketLoader from './RocketLoader';
 export interface Project {
   id: string;
   title: string;
@@ -39,6 +40,16 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
 
 export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Artificial delay to show the loader, 
+  // ensuring the full cinematic rocket animation completes before hiding
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2200); // 2.2 seconds: allows 1.2s for setup + 1s of majestic flying
+    return () => clearTimeout(timer);
+  }, []);
 
   // 1. Calculate Layout (Dense Grid Oval Packing)
   const laidOutProjects = useMemo(() => {
@@ -451,6 +462,13 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
           </div>
           );
         })}
+      </div>
+
+      {/* Loading Overlay */}
+      <div 
+        class={`absolute inset-0 z-50 flex items-center justify-center bg-bg transition-opacity duration-1000 pointer-events-none ${isLoading ? 'opacity-100' : 'opacity-0'}`}
+      >
+        <RocketLoader />
       </div>
     </div>
   );

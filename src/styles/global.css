@@ -38,6 +38,47 @@
       opacity: 0;
     }
   }
+
+  --animate-rocket-hover: rocket-hover 3s ease-in-out infinite;
+  
+  @keyframes rocket-hover {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  /* Cinematic Sequence - Fast & Snappy */
+  --animate-seq-ai: seq-ai-draw 0.6s ease-out forwards;
+  --animate-seq-me: seq-me-pulse 1s ease-in-out 0.5s infinite alternate both;
+  --animate-seq-flame: seq-flame-ignite 1.2s ease-out forwards, flame-flicker 0.1s ease-in-out 1.2s infinite alternate;
+  --animate-seq-speed: seq-speed-run 0.6s linear 1.2s infinite both;
+
+  @keyframes seq-ai-draw {
+    0% { stroke-dasharray: 200; stroke-dashoffset: 200; }
+    100% { stroke-dasharray: 200; stroke-dashoffset: 0; }
+  }
+
+  @keyframes seq-me-pulse {
+    0% { stroke-dasharray: 200; stroke-dashoffset: 200; }
+    100% { stroke-dasharray: 200; stroke-dashoffset: 0; }
+  }
+
+  @keyframes seq-flame-ignite {
+    0%, 90% { opacity: 0; transform: scaleX(0); }
+    95% { opacity: 1; transform: scaleX(1.2); }
+    100% { opacity: 0.8; transform: scaleX(1); }
+  }
+
+  @keyframes flame-flicker {
+    0%, 100% { opacity: 0.8; transform: scaleX(1); }
+    50% { opacity: 0.5; transform: scaleX(0.75); }
+  }
+
+  @keyframes seq-speed-run {
+    0% { opacity: 0; transform: translateX(60px); }
+    20% { opacity: 1; }
+    80% { opacity: 1; transform: translateX(-40px); }
+    100% { opacity: 0; transform: translateX(-80px); }
+  }
 }
 @layer utilities {
   main {
