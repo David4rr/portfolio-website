@@ -85,13 +85,26 @@ try {
     class="flex flex-col items-center text-center max-w-4xl mx-auto w-full relative z-10"
   >
     <!-- ASCII Emblem -->
-    <div class="mb-6 flex flex-col items-center">
+    <div class="mb-2 flex flex-col items-center relative">
       <div
         class="p-3 border border-border-subtle/50 bg-bg-elevated/30 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]"
       >
         <AsciiAvatar initialArt={initialArt} framesData={framesData} client:idle />
       </div>
-      <div class="w-[1px] h-6 bg-border-subtle mt-4"></div>
+      <div class="w-[1px] h-3 bg-border-subtle mt-2"></div>
+
+      <div class="absolute left-full top-[10%] ml-4 flex-col items-start hidden md:flex pointer-events-none opacity-60 w-40">
+        <svg class="w-16 h-16 text-accent mb-2 -ml-4" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+           <!-- Looping arrow path -->
+           <path d="M 90 90 Q 90 50, 60 50 Q 40 50, 40 65 Q 40 80, 60 80 Q 90 80, 70 40 Q 60 10, 10 30" />
+           <!-- Properly aligned delicate arrow head -->
+           <path d="M 26 33 L 10 30 L 20 18" />
+        </svg>
+        <span class="font-serif italic text-text-muted text-[0.7rem] leading-[1.4] text-left">
+          A gentle hold,<br/>
+          lets the truth unfold.
+        </span>
+      </div>
     </div>
 
     <!-- The Title -->
@@ -129,12 +142,26 @@ try {
     <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
       <a
         href="/#projects"
-        class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
+        class="group inline-flex items-center justify-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
         >
+        <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
+          <span class="absolute inset-0 bg-text-main/50 rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute w-[16px] h-[16px] text-bg opacity-0 scale-50 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100">
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          </svg>
+        </div>
         Explore the Work
       </a>
-      <a href="mailto:hello@example.com" class="font-serif italic text-text-muted hover:text-accent active:text-accent active:scale-95 transition-all duration-300 text-sm">
-        Or send a letter &rarr;
+      <a href="mailto:hello@example.com" class="group inline-flex items-center justify-center gap-2 font-serif italic text-text-muted hover:text-accent active:text-accent active:scale-95 transition-all duration-300 text-sm">
+        Or send a letter
+        <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
+          <span class="absolute inset-0 bg-text-muted rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute w-[16px] h-[16px] text-accent opacity-0 scale-50 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+        </div>
       </a>
     </div>
 

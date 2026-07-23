@@ -98,11 +98,220 @@ const education = {
       <!-- The poetic connector line bridging the timeline to the button -->
       <div class="absolute left-[8px] md:left-[16px] top-[-3rem] bottom-[50%] right-[50%] border-l-2 border-b-2 border-border-subtle rounded-bl-[48px] pointer-events-none"></div>
 
-      <a href="/assets/resume.pdf" target="_blank" rel="noopener noreferrer" 
-         class="relative z-10 bg-bg inline-block border-2 border-border-subtle text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:border-accent hover:text-accent active:border-accent active:text-accent active:scale-95 transition-all duration-300">
-         Download Full Résumé
-      </a>
+      <!-- The Download Component -->
+      <button id="resume-download-btn" class="group relative z-10 bg-bg flex items-center justify-center text-text-main font-sans uppercase tracking-[0.2em] text-[10px] h-[48px] w-[260px] rounded-full overflow-hidden hover:text-accent active:scale-95 transition-transform duration-300 cursor-pointer">
+        
+        <!-- Base border (replaces CSS border to prevent clipping) -->
+        <svg class="base-border absolute inset-0 w-full h-full pointer-events-none text-border-subtle group-hover:text-accent transition-colors duration-300">
+          <path d="M 1 24 A 23 23 0 0 1 24 1 L 236 1 A 23 23 0 0 1 259 24 A 23 23 0 0 1 236 47 L 24 47 A 23 23 0 0 1 1 24 Z" fill="none" stroke="currentColor" stroke-width="2" />
+        </svg>
+
+        <!-- Button Area (Initial State) -->
+        <div class="btn-area absolute inset-0 flex items-center justify-center gap-3 transition-colors duration-300">
+          <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
+            <span class="absolute inset-0 bg-border-subtle rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute w-[16px] h-[16px] text-accent opacity-0 scale-50 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </div>
+          <span>Download Full Résumé</span>
+        </div>
+
+        <!-- Progress Area (Loading State) -->
+        <div class="progress-area absolute inset-0 hidden items-center justify-center gap-4 pointer-events-none">
+          <div class="area-left flex items-center gap-2 text-accent">
+             <svg class="w-4 h-4 loading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/>
+             </svg>
+             <span class="loading-progress font-mono text-text-main">0%</span>
+          </div>
+        </div>
+
+        <!-- Complete Area (Done State) -->
+        <div class="complete-area absolute inset-0 hidden items-center justify-center gap-2 text-accent pointer-events-none">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path class="tick-1" d="M20 6L9 17" stroke-dasharray="52" stroke-dashoffset="52"/>
+            <path class="tick-2" d="M9 17l-5-5" stroke-dasharray="52" stroke-dashoffset="52"/>
+          </svg>
+          <span class="done-text font-bold text-text-main">Downloaded</span>
+        </div>
+        
+        <!-- Frame path for stroke animation starting from left-center -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none text-accent">
+          <path class="frame-btn-rect" d="M 1 24 A 23 23 0 0 1 24 1 L 236 1 A 23 23 0 0 1 259 24 A 23 23 0 0 1 236 47 L 24 47 A 23 23 0 0 1 1 24 Z" fill="none" stroke="currentColor" stroke-width="2" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" />
+        </svg>
+      </button>
     </div>
 
   </div>
 </section>
+
+<script>
+  import anime from 'animejs/lib/anime.es.js';
+
+  const btn = document.getElementById('resume-download-btn');
+  const baseBorder = btn?.querySelector('.base-border');
+  const btnArea = btn?.querySelector('.btn-area');
+  const progressArea = btn?.querySelector('.progress-area');
+  const completeArea = btn?.querySelector('.complete-area');
+  const frameBtnRect = btn?.querySelector('.frame-btn-rect');
+  const loadingIcon = btn?.querySelector('.loading-icon');
+  const loadingProgress = btn?.querySelector('.loading-progress');
+  const tick1 = btn?.querySelector('.tick-1');
+  const tick2 = btn?.querySelector('.tick-2');
+  const doneText = btn?.querySelector('.done-text');
+  
+  if (btn) {
+    let isLoading = false;
+    let loadingTime = 2500;
+    let progress = { value: '0%' };
+    
+    btn.addEventListener('click', () => {
+      if (isLoading) return;
+      isLoading = true;
+      progress.value = '0%';
+      if (loadingProgress) loadingProgress.innerHTML = '0%';
+
+      if (baseBorder) (baseBorder as HTMLElement).style.opacity = '0';
+
+      anime({
+        targets: btnArea,
+        opacity: [1, 0],
+        duration: 300,
+        easing: 'easeInQuad',
+        complete: () => {
+          if (btnArea) (btnArea as HTMLElement).style.display = 'none';
+          if (progressArea) {
+            (progressArea as HTMLElement).style.display = 'flex';
+            progressArea.classList.remove('hidden');
+          }
+          startLoading();
+        }
+      });
+    });
+
+    function startLoading() {
+      anime({
+        targets: loadingIcon,
+        opacity: [0, 1],
+        duration: 500,
+        easing: 'easeOutQuad'
+      });
+      
+      anime({
+        targets: loadingIcon,
+        rotateZ: 360,
+        duration: 2000,
+        loop: true,
+        easing: 'linear'
+      });
+
+      anime({
+        targets: loadingProgress,
+        translateY: ['10px', '0'],
+        opacity: [0, 1],
+        duration: 500,
+        easing: 'easeOutQuart'
+      });
+
+      anime({
+        targets: progress,
+        value: '100%',
+        duration: loadingTime,
+        easing: 'cubicBezier(.5, .05, .3, .9)',
+        round: 1,
+        update: function() {
+          if (loadingProgress) loadingProgress.innerHTML = progress.value;
+        }
+      });
+
+      anime({
+        targets: frameBtnRect,
+        strokeDashoffset: [100, 0],
+        duration: loadingTime,
+        easing: 'cubicBezier(.5, .05, .3, .9)',
+        complete: completeLoading
+      });
+    }
+
+    function completeLoading() {
+      anime({
+        targets: [loadingIcon, loadingProgress],
+        translateY: [0, -20],
+        opacity: [1, 0],
+        duration: 500,
+        easing: 'easeInQuad',
+        complete: function() {
+          if (progressArea) (progressArea as HTMLElement).style.display = 'none';
+          if (completeArea) {
+            (completeArea as HTMLElement).style.display = 'flex';
+            completeArea.classList.remove('hidden');
+          }
+          showDone();
+        }
+      });
+    }
+
+    function showDone() {
+      anime({
+        targets: tick1,
+        strokeDashoffset: [52, 0],
+        opacity: [0, 1],
+        duration: 500,
+        easing: 'cubicBezier(.5, .05, .3, .9)'
+      });
+
+      anime({
+        targets: tick2,
+        strokeDashoffset: [52, 0],
+        opacity: [0, 1],
+        duration: 500,
+        easing: 'cubicBezier(.5, .05, .3, .9)',
+        delay: 200
+      });
+
+      anime({
+        targets: doneText,
+        opacity: [0, 1],
+        translateY: ['10px', '0'],
+        duration: 800,
+        easing: 'easeOutQuad',
+        delay: 200,
+        complete: function() {
+          // Direct Download after animation
+          const link = document.createElement('a');
+          link.href = '/assets/resume.pdf';
+          link.download = 'resume.pdf';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      });
+      
+      // Optional: reset after some time
+      setTimeout(() => {
+        isLoading = false;
+        if (baseBorder) (baseBorder as HTMLElement).style.opacity = '1';
+        if (completeArea) {
+            (completeArea as HTMLElement).style.display = 'none';
+            completeArea.classList.add('hidden');
+        }
+        if (btnArea) {
+            (btnArea as HTMLElement).style.display = 'flex';
+            (btnArea as HTMLElement).style.opacity = '1';
+        }
+        if (frameBtnRect) (frameBtnRect as HTMLElement).style.strokeDashoffset = '100';
+        if (tick1) {
+            (tick1 as HTMLElement).style.strokeDashoffset = '52';
+            (tick1 as HTMLElement).style.opacity = '0';
+        }
+        if (tick2) {
+            (tick2 as HTMLElement).style.strokeDashoffset = '52';
+            (tick2 as HTMLElement).style.opacity = '0';
+        }
+      }, 5000);
+    }
+  }
+</script>
