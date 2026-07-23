@@ -4,6 +4,7 @@ import { Image } from "astro:assets";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Nav from "../components/Nav.astro";
 import Hero from "../components/Hero.astro";
+import Preloader from "../components/Preloader.astro";
 import Timeline from "../components/Timeline.astro";
 import TechStack from "../components/TechStack.astro";
 import Contact from "../components/Contact.astro";
@@ -18,12 +19,13 @@ const projects = await getCollection("projects");
 ---
 
 <BaseLayout title="Portfolio">
+  <Preloader />
   <Nav />
   <main class="w-full relative">
     <!-- 1. Hero -->
     <section
       data-section
-      class="sticky top-0 h-[100dvh] overflow-y-auto no-scrollbar w-full bg-bg z-40"
+      class="sticky top-0 h-[100dvh] overflow-hidden w-full bg-bg z-40"
     >
       <div
         data-reveal="letter-unfold"

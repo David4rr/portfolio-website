@@ -1,6 +1,10 @@
 import { h } from 'preact';
 
-export default function RocketLoader() {
+interface RocketLoaderProps {
+  text?: string;
+}
+
+export default function RocketLoader({ text = "Igniting..." }: RocketLoaderProps) {
   return (
     <div class="flex flex-col items-center justify-center space-y-6">
       <svg 
@@ -51,9 +55,11 @@ export default function RocketLoader() {
         <path d="M 71 30 Q 85 30 95 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" /> {/* Middle prong */}
         <path d="M 74 38 Q 95 35 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" /> {/* Bottom sweeping prong */}
       </svg>
-      <div class="font-serif italic text-text-muted text-sm md:text-base tracking-wide animate-pulse mt-4">
-        Igniting...
-      </div>
+      {text && (
+        <div class="font-serif italic text-text-muted text-sm md:text-base tracking-wide animate-pulse mt-4">
+          {text}
+        </div>
+      )}
     </div>
   );
 }
