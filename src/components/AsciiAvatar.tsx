@@ -72,7 +72,7 @@ export default function AsciiAvatar({ initialArt, framesData }: AsciiAvatarProps
   return (
     <pre
       id="ascii-avatar"
-      class="font-mono text-[8px] leading-[0.55] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+      class="font-mono text-[clamp(4px,0.7vh,8px)] leading-[0.55] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
       onClick={handleClick}
     >
       {content}

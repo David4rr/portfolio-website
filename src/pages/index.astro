@@ -1,33 +1,39 @@
 ---
 // ponytail: Home page composing all sections
-import { Image } from 'astro:assets';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Nav from '../components/Nav.astro';
-import Hero from '../components/Hero.astro';
-import Timeline from '../components/Timeline.astro';
-import TechStack from '../components/TechStack.astro';
-import Contact from '../components/Contact.astro';
-import Footer from '../components/Footer.astro';
-import LiveClock from '../components/LiveClock.astro';
-import { getCollection } from 'astro:content';
+import { Image } from "astro:assets";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Nav from "../components/Nav.astro";
+import Hero from "../components/Hero.astro";
+import Timeline from "../components/Timeline.astro";
+import TechStack from "../components/TechStack.astro";
+import Contact from "../components/Contact.astro";
+import Footer from "../components/Footer.astro";
+import LiveClock from "../components/LiveClock.astro";
+import { getCollection } from "astro:content";
 
-import laurelWreathImg from '../assets/laurel_wreath.jpg';
-import astrolabeImg from '../assets/astrolabe.jpg';
+import laurelWreathImg from "../assets/laurel_wreath.jpg";
+import astrolabeImg from "../assets/astrolabe.jpg";
 
-const projects = await getCollection('projects');
+const projects = await getCollection("projects");
 ---
 
 <BaseLayout title="Portfolio">
   <Nav />
   <main class="w-full relative">
     <!-- 1. Hero -->
-    <section data-section class="sticky top-0 h-[100dvh] overflow-hidden w-full bg-bg z-40">
-      <div data-reveal="letter-unfold" class="h-full max-w-[1200px] mx-auto px-8 w-full">
-        <div data-animate class="h-full">
+    <section
+      data-section
+      class="sticky top-0 h-[100dvh] overflow-y-auto no-scrollbar w-full bg-bg z-40"
+    >
+      <div
+        data-reveal="letter-unfold"
+        class="min-h-full max-w-[1200px] mx-auto px-4 md:px-8 w-full flex flex-col justify-center pt-6 pb-4"
+      >
+        <div data-animate class="w-full">
           <Hero />
         </div>
       </div>
-      
+
       <!-- Live Clock outside max-w-[1200px] to be truly at screen edge -->
       <LiveClock />
     </section>
@@ -36,40 +42,75 @@ const projects = await getCollection('projects');
 
     <!-- 2. Projects -->
     <section data-section class="sticky top-0 min-h-screen w-full bg-bg z-30">
-      <div data-reveal="word-cascade" class="h-full max-w-[1200px] mx-auto px-8 w-full">
-        <div class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100vh-3rem)]">
+      <div
+        data-reveal="word-cascade"
+        class="h-full max-w-[1200px] mx-auto px-4 md:px-8 w-full"
+      >
+        <div
+          class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100vh-3rem)]"
+        >
           <div>
-            <h2 data-word class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight">
+            <h2
+              data-word
+              class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight"
+            >
               Selected Works<span class="text-accent">.</span>
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {projects.map((project, i) => {
-                const isOrphan = projects.length % 2 !== 0 && i === projects.length - 1;
-                return (
-                  <a data-card href={`/projects/${project.id}`} class={`block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group flex flex-col justify-center ${isOrphan ? 'md:col-span-2 md:min-h-[200px]' : ''}`}>
-                    <h3 class={`font-bold mb-2 text-text-main group-hover:text-accent transition-colors ${isOrphan ? 'text-3xl' : 'text-2xl'}`}>{project.data.title}</h3>
-                    {project.data.description && <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)] max-w-3xl">{project.data.description}</p>}
-                  </a>
-                );
-              })}
+              {
+                projects.map((project, i) => {
+                  const isOrphan =
+                    projects.length % 2 !== 0 && i === projects.length - 1;
+                  return (
+                    <a
+                      data-card
+                      href={`/projects/${project.id}`}
+                      class={`block p-6 bg-bg-elevated border border-border-subtle rounded-[8px] hover:-translate-y-1 hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 motion-reduce:transition-none group flex flex-col justify-center ${isOrphan ? "md:col-span-2 md:min-h-[200px]" : ""}`}
+                    >
+                      <h3
+                        class={`font-bold mb-2 text-text-main group-hover:text-accent transition-colors ${isOrphan ? "text-3xl" : "text-2xl"}`}
+                      >
+                        {project.data.title}
+                      </h3>
+                      {project.data.description && (
+                        <p class="text-text-muted text-[clamp(0.9rem,1.2vw,1.1rem)] max-w-3xl">
+                          {project.data.description}
+                        </p>
+                      )}
+                    </a>
+                  );
+                })
+              }
             </div>
           </div>
-          
+
           <div class="mt-16 flex justify-center w-full">
-            <a href="/explore" class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500">
+            <a
+              href="/explore"
+              class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500"
+            >
               <span>View More Projects</span>
               <span class="text-[14px]">&rarr;</span>
             </a>
           </div>
-          
+
           <!-- Poetic Intermission 1 (Laurel Wreath) - Moved to bottom of Projects -->
-          <div data-word class="w-full max-w-sm mx-auto mt-24 mb-8 flex flex-col items-center justify-center pointer-events-none relative">
-            <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"></div>
-            <Image 
-              src={laurelWreathImg} 
-              alt="Classical Roman Laurel Wreath" 
+          <div
+            data-word
+            class="w-full max-w-sm mx-auto mt-24 mb-8 flex flex-col items-center justify-center pointer-events-none relative"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-70"
+            >
+            </div>
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg z-10 opacity-70"
+            >
+            </div>
+            <Image
+              src={laurelWreathImg}
+              alt="Classical Roman Laurel Wreath"
               class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-60 transition-all duration-1000"
             />
           </div>
@@ -79,16 +120,24 @@ const projects = await getCollection('projects');
 
     <!-- 3. Activity -->
     <section data-section class="sticky top-0 min-h-screen w-full bg-bg z-20">
-      <div data-reveal="ink-bloom" class="h-full max-w-[1200px] mx-auto px-8 w-full">
+      <div
+        data-reveal="ink-bloom"
+        class="h-full max-w-[1200px] mx-auto px-4 md:px-8 w-full"
+      >
         <div data-animate class="h-full flex flex-col justify-center">
           <Timeline />
-          
+
           <!-- Poetic Intermission 2 (Astrolabe) - Placed as a bridge between timeline and techstack -->
-          <div class="w-full max-w-sm mx-auto py-8 flex flex-col items-center justify-center pointer-events-none relative border-t border-border-subtle/30 mt-4">
-            <div class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-80"></div>
-            <Image 
-              src={astrolabeImg} 
-              alt="Classical Astrolabe and Compass" 
+          <div
+            class="w-full max-w-sm mx-auto py-8 flex flex-col items-center justify-center pointer-events-none relative border-t border-border-subtle/30 mt-4"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-80"
+            >
+            </div>
+            <Image
+              src={astrolabeImg}
+              alt="Classical Astrolabe and Compass"
               class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000"
             />
           </div>
@@ -99,8 +148,15 @@ const projects = await getCollection('projects');
     </section>
 
     <!-- 4. Contact -->
-    <section data-section class="sticky top-0 h-screen w-full bg-bg z-10 flex flex-col" id="contact">
-      <div data-reveal="ink-bloom" class="w-full max-w-[1200px] mx-auto px-8 flex flex-col justify-center h-full flex-1">
+    <section
+      data-section
+      class="sticky top-0 h-screen w-full bg-bg z-10 flex flex-col"
+      id="contact"
+    >
+      <div
+        data-reveal="ink-bloom"
+        class="w-full max-w-[1200px] mx-auto px-4 md:px-8 flex flex-col justify-center h-full flex-1"
+      >
         <div data-animate class="h-full flex flex-col">
           <Contact />
         </div>

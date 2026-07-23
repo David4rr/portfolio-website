@@ -71,7 +71,7 @@ try {
 ---
 
 <section
-  class="min-h-screen flex flex-col justify-center section-padding pt-20 pb-24 relative"
+  class="min-h-screen flex flex-col justify-center section-padding py-2 md:py-4 lg:py-8 relative"
   id="hero"
 >
   <!-- Decorative subtle grid/lines for paper feel -->
@@ -93,7 +93,7 @@ try {
       </div>
       <div class="w-[1px] h-3 bg-border-subtle mt-2"></div>
 
-      <div class="absolute left-full top-[10%] ml-4 flex-col items-start hidden md:flex pointer-events-none opacity-60 w-40">
+      <div class="absolute left-full top-1/2 -translate-y-1/2 ml-4 flex-col items-start hidden md:flex pointer-events-none opacity-60 w-40">
         <svg class="w-16 h-16 text-accent mb-2 -ml-4" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
            <!-- Looping arrow path -->
            <path d="M 90 90 Q 90 50, 60 50 Q 40 50, 40 65 Q 40 80, 60 80 Q 90 80, 70 40 Q 60 10, 10 30" />
@@ -108,19 +108,19 @@ try {
     </div>
 
     <!-- The Title -->
-    <h1 class="font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-none tracking-tight mb-2 whitespace-nowrap text-text-main">
+    <h1 class="font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-none tracking-tight mb-2 whitespace-normal sm:whitespace-nowrap text-text-main">
       David Arrozaqi<span class="text-accent">.</span>
     </h1>
 
     <!-- The Role (Typewriter) -->
-    <h2 class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-6">
+    <h2 class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-3">
       <Typewriter client:idle />
     </h2>
 
     <!-- The Prose -->
     <div class="max-w-2xl mx-auto">
       <p
-        class="font-serif text-text-muted text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed mb-4 px-4"
+        class="font-serif text-text-muted text-[clamp(0.95rem,1.4vw,1.15rem)] leading-relaxed mb-3 px-4"
       >
         I weave logic and design into seamless digital experiences across the
         modern web, mobile platforms, and artificial intelligence. My focus is
@@ -129,9 +129,9 @@ try {
       </p>
 
       <!-- The Aside -->
-      <div class="flex justify-center items-center gap-4 mb-12 opacity-80">
+      <div class="flex justify-center items-center gap-4 mb-4 opacity-80">
         <span class="w-6 h-[1px] bg-border-subtle"></span>
-        <p class="font-serif text-[0.8rem] italic text-text-muted">
+        <p class="font-serif text-[0.75rem] italic text-text-muted">
           * I firmly believe that the most elegant algorithms are fueled by strong coffee.
         </p>
         <span class="w-6 h-[1px] bg-border-subtle"></span>
@@ -139,7 +139,7 @@ try {
     </div>
 
     <!-- Actions -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-4">
       <a
         href="/#projects"
         class="group inline-flex items-center justify-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
@@ -165,7 +165,7 @@ try {
       </a>
     </div>
 
-    <!-- GitHub Telegraph (Live Feed) - Now an Astro Island! -->
+    <!-- GitHub Telegraph (Live Feed) -->
     <GithubActivity username={import.meta.env.GITHUB_USERNAME || "David4rr"} client:visible />
   </div>
 </section>
