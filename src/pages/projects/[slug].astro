@@ -3,21 +3,22 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { getCollection } from 'astro:content';
-import { render } from 'astro:content';
+import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
+import { marked } from 'marked';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects');
+  const projects = await getProjectsFromNotion();
   return projects.map(project => ({
-    params: { slug: project.id },
+    params: { slug: project.slug },
     props: { project },
   }));
 }
 
 const { project } = Astro.props;
-const { Content } = await render(project);
+const markdownContent = await getProjectContent(project.id);
+const htmlContent = marked.parse(markdownContent);
 ---
-<BaseLayout title={project.data.title}>
+<BaseLayout title={project.title}>
   <Nav />
   
   <main class="min-h-screen pt-32 pb-32 bg-bg">
@@ -37,51 +38,65 @@ const { Content } = await render(project);
       {/* Hero Title Section - Poetic */}
       <div class="text-center mb-16">
         <h1 class="premium-reveal opacity-0 font-serif text-3xl md:text-5xl leading-[1.2] text-text-main mb-6 font-light tracking-tight italic">
-          {project.data.title}
+          {project.title}
         </h1>
-        {project.data.description && (
-          <p class="hero-desc-writing text-text-muted text-lg font-sans font-light leading-relaxed px-4 md:px-8 opacity-0">
-            {project.data.description}
+        {project.description && (
+          <p class="hero-desc-writing text-text-muted text-lg font-sans font-light leading-relaxed px-4 md:px-8 opacity-0 mb-12">
+            {project.description}
           </p>
         )}
         
         {/* Footnote-style metadata */}
-        <div class="premium-reveal opacity-0 mt-12 pt-6 border-t border-border-subtle/30 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-[10px] font-sans uppercase tracking-[0.2em] text-text-muted/70 mb-6">
-          <span>{project.data.type || 'Digital Fragment'}</span>
-          <span class="hidden md:inline text-accent">•</span>
-          <span>Curated with Devotion</span>
+        <div class="flex flex-wrap items-center justify-center gap-3 text-xs tracking-[0.2em] uppercase font-sans mb-12 text-text-muted premium-reveal opacity-0" style="animation-delay: 0.4s;">
+          {project.type.split(' • ').map((t, i, arr) => (
+            <>
+              <span>{t}</span>
+              {i < arr.length - 1 && <span class="w-1 h-1 rounded-full bg-accent"></span>}
+            </>
+          ))}
         </div>
       </div>
 
       {/* Soft Image Integration / Stacked Cards */}
-      {project.data.gallery && project.data.gallery.length > 0 ? (
-        <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto mb-16 flex flex-col items-center">
-          <div class="w-full relative aspect-[3/4] cursor-pointer group card-stack-container mb-12">
-            {project.data.gallery.map((imgUrl, i) => (
+      {project.gallery && project.gallery.length > 0 ? (
+        <div class="premium-reveal opacity-0 w-full max-w-2xl mx-auto mb-16 flex flex-col items-center">
+          <div 
+            class="w-full relative cursor-pointer group card-stack-container mb-20"
+            data-captions={JSON.stringify(project.galleryCaptions || [])}
+          >
+            {/* Ghost image to naturally set the container height to the first image's aspect ratio */}
+            <img src={project.gallery[0]} class="w-full h-auto opacity-0 pointer-events-none block" aria-hidden="true" />
+            
+            {project.gallery.map((imgUrl, i) => (
               <div 
-                class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30 will-change-transform origin-bottom"
-                style={`z-index: ${project.data.gallery.length - i};`}
+                class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 bg-bg border border-border-subtle/30 will-change-transform origin-bottom flex items-center justify-center"
+                style={{ zIndex: project.gallery.length - i }}
                 data-index={i}
               >
                 <img 
                   src={imgUrl} 
-                  alt={`${project.data.title} - fragment ${i + 1}`} 
-                  class="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
+                  alt={`${project.title} gallery ${i+1}`} 
+                  class="w-full h-full object-contain rounded-[1px]"
                 />
               </div>
             ))}
           </div>
-          <div class="flex justify-center items-center gap-4 w-full opacity-70 pointer-events-none">
+          <div class="flex justify-center items-center gap-4 w-full opacity-70 pointer-events-none mt-8 mb-10">
             <span class="w-4 h-[1px] bg-accent/50"></span>
             <span class="text-[9px] font-sans tracking-[0.3em] uppercase text-accent">Click to reveal</span>
             <span class="w-4 h-[1px] bg-accent/50"></span>
+          </div>
+          <div class="w-full relative px-4" style="perspective: 800px;">
+            <div id="dynamic-caption" class="w-full flex flex-wrap items-center justify-center text-center text-text-muted font-serif italic text-sm origin-center leading-relaxed">
+              {project.galleryCaptions?.[0]}
+            </div>
           </div>
         </div>
       ) : (
         <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto relative mb-20 aspect-[3/4] overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30">
           <img 
-            src={project.data.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
-            alt={project.data.title} 
+            src={project.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
+            alt={project.title} 
             class="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
           />
         </div>
@@ -89,18 +104,18 @@ const { Content } = await render(project);
 
       {/* Content Layout - Modern Prose */}
       <article class="prose prose-invert prose-p:text-text-muted prose-p:font-sans prose-p:leading-[2.4] prose-p:mb-6 prose-p:text-[1.1rem] md:prose-p:text-[1.15rem] prose-headings:font-serif prose-headings:text-text-main prose-headings:font-normal prose-headings:italic prose-h2:text-2xl prose-h3:text-lg prose-a:text-accent prose-img:rounded-sm prose-img:opacity-85 prose-img:sepia-[0.15] hover:prose-img:opacity-100 hover:prose-img:sepia-0 prose-img:transition-all prose-img:duration-1000 prose-img:mx-auto prose-img:mt-16 prose-img:mb-6 prose-img:shadow-xl prose-img:border prose-img:border-border-subtle/30 prose-em:block prose-em:text-center prose-em:text-[13px] prose-em:opacity-60 prose-em:mb-16 prose-em:font-serif max-w-none mx-auto text-left">
-        <Content />
+        <Fragment set:html={htmlContent} />
       </article>
 
       {/* End mark (Replaced by Tech Stack) */}
-      <div class="mt-20 pt-10 border-t border-border-subtle/20 flex flex-col items-center justify-center text-center">
+      <div class="mt-16 pt-10 border-t border-border-subtle/20 flex flex-col items-center justify-center text-center">
         <div class="flex items-center gap-4 mb-8 opacity-80">
           <span class="w-4 h-[1px] bg-accent/50"></span>
           <span class="text-[9px] font-sans tracking-[0.3em] uppercase text-accent">Built With</span>
           <span class="w-4 h-[1px] bg-accent/50"></span>
         </div>
         <div class="flex flex-wrap justify-center items-center gap-2 text-[11px] md:text-xs font-serif italic text-text-muted/70">
-          {(project.data.techStack || ['Flutter', 'Golang', 'Riverpod', 'Midtrans']).map((tech, index, array) => (
+          {(project.techStack || ['Flutter', 'Golang', 'Riverpod', 'Midtrans']).map((tech, index, array) => (
             <>
               <span class="tracking-widest hover:text-accent transition-colors cursor-default">{tech}</span>
               {index < array.length - 1 && <span class="opacity-40 font-sans mx-2 text-accent">/</span>}
@@ -109,15 +124,58 @@ const { Content } = await render(project);
         </div>
       </div>
       
+      {/* Live Project URL */}
+      {project.url && (
+        <div class="mt-16 mb-24 flex flex-col items-center justify-center relative z-20">
+          <a 
+            href={project.url} 
+            id="visit-site-btn"
+            class="group relative inline-flex items-center justify-center overflow-hidden border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500 w-48 h-12"
+          >
+            {/* The Text */}
+            <span class="btn-text absolute transition-all duration-500 group-hover:opacity-0 group-hover:-translate-y-4">Visit Site</span>
+            
+            {/* The Rocket (Hidden initially, appears on hover) */}
+            <div class="btn-rocket absolute opacity-0 translate-y-6 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 w-40 h-16 flex items-center justify-center pointer-events-none origin-center">
+               <svg viewBox="-60 0 180 60" class="w-full h-full overflow-visible -rotate-12 animate-rocket-hover">
+                 {/* Speed lines */}
+                 <g class="stroke-text-muted/30 group-hover:stroke-bg/50 stroke-[1px] transition-colors duration-500">
+                   <line x1="120" y1="10" x2="140" y2="10" class="animate-seq-speed" style="animation-delay: 1.2s" />
+                   <line x1="80" y1="50" x2="110" y2="50" class="animate-seq-speed" style="animation-delay: 1.25s" />
+                   <line x1="50" y1="60" x2="90" y2="60" class="animate-seq-speed" style="animation-delay: 1.3s" />
+                 </g>
+                 {/* Flames */}
+                 <g class="animate-seq-flame origin-[20px_30px]">
+                   <path d="M 16 12 L -50 30 L 16 48" class="fill-accent/60 stroke-none" />
+                   <path d="M 16 18 L -25 30 L 16 42" class="fill-accent stroke-none" />
+                   <path d="M 16 24 L -5 30 L 16 36" class="fill-bg stroke-none" />
+                 </g>
+                 {/* Structural Body - AI (using stroke-bg for contrast on light hover background) */}
+                 <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
+                 <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
+                 <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4" stroke-linecap="round" />
+                 <path d="M 50 14 Q 65 30 50 46" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="3" stroke-linecap="round" />
+                 {/* Glowing Poetic Wiring - ME */}
+                 <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                 <path d="M 76 22 Q 68 30 76 38" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                 <path d="M 74 22 Q 95 25 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                 <path d="M 71 30 Q 85 30 95 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                 <path d="M 74 38 Q 95 35 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+               </svg>
+            </div>
+          </a>
+        </div>
+      )}
     </div>
   </main>
 
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-  <script is:inline>
+  <script>
+    import anime from 'animejs';
+    
     document.addEventListener('astro:page-load', () => {
       // 1. Back button dynamic URL
       if (new URLSearchParams(window.location.search).get('from') === 'explore') {
-        const btn = document.getElementById('magnetic-area');
+        const btn = document.getElementById('magnetic-area') as HTMLAnchorElement;
         const text = document.getElementById('back-text');
         if (btn && text) {
           btn.href = '/explore';
@@ -126,20 +184,20 @@ const { Content } = await render(project);
       }
 
       // Helper function to safely split text nodes into animatable letters
-      function splitTextToLetters(el) {
+      function splitTextToLetters(el: HTMLElement) {
         if (el.dataset.split) return;
         el.dataset.split = 'true';
         
-        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
-        const textNodes = [];
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        const textNodes: Node[] = [];
         let node;
         while(node = walker.nextNode()) {
-          if(node.nodeValue.trim() !== '') textNodes.push(node);
+          if(node.nodeValue && node.nodeValue.trim() !== '') textNodes.push(node);
         }
         
         textNodes.forEach(textNode => {
           const fragment = document.createDocumentFragment();
-          const words = textNode.nodeValue.split(/(\s+)/); // keep spaces intact
+          const words = textNode.nodeValue!.split(/(\s+)/); // keep spaces intact
           words.forEach(word => {
             if (word.trim() === '') {
               fragment.appendChild(document.createTextNode(word));
@@ -151,7 +209,7 @@ const { Content } = await render(project);
               fragment.appendChild(spanWrap);
             }
           });
-          textNode.parentNode.replaceChild(fragment, textNode);
+          textNode.parentNode?.replaceChild(fragment, textNode);
         });
       }
 
@@ -179,9 +237,9 @@ const { Content } = await render(project);
           skewX: [30, 0],
           scaleY: [0.2, 1],
           translateY: [5, 0],
-          duration: 800,
+          duration: 500,
           easing: 'easeOutQuint',
-          delay: anime.stagger(15, {start: 500})
+          delay: anime.stagger(4, {start: 350})
         });
         
         anime({
@@ -212,9 +270,9 @@ const { Content } = await render(project);
                   skewX: [30, 0],
                   scaleY: [0.2, 1],
                   translateY: [5, 0],
-                  duration: 800,
+                  duration: 600,
                   easing: 'easeOutQuint',
-                  delay: anime.stagger(12) // Slightly faster for poetry paragraphs
+                  delay: anime.stagger(6) // Faster for prose
                 });
               }
               
@@ -239,8 +297,8 @@ const { Content } = await render(project);
 
       // 4. Anime.js Stacked Cards logic
       const container = document.querySelector('.card-stack-container');
-      if (container && window.anime) {
-        let cards = Array.from(container.querySelectorAll('.card-stack-item'));
+      if (container) {
+        let cards = Array.from(container.querySelectorAll('.card-stack-item')) as HTMLElement[];
         if(cards.length > 0) {
           // Initial layout
           cards.forEach((card, i) => {
@@ -250,10 +308,39 @@ const { Content } = await render(project);
                 translateX: i * 4,
                 rotate: i % 2 === 0 ? i * 1.5 : -i * 1.5,
                 scale: 1 - (i * 0.05),
-                opacity: 1 - (i * 0.2)
+                opacity: 1
               });
             }
           });
+
+          // Add captions data to JS
+          const captionsAttr = container.getAttribute('data-captions');
+          const captions = captionsAttr ? JSON.parse(captionsAttr) : [];
+          const captionEl = document.getElementById('dynamic-caption');
+
+          // Helper to split caption text safely for word animations
+          function prepareCaption(text: string) {
+            if (!captionEl) return;
+            captionEl.innerHTML = '';
+            // Handle newlines injected from | operator
+            const words = text.replace(/\n/g, ' \n ').split(' ');
+            words.forEach(word => {
+              if (word === '\n') {
+                const br = document.createElement('div');
+                br.className = 'w-full basis-full h-0 m-0 p-0';
+                captionEl.appendChild(br);
+              } else if (word.trim() !== '') {
+                const span = document.createElement('span');
+                span.className = 'caption-word inline-block mr-[0.25em] origin-center';
+                span.textContent = word;
+                captionEl.appendChild(span);
+              }
+            });
+          }
+
+          if (captionEl && captions.length > 0) {
+            prepareCaption(captions[0] || 'Project Fragment');
+          }
 
           let isAnimating = false;
 
@@ -263,6 +350,40 @@ const { Content } = await render(project);
             
             const topCard = cards.shift(); 
             cards.push(topCard); 
+            
+            // The new top card is now at index 0
+            if (captionEl && captions.length > 0) {
+              const newIndexAttr = cards[0].getAttribute('data-index');
+              if (newIndexAttr !== null) {
+                const newIndex = parseInt(newIndexAttr);
+                
+                const oldWords = captionEl.querySelectorAll('.caption-word');
+                
+                // Fast 3D Flip Out per word
+                anime({
+                  targets: oldWords.length > 0 ? oldWords : captionEl,
+                  rotateX: [0, 90],
+                  opacity: [1, 0],
+                  duration: 150,
+                  delay: oldWords.length > 0 ? anime.stagger(20) : 0,
+                  easing: 'easeInSine',
+                  complete: () => {
+                    prepareCaption(captions[newIndex] || 'Project Fragment');
+                    const newWords = captionEl.querySelectorAll('.caption-word');
+                    
+                    // Fast 3D Flip In per word
+                    anime({
+                      targets: newWords,
+                      rotateX: [-90, 0],
+                      opacity: [0, 1],
+                      duration: 250,
+                      delay: anime.stagger(30),
+                      easing: 'easeOutBack'
+                    });
+                  }
+                });
+              }
+            }
 
             // Slide away
             anime({
@@ -286,7 +407,7 @@ const { Content } = await render(project);
                   translateY: newIndex * 12,
                   rotate: newIndex % 2 === 0 ? newIndex * 1.5 : -newIndex * 1.5,
                   scale: 1 - (newIndex * 0.05),
-                  opacity: 1 - (newIndex * 0.2),
+                  opacity: 1,
                   easing: 'easeOutQuint',
                   duration: 600,
                   complete: () => { isAnimating = false; }
@@ -303,7 +424,7 @@ const { Content } = await render(project);
                 translateX: i * 4,
                 rotate: i % 2 === 0 ? i * 1.5 : -i * 1.5,
                 scale: 1 - (i * 0.05),
-                opacity: 1 - (i * 0.2),
+                opacity: 1,
                 duration: 700,
                 delay: i === 0 ? 100 : 0,
                 easing: 'easeOutQuint'
@@ -389,6 +510,53 @@ const { Content } = await render(project);
             duration: 400,
             easing: 'easeOutExpo',
             complete: () => idleAnim.play()
+          });
+        });
+      }
+      
+      // 6. PREMIUM FEATURE: Morphing Rocket Button Entrance Transition
+      const visitBtn = document.getElementById('visit-site-btn');
+      if (visitBtn) {
+        visitBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const href = visitBtn.getAttribute('href');
+          const rocket = visitBtn.querySelector('.btn-rocket');
+          const btnText = visitBtn.querySelector('.btn-text');
+          
+          if (!rocket || !href) return;
+          
+          // Force button styles to allow rocket to escape
+          visitBtn.classList.remove('group'); // Reverts rocket to stroke-text-main instantly
+          visitBtn.style.overflow = 'visible';
+          visitBtn.style.borderColor = 'transparent';
+          visitBtn.style.background = 'transparent';
+          visitBtn.style.boxShadow = 'none';
+          if(btnText) (btnText as HTMLElement).style.display = 'none';
+          
+          // Massive warp speed entrance!
+          anime({
+            targets: rocket,
+            scale: [1, 40],
+            translateX: [0, 800],
+            translateY: [0, -400],
+            rotate: [-12, -25],
+            opacity: [1, 0],
+            duration: 1200,
+            easing: 'easeInExpo',
+            complete: () => {
+              // Redirect once the flash covers the screen
+              window.open(href, '_blank');
+              
+              // Reset state for back navigation
+              setTimeout(() => {
+                visitBtn.classList.add('group');
+                visitBtn.style.overflow = 'hidden';
+                visitBtn.style.borderColor = '';
+                visitBtn.style.background = '';
+                if(btnText) (btnText as HTMLElement).style.display = '';
+                anime.set(rocket, { scale: 1, translateX: 0, translateY: 0, rotate: 0, opacity: '' });
+              }, 1000);
+            }
           });
         });
       }

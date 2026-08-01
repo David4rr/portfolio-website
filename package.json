@@ -14,9 +14,12 @@
   "dependencies": {
     "@astrojs/preact": "^6.0.1",
     "@astrojs/sitemap": "^3.7.3",
+    "@notionhq/client": "^5.23.3",
     "@tailwindcss/vite": "^4.3.3",
     "animejs": "^3.2.2",
     "astro": "^7.1.1",
+    "marked": "^18.0.7",
+    "notion-to-md": "^3.1.9",
     "preact": "^10.29.7",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3"

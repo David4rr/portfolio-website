@@ -10,19 +10,14 @@ import TechStack from "../components/TechStack.astro";
 import Contact from "../components/Contact.astro";
 import Footer from "../components/Footer.astro";
 import LiveClock from "../components/LiveClock.astro";
-import { getCollection } from "astro:content";
+import { getProjectsFromNotion } from "../lib/notion";
 
 import laurelWreathImg from "../assets/laurel_wreath.jpg";
 import astrolabeImg from "../assets/astrolabe.jpg";
 
-const projects = await getCollection("projects");
-
-const dummyImages = [
-  "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=600&h=400", 
-  "https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&q=80&w=400&h=800", 
-  "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=600&h=600", 
-  "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800&h=500", 
-];
+// Hanya ambil maksimal 4 proyek untuk halaman utama
+const allProjects = await getProjectsFromNotion();
+const projects = allProjects.slice(0, 4);
 ---
 
 <BaseLayout title="Portfolio">
@@ -81,18 +76,20 @@ const dummyImages = [
                   return (
                     <a
                       data-card
-                      href={`/projects/${project.id}`}
+                      href={`/projects/${project.slug}`}
                       class={`group relative block w-full p-6 md:p-10 border border-border-subtle bg-bg hover:border-transparent transition-colors duration-700 overflow-hidden flex flex-col justify-between h-full ${getBentoClass(i)}`}
                     >
                       <!-- Front Layer: Image (Starts full, shrinks to center on hover) -->
                       <div class="absolute inset-0 w-full h-full z-10 transition-all duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)] [clip-path:inset(0_0_0_0)] group-hover:[clip-path:inset(50%_50%_50%_50%)] pointer-events-none">
-                        <Image 
-                          src={project.data.image || dummyImages[i % dummyImages.length]} 
-                          alt={project.data.title}
-                          width={800}
-                          height={800}
-                          class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
-                        />
+                        {project.image && (
+                          <Image 
+                            src={project.image} 
+                            alt={project.title}
+                            width={800}
+                            height={800}
+                            class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
+                          />
+                        )}
                       </div>
                       
                       <!-- Base Layer: Content (Always there, revealed when image shrinks) -->
@@ -118,11 +115,11 @@ const dummyImages = [
 
                         <div class="mt-auto pt-16 relative z-10">
                           <h3 class="font-serif text-3xl md:text-4xl text-text-main mb-4 italic">
-                            {project.data.title}
+                            {project.title}
                           </h3>
-                          {project.data.description && (
+                          {project.description && (
                             <p class="font-sans text-sm md:text-base leading-relaxed text-text-muted max-w-[90%]">
-                              {project.data.description}
+                              {project.description}
                             </p>
                           )}
                         </div>
