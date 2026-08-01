@@ -43,6 +43,14 @@ const { title } = Astro.props;
       
       initTheme();
       document.addEventListener('astro:after-swap', initTheme);
+      
+      document.addEventListener('astro:before-swap', (e) => {
+        if (document.documentElement.classList.contains('light')) {
+          e.newDocument.documentElement.classList.add('light');
+        } else {
+          e.newDocument.documentElement.classList.remove('light');
+        }
+      });
     </script>
   </head>
   <body class="bg-bg text-text-main font-sans antialiased">

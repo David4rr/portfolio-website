@@ -20,92 +20,377 @@ const { Content } = await render(project);
 <BaseLayout title={project.data.title}>
   <Nav />
   
-  <main class="min-h-screen pt-40 pb-32 bg-bg">
-    <div class="max-w-[1200px] mx-auto px-6 md:px-12">
+  <main class="min-h-screen pt-32 pb-32 bg-bg">
+    <div class="max-w-xl mx-auto px-6 md:px-8">
       
-      {/* Elegant Back Button */}
-      <a id="back-button" href="/#projects" class="inline-flex items-center gap-4 text-text-muted hover:text-text-main transition-colors uppercase font-sans text-[11px] tracking-[0.2em] mb-20 group">
-        <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[12px] group-hover:h-[12px]">
-          <span class="absolute inset-0 bg-border-subtle rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0" />
-          <span class="absolute inset-0 bg-text-main rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100" />
-        </div>
-        <span id="back-text">Return to Index</span>
-      </a>
-
-      {/* Hero Title Section */}
-      <div class="mb-20 max-w-4xl">
-        <h1 class="font-serif text-[clamp(3.5rem,7vw,6.5rem)] leading-[1.05] text-text-main mb-8 font-normal tracking-tight">{project.data.title}</h1>
-        {project.data.description && (
-          <p class="text-text-muted text-xl md:text-2xl font-serif italic leading-relaxed">
-            "{project.data.description}"
-          </p>
-        )}
+      {/* Return link - minimalist top center */}
+      <div class="flex justify-center mb-16 md:mb-20">
+        <a id="magnetic-area" href="/#projects" class="p-6 cursor-pointer group">
+          <div id="back-button" class="flex items-center text-text-muted group-hover:text-accent transition-colors duration-300 uppercase font-sans text-[10px] tracking-[0.3em]">
+            <span class="w-12 flex justify-end items-center"><span class="return-line-left w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
+            <span id="back-text" class="w-24 text-center">Return</span>
+            <span class="w-12 flex justify-start items-center"><span class="return-line-right w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
+          </div>
+        </a>
       </div>
 
-      {/* Massive Hero Image (Gallery Canvas) */}
-      {project.data.image && (
-        <div class="w-full relative mb-32 aspect-[21/9] overflow-hidden border border-border-subtle shadow-[0_30px_60px_rgba(0,0,0,0.08)] bg-text-main/5">
+      {/* Hero Title Section - Poetic */}
+      <div class="text-center mb-16">
+        <h1 class="premium-reveal opacity-0 font-serif text-3xl md:text-5xl leading-[1.2] text-text-main mb-6 font-light tracking-tight italic">
+          {project.data.title}
+        </h1>
+        {project.data.description && (
+          <p class="hero-desc-writing text-text-muted text-lg font-sans font-light leading-relaxed px-4 md:px-8 opacity-0">
+            {project.data.description}
+          </p>
+        )}
+        
+        {/* Footnote-style metadata */}
+        <div class="premium-reveal opacity-0 mt-12 pt-6 border-t border-border-subtle/30 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-[10px] font-sans uppercase tracking-[0.2em] text-text-muted/70 mb-6">
+          <span>{project.data.type || 'Digital Fragment'}</span>
+          <span class="hidden md:inline text-accent">•</span>
+          <span>Curated with Devotion</span>
+        </div>
+      </div>
+
+      {/* Soft Image Integration / Stacked Cards */}
+      {project.data.gallery && project.data.gallery.length > 0 ? (
+        <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto mb-16 flex flex-col items-center">
+          <div class="w-full relative aspect-[3/4] cursor-pointer group card-stack-container mb-12">
+            {project.data.gallery.map((imgUrl, i) => (
+              <div 
+                class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30 will-change-transform origin-bottom"
+                style={`z-index: ${project.data.gallery.length - i};`}
+                data-index={i}
+              >
+                <img 
+                  src={imgUrl} 
+                  alt={`${project.data.title} - fragment ${i + 1}`} 
+                  class="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
+                />
+              </div>
+            ))}
+          </div>
+          <div class="flex justify-center items-center gap-4 w-full opacity-70 pointer-events-none">
+            <span class="w-4 h-[1px] bg-accent/50"></span>
+            <span class="text-[9px] font-sans tracking-[0.3em] uppercase text-accent">Click to reveal</span>
+            <span class="w-4 h-[1px] bg-accent/50"></span>
+          </div>
+        </div>
+      ) : (
+        <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto relative mb-20 aspect-[3/4] overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30">
           <img 
-            src={project.data.image} 
+            src={project.data.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
             alt={project.data.title} 
-            class="w-full h-full object-cover brightness-[0.92]" 
+            class="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
           />
         </div>
       )}
 
-      {/* Content Layout */}
-      <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-16 lg:gap-32 relative">
-        
-        {/* Left Column: Museum Placard (Sticky) */}
-        <aside class="relative hidden md:block">
-          <div class="sticky top-40 bg-bg-elevated p-8 border border-border-subtle shadow-sm">
-            <h3 class="font-sans uppercase tracking-[0.25em] text-[10px] text-text-muted mb-6 border-b border-border-subtle pb-4">
-              Curator's Note
-            </h3>
-            
-            <div class="space-y-6 text-sm">
-              <div>
-                <span class="block text-text-muted text-[11px] uppercase tracking-widest mb-1.5">Collection</span>
-                <span class="text-text-main font-serif italic text-lg capitalize">{project.data.type || 'Digital Archive'}</span>
-              </div>
-              <div>
-                <span class="block text-text-muted text-[11px] uppercase tracking-widest mb-1.5">Format</span>
-                <span class="text-text-main font-serif italic text-lg">Interactive Media</span>
-              </div>
-            </div>
-            
-            <div class="mt-8 pt-8 border-t border-border-subtle text-text-muted text-xs font-sans leading-relaxed">
-              Exhibited in the permanent collection. All rights reserved.
-            </div>
-          </div>
-        </aside>
+      {/* Content Layout - Modern Prose */}
+      <article class="prose prose-invert prose-p:text-text-muted prose-p:font-sans prose-p:leading-[2.4] prose-p:mb-6 prose-p:text-[1.1rem] md:prose-p:text-[1.15rem] prose-headings:font-serif prose-headings:text-text-main prose-headings:font-normal prose-headings:italic prose-h2:text-2xl prose-h3:text-lg prose-a:text-accent prose-img:rounded-sm prose-img:opacity-85 prose-img:sepia-[0.15] hover:prose-img:opacity-100 hover:prose-img:sepia-0 prose-img:transition-all prose-img:duration-1000 prose-img:mx-auto prose-img:mt-16 prose-img:mb-6 prose-img:shadow-xl prose-img:border prose-img:border-border-subtle/30 prose-em:block prose-em:text-center prose-em:text-[13px] prose-em:opacity-60 prose-em:mb-16 prose-em:font-serif max-w-none mx-auto text-left">
+        <Content />
+      </article>
 
-        {/* Right Column: Markdown Content */}
-        <article class="prose prose-invert prose-p:text-text-muted prose-p:font-sans prose-p:leading-[2] prose-p:text-[1.05rem] prose-headings:font-serif prose-headings:text-text-main prose-headings:font-normal prose-h2:text-4xl prose-h3:text-2xl max-w-none">
-          {/* Fallback placard for mobile */}
-          <div class="md:hidden bg-bg-elevated p-6 border border-border-subtle mb-12">
-            <span class="block text-text-muted text-[10px] uppercase tracking-[0.2em] mb-2">Collection</span>
-            <span class="text-text-main font-serif italic text-xl capitalize">{project.data.type || 'Digital Archive'}</span>
-          </div>
-          
-          <Content />
-        </article>
+      {/* End mark (Replaced by Tech Stack) */}
+      <div class="mt-20 pt-10 border-t border-border-subtle/20 flex flex-col items-center justify-center text-center">
+        <div class="flex items-center gap-4 mb-8 opacity-80">
+          <span class="w-4 h-[1px] bg-accent/50"></span>
+          <span class="text-[9px] font-sans tracking-[0.3em] uppercase text-accent">Built With</span>
+          <span class="w-4 h-[1px] bg-accent/50"></span>
+        </div>
+        <div class="flex flex-wrap justify-center items-center gap-2 text-[11px] md:text-xs font-serif italic text-text-muted/70">
+          {(project.data.techStack || ['Flutter', 'Golang', 'Riverpod', 'Midtrans']).map((tech, index, array) => (
+            <>
+              <span class="tracking-widest hover:text-accent transition-colors cursor-default">{tech}</span>
+              {index < array.length - 1 && <span class="opacity-40 font-sans mx-2 text-accent">/</span>}
+            </>
+          ))}
+        </div>
       </div>
       
     </div>
   </main>
-  
-  <Footer />
 
-  <script>
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  <script is:inline>
     document.addEventListener('astro:page-load', () => {
+      // 1. Back button dynamic URL
       if (new URLSearchParams(window.location.search).get('from') === 'explore') {
-        const btn = document.getElementById('back-button');
+        const btn = document.getElementById('magnetic-area');
         const text = document.getElementById('back-text');
         if (btn && text) {
           btn.href = '/explore';
           text.innerText = 'Return to Gallery';
         }
+      }
+
+      // Helper function to safely split text nodes into animatable letters
+      function splitTextToLetters(el) {
+        if (el.dataset.split) return;
+        el.dataset.split = 'true';
+        
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+        const textNodes = [];
+        let node;
+        while(node = walker.nextNode()) {
+          if(node.nodeValue.trim() !== '') textNodes.push(node);
+        }
+        
+        textNodes.forEach(textNode => {
+          const fragment = document.createDocumentFragment();
+          const words = textNode.nodeValue.split(/(\s+)/); // keep spaces intact
+          words.forEach(word => {
+            if (word.trim() === '') {
+              fragment.appendChild(document.createTextNode(word));
+            } else {
+              const spanWrap = document.createElement('span');
+              spanWrap.className = 'inline-block whitespace-nowrap';
+              const lettersHTML = [...word].map(l => `<span class="letter inline-block opacity-0 origin-bottom-left">${l}</span>`).join('');
+              spanWrap.innerHTML = lettersHTML;
+              fragment.appendChild(spanWrap);
+            }
+          });
+          textNode.parentNode.replaceChild(fragment, textNode);
+        });
+      }
+
+      // 2. PREMIUM FEATURE: Staggered Intro Reveal
+      const revealElements = document.querySelectorAll('.premium-reveal');
+      if (revealElements.length > 0) {
+        anime({
+          targets: revealElements,
+          translateY: [40, 0],
+          opacity: [0, 1],
+          duration: 1400,
+          delay: anime.stagger(200, {start: 100}),
+          easing: 'easeOutQuart'
+        });
+      }
+
+      // 2.5 PREMIUM FEATURE: Handwriting Fluid Reveal for Description
+      const descEl = document.querySelector('.hero-desc-writing');
+      if (descEl) {
+        splitTextToLetters(descEl);
+
+        anime({
+          targets: '.hero-desc-writing .letter',
+          opacity: [0, 1],
+          skewX: [30, 0],
+          scaleY: [0.2, 1],
+          translateY: [5, 0],
+          duration: 800,
+          easing: 'easeOutQuint',
+          delay: anime.stagger(15, {start: 500})
+        });
+        
+        anime({
+          targets: descEl,
+          opacity: [0, 1],
+          duration: 100
+        });
+      }
+
+      // 3. PREMIUM FEATURE: Handwriting Scroll Reveal for Poetry Text
+      const proseElements = document.querySelectorAll('.prose > *');
+      if (proseElements.length > 0 && 'IntersectionObserver' in window) {
+        proseElements.forEach(el => {
+          el.style.opacity = '0';
+          splitTextToLetters(el);
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.style.opacity = '1';
+              
+              const letters = entry.target.querySelectorAll('.letter');
+              if (letters.length > 0) {
+                anime({
+                  targets: letters,
+                  opacity: [0, 1],
+                  skewX: [30, 0],
+                  scaleY: [0.2, 1],
+                  translateY: [5, 0],
+                  duration: 800,
+                  easing: 'easeOutQuint',
+                  delay: anime.stagger(12) // Slightly faster for poetry paragraphs
+                });
+              }
+              
+              const nonTextElements = entry.target.querySelectorAll('img, video, hr, iframe');
+              if (nonTextElements.length > 0 || letters.length === 0) {
+                anime({
+                  targets: letters.length === 0 ? entry.target : nonTextElements,
+                  translateY: [25, 0],
+                  opacity: [0, 1],
+                  duration: 1200,
+                  easing: 'easeOutCubic'
+                });
+              }
+
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+        proseElements.forEach(el => observer.observe(el));
+      }
+
+      // 4. Anime.js Stacked Cards logic
+      const container = document.querySelector('.card-stack-container');
+      if (container && window.anime) {
+        let cards = Array.from(container.querySelectorAll('.card-stack-item'));
+        if(cards.length > 0) {
+          // Initial layout
+          cards.forEach((card, i) => {
+            if (i > 0) {
+              anime.set(card, {
+                translateY: i * 12,
+                translateX: i * 4,
+                rotate: i % 2 === 0 ? i * 1.5 : -i * 1.5,
+                scale: 1 - (i * 0.05),
+                opacity: 1 - (i * 0.2)
+              });
+            }
+          });
+
+          let isAnimating = false;
+
+          container.addEventListener('click', () => {
+            if(cards.length <= 1 || isAnimating) return;
+            isAnimating = true;
+            
+            const topCard = cards.shift(); 
+            cards.push(topCard); 
+
+            // Slide away
+            anime({
+              targets: topCard,
+              translateX: 180,
+              translateY: -30,
+              rotate: 15,
+              scale: 0.9,
+              opacity: 0,
+              easing: 'easeInQuad',
+              duration: 350,
+              complete: () => {
+                cards.forEach((c, index) => {
+                  c.style.zIndex = cards.length - index;
+                });
+                
+                const newIndex = cards.length - 1;
+                anime({
+                  targets: topCard,
+                  translateX: newIndex * 4,
+                  translateY: newIndex * 12,
+                  rotate: newIndex % 2 === 0 ? newIndex * 1.5 : -newIndex * 1.5,
+                  scale: 1 - (newIndex * 0.05),
+                  opacity: 1 - (newIndex * 0.2),
+                  easing: 'easeOutQuint',
+                  duration: 600,
+                  complete: () => { isAnimating = false; }
+                });
+              }
+            });
+
+            // Elevate remaining
+            cards.forEach((card, i) => {
+              if(card === topCard) return; 
+              anime({
+                targets: card,
+                translateY: i * 12,
+                translateX: i * 4,
+                rotate: i % 2 === 0 ? i * 1.5 : -i * 1.5,
+                scale: 1 - (i * 0.05),
+                opacity: 1 - (i * 0.2),
+                duration: 700,
+                delay: i === 0 ? 100 : 0,
+                easing: 'easeOutQuint'
+              });
+            });
+          });
+        }
+      }
+
+      // 5. PREMIUM FEATURE: Complex Return Button (Breathing & Magnetic)
+      const magneticArea = document.getElementById('magnetic-area');
+      const returnBtn = document.getElementById('back-button');
+      const leftLine = document.querySelector('.return-line-left');
+      const rightLine = document.querySelector('.return-line-right');
+      
+      if (magneticArea && returnBtn && leftLine && rightLine) {
+        // Idle breathing
+        let idleAnim = anime({
+          targets: [leftLine, rightLine],
+          width: ['12px', '28px'],
+          duration: 1800,
+          direction: 'alternate',
+          loop: true,
+          easing: 'easeInOutSine'
+        });
+
+        // Magnetic Hover Effect
+        magneticArea.addEventListener('mousemove', (e) => {
+          const rect = magneticArea.getBoundingClientRect();
+          const x = (e.clientX - rect.left) - (rect.width / 2);
+          const y = (e.clientY - rect.top) - (rect.height / 2);
+          
+          anime({
+            targets: returnBtn,
+            translateX: x * 0.4,
+            translateY: y * 0.4,
+            duration: 0,
+            easing: 'linear'
+          });
+        });
+
+        magneticArea.addEventListener('mouseenter', () => {
+          idleAnim.pause();
+          
+          anime({
+            targets: leftLine,
+            width: '40px',
+            translateX: -6,
+            duration: 600,
+            easing: 'easeOutElastic(1, .5)'
+          });
+          
+          anime({
+            targets: rightLine,
+            width: '40px',
+            translateX: 6,
+            duration: 600,
+            easing: 'easeOutElastic(1, .5)'
+          });
+
+          anime({
+            targets: returnBtn,
+            letterSpacing: '0.5em',
+            duration: 400,
+            easing: 'easeOutExpo'
+          });
+        });
+
+        magneticArea.addEventListener('mouseleave', () => {
+          // Snap back from magnetic
+          anime({
+            targets: returnBtn,
+            translateX: 0,
+            translateY: 0,
+            letterSpacing: '0.3em',
+            duration: 800,
+            easing: 'easeOutElastic(1, .5)'
+          });
+
+          anime({
+            targets: [leftLine, rightLine],
+            translateX: 0,
+            duration: 400,
+            easing: 'easeOutExpo',
+            complete: () => idleAnim.play()
+          });
+        });
       }
     });
   </script>
