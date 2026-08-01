@@ -86,9 +86,11 @@ const dummyImages = [
                     >
                       <!-- Front Layer: Image (Starts full, shrinks to center on hover) -->
                       <div class="absolute inset-0 w-full h-full z-10 transition-all duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)] [clip-path:inset(0_0_0_0)] group-hover:[clip-path:inset(50%_50%_50%_50%)] pointer-events-none">
-                        <img 
-                          src={dummyImages[i % dummyImages.length]} 
-                          alt={project.data.title} 
+                        <Image 
+                          src={project.data.image || dummyImages[i % dummyImages.length]} 
+                          alt={project.data.title}
+                          width={800}
+                          height={800}
                           class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
                         />
                       </div>

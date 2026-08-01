@@ -1,7 +1,7 @@
 ---
 // ponytail: sticky nav with top center toggle
 ---
-<nav id="main-nav" class="fixed top-0 left-0 right-0 py-4 md:py-5 px-6 grid grid-cols-3 items-center z-50 bg-bg/90 backdrop-blur-md border-b border-border-subtle/50 transition-colors duration-300">
+<nav id="main-nav" class="fixed top-0 left-0 right-0 py-4 md:py-5 px-6 grid grid-cols-3 items-center z-50 bg-bg/90 backdrop-blur-md transition-colors duration-300">
   <script>
     const setupNav = () => {
       const nav = document.getElementById('main-nav');
@@ -16,31 +16,7 @@
         const y = isDeep ? (Math.random() * 5 + 85) : (Math.random() * 5 + 95);
         points.push(`${x}% ${y}%`);
       }
-      const jaggedClip = `polygon(${points.join(', ')})`;
-
-      let isTorn = false;
-      const onScroll = () => {
-        // Hero is typically 100vh. If we scroll down more than 10px, we can make it torn?
-        // Wait, the tear happens when Hero is pushed up. Hero is pinned until next section comes up.
-        // So let's tear it when scrollY > window.innerHeight * 0.2
-        if (window.scrollY > window.innerHeight * 0.2) {
-          if (!isTorn) {
-            nav.style.clipPath = jaggedClip;
-            nav.classList.remove('border-b', 'border-border-subtle/50');
-            isTorn = true;
-          }
-        } else {
-          if (isTorn) {
-            nav.style.clipPath = 'none';
-            nav.classList.add('border-b', 'border-border-subtle/50');
-            isTorn = false;
-          }
-        }
-      };
-
-      window.addEventListener('scroll', onScroll, { passive: true });
-      // Trigger once on load
-      onScroll();
+      nav.style.clipPath = `polygon(${points.join(', ')})`;
     };
 
     document.addEventListener('astro:page-load', setupNav);
