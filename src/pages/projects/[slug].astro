@@ -37,6 +37,11 @@ const htmlContent = marked.parse(markdownContent);
 
       {/* Hero Title Section - Poetic */}
       <div class="text-center mb-16">
+        {project.timeline && (
+          <div class="premium-reveal opacity-0 font-serif text-sm md:text-base italic text-text-muted/70 mb-4">
+            Forged in the span of {project.timeline}
+          </div>
+        )}
         <h1 class="premium-reveal opacity-0 font-serif text-3xl md:text-5xl leading-[1.2] text-text-main mb-6 font-light tracking-tight italic">
           {project.title}
         </h1>

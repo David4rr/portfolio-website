@@ -34,6 +34,7 @@ export interface NotionProject {
   galleryCaptions?: string[];
   content?: string;
   url?: string;
+  timeline?: string;
 }
 
 // Function to fetch all published projects
@@ -166,6 +167,16 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
         url = urlProp.rich_text?.map((rt: any) => rt.plain_text).join('') || '';
       }
 
+      // Timeline / Duration
+      const timelineKey = Object.keys(props).find(k => k.toLowerCase() === 'timeline' || k.toLowerCase() === 'duration' || k.toLowerCase() === 'time');
+      const timelineProp = timelineKey ? props[timelineKey] : null;
+      let timeline = '';
+      if (timelineProp && timelineProp.rich_text && timelineProp.rich_text.length > 0) {
+        timeline = timelineProp.rich_text.map((rt: any) => rt.plain_text).join('');
+      } else if (timelineProp && timelineProp.title && timelineProp.title.length > 0) {
+         timeline = timelineProp.title.map((rt: any) => rt.plain_text).join('');
+      }
+
       return {
         id: page.id,
         slug,
@@ -176,7 +187,8 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
         techStack,
         gallery,
         galleryCaptions,
-        url
+        url,
+        timeline
       };
     });
   } catch (error) {
