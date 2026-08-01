@@ -38,9 +38,12 @@ export interface NotionProject {
 
 // Function to fetch all published projects
 export async function getProjectsFromNotion(): Promise<NotionProject[]> {
-  const databaseId = '3af4c12b759580038637c70759a1c0cf'; // Extracted from URL
+  const databaseId = getEnv('NOTION_DATABASE_ID');
   
   try {
+    if (!databaseId) {
+      throw new Error("NOTION_DATABASE_ID is missing in your .env file!");
+    }
     if (!token) {
       throw new Error("NOTION_ACCESS_TOKEN is missing or undefined. Please restart your dev server.");
     }
