@@ -183,4 +183,12 @@
     animation: none;
     mix-blend-mode: normal;
   }
+
+  /* Custom Polaroid Background */
+  .card-polaroid {
+    background-color: var(--color-bg-elevated);
+  }
+  :root.light .card-polaroid, .theme-light .card-polaroid {
+    background-color: var(--color-bg);
+  }
 }

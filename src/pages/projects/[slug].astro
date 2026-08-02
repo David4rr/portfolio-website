@@ -6,17 +6,19 @@ import Footer from '../../components/Footer.astro';
 import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
 import { marked } from 'marked';
 
-export async function getStaticPaths() {
-  const projects = await getProjectsFromNotion();
-  return projects.map(project => ({
-    params: { slug: project.slug },
-    props: { project },
-  }));
+// Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
+
+const { slug } = Astro.params;
+const projects = await getProjectsFromNotion();
+const project = projects.find(p => p.slug === slug);
+
+if (!project) {
+  return Astro.redirect('/404');
 }
 
-const { project } = Astro.props;
-const markdownContent = await getProjectContent(project.id);
-const htmlContent = marked.parse(markdownContent);
+const mdContent = await getProjectContent(project.id);
+const htmlContent = marked.parse(mdContent);
 ---
 <BaseLayout title={project.title}>
   <Nav />
@@ -74,7 +76,7 @@ const htmlContent = marked.parse(markdownContent);
             
             {project.gallery.map((imgUrl, i) => (
               <div 
-                class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 bg-bg border border-border-subtle/30 will-change-transform origin-bottom flex items-center justify-center"
+                class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 card-polaroid border border-border-subtle will-change-transform origin-bottom flex items-center justify-center"
                 style={{ zIndex: project.gallery.length - i }}
                 data-index={i}
               >

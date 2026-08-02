@@ -1,72 +1,20 @@
 ---
 // ponytail: hero section with interactive Matrix ASCII avatar
-import sharp from "sharp";
-import fs from "fs";
 import GithubActivity from "./GithubActivity";
 import AsciiAvatar from "./AsciiAvatar";
 import Typewriter from "./Typewriter";
+import framesJson from "../data/ascii-frames.json";
 
 let framesData = "[]";
 let initialArt = "";
 
 try {
-  const githubUser = import.meta.env.GITHUB_USERNAME || "David4rr";
-  const gens = [
-    `https://avatars.githubusercontent.com/${githubUser}`,
-    "./public/assets/mypic.png",
-  ];
-  const charsArray =
-    '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split(
-      "",
-    );
-
-  const frames = await Promise.all(
-    gens.map(async (src) => {
-      const buf = src.startsWith("http")
-        ? Buffer.from(await (await fetch(src)).arrayBuffer())
-        : await fs.promises.readFile(src);
-
-      // The CSS leading-[0.6] makes characters form a perfect 1:1 square grid.
-      // Therefore, we MUST use a 1:1 resize (80x80) otherwise the image gets flattened!
-      const { data, info } = await sharp(buf)
-        .resize(80, 80, { fit: "cover" })
-        .ensureAlpha()
-        .raw()
-        .toBuffer({ resolveWithObject: true });
-
-      const rows = [];
-      for (let y = 0; y < info.height; y++) {
-        let row = "";
-        for (let x = 0; x < info.width; x++) {
-          const offset = (y * info.width + x) * info.channels;
-          const alpha = data[offset + info.channels - 1];
-
-          // Handle transparency
-          if (alpha < 128) {
-            row += " ";
-          } else {
-            // Calculate grayscale brightness
-            const r = data[offset];
-            const g = data[offset + 1];
-            const b = data[offset + 2];
-            const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-
-            const idx = Math.floor(
-              (brightness / 255) * (charsArray.length - 1),
-            );
-            row += charsArray[idx];
-          }
-        }
-        rows.push(row);
-      }
-      return rows;
-    }),
-  );
-
+  // Use pre-generated ASCII frames from JSON
+  const frames = framesJson;
   framesData = JSON.stringify(frames);
-  initialArt = frames[0].join("\n");
+  initialArt = frames[0] ? frames[0].join("\n") : "";
 } catch (e) {
-  console.error("Failed to generate ASCII frames:", e);
+  console.error("Error loading ASCII frames:", e);
 }
 ---
 
@@ -86,9 +34,7 @@ try {
   >
     <!-- ASCII Emblem -->
     <div class="mb-2 flex flex-col items-center relative">
-      <div
-        class="p-3 border border-border-subtle/50 bg-bg-elevated/30 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]"
-      >
+      <div class="p-2">
         <AsciiAvatar initialArt={initialArt} framesData={framesData} client:idle />
       </div>
       <div class="w-[1px] h-3 bg-border-subtle mt-2"></div>

@@ -16,8 +16,8 @@ import RocketLoader from "./RocketLoader.tsx";
 
 <script is:inline>
   // Runs synchronously before paint.
-  // If window.hasPlayedPreloader is NOT set, this is a hard load (F5), so we show it!
-  if (!window.hasPlayedPreloader) {
+  // If hasSeenPreloader is NOT set in sessionStorage, this is a fresh session, so we show it!
+  if (!sessionStorage.getItem('hasSeenPreloader')) {
     const el = document.getElementById('preloader-overlay');
     if (el) {
       el.style.display = 'flex';
@@ -33,14 +33,14 @@ import RocketLoader from "./RocketLoader.tsx";
     const percentEl = document.getElementById('preloader-percent');
     
     if (preloader && percentEl) {
-      if (window.hasPlayedPreloader) {
-        // Client-side navigation (e.g. coming back from /explore). 
+      if (sessionStorage.getItem('hasSeenPreloader')) {
+        // Already seen in this session. 
         // Inline script kept it hidden. Do nothing.
         return;
       }
       
-      // First load or hard refresh
-      window.hasPlayedPreloader = true;
+      // First load for this session
+      sessionStorage.setItem('hasSeenPreloader', 'true');
       document.body.style.overflow = 'hidden';
       let pct = 0;
       

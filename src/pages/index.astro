@@ -15,6 +15,9 @@ import { getProjectsFromNotion } from "../lib/notion";
 import laurelWreathImg from "../assets/laurel_wreath.jpg";
 import astrolabeImg from "../assets/astrolabe.jpg";
 
+// Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
+
 // Hanya ambil maksimal 4 proyek untuk halaman utama
 const allProjects = await getProjectsFromNotion();
 const projects = allProjects.slice(0, 4);
