@@ -135,12 +135,55 @@ const projects = allProjects.slice(0, 4);
           </div>
 
           <div class="mt-16 flex justify-center w-full">
-            <a
-              href="/explore"
-              class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500"
-            >
-              <span>View More Projects</span>
-              <span class="text-[14px]">&rarr;</span>
+            <a href="/explore" id="rocket-btn" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 transition-colors duration-300 cursor-pointer select-none">
+              
+              <span class="relative z-10 btn-text pointer-events-none">View More Projects</span>
+
+              <!-- Shared Container for Rocket -->
+              <div class="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
+
+                <!-- Rocket System -->
+                <div class="rocket-system absolute w-[100px] h-[100px] flex items-center justify-center overflow-visible origin-center" style="transform: scale(0.7);">
+                  <svg class="w-full h-full overflow-visible" viewBox="-50 -50 100 100" fill="none" stroke="currentColor">
+                    
+                    <!-- Fixed Ropes: Start at button edge (x=32), end at final rocket tail (x=101.1) -->
+                    <path class="rope-top text-text-main/50 opacity-0" d="M 32 -18 L 101.1 -9" stroke="currentColor" stroke-width="1.5" />
+                    <path class="rope-bottom text-text-main/50 opacity-0" d="M 32 18 L 101.1 9" stroke="currentColor" stroke-width="1.5" />
+
+                    <!-- Rocket Mover -->
+                    <g class="rocket-mover">
+                      <!-- Rocket Core (AIME Rocket, perfectly centered over arrow at t=0) -->
+                      <g class="rocket-body text-text-main" transform="scale(0.45) translate(-70, -30)">
+                        
+                        <!-- Flames -->
+                        <g class="rocket-flames opacity-0 text-accent">
+                          <g class="rocket-flames-flicker origin-[16px_30px]">
+                            <path d="M 16 12 L -50 30 L 16 48" fill="currentColor" stroke="none" opacity="0.3" />
+                            <path d="M 16 18 L -25 30 L 16 42" fill="currentColor" stroke="none" opacity="0.6" />
+                            <path d="M 16 24 L -5 30 L 16 36" fill="currentColor" stroke="none" />
+                          </g>
+                        </g>
+
+                        <!-- Static Body & Circuitry -->
+                        <g stroke="currentColor" fill="none" stroke-linecap="round">
+                          <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" stroke-width="4.5" />
+                          <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" stroke-width="4.5" />
+                          <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" stroke-width="4" />
+                          <path d="M 50 14 Q 65 30 50 46" stroke-width="3" />
+                        </g>
+
+                        <g class="text-accent" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="2">
+                          <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" />
+                          <path d="M 76 22 Q 68 30 76 38" />
+                          <path d="M 74 22 Q 95 25 115 30" />
+                          <path d="M 71 30 Q 85 30 95 30" />
+                          <path d="M 74 38 Q 95 35 115 30" />
+                        </g>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+              </div>
             </a>
           </div>
         </div>
@@ -193,3 +236,163 @@ const projects = allProjects.slice(0, 4);
     </section>
   </main>
 </BaseLayout>
+
+<script>
+  import anime from "animejs/lib/anime.es.js";
+
+  const initRocketBtn = () => {
+    const btn = document.getElementById("rocket-btn");
+    if (!btn) return;
+
+    const newBtn = btn.cloneNode(true) as HTMLAnchorElement;
+    btn.parentNode?.replaceChild(newBtn, btn);
+
+    const rocketSystem = newBtn.querySelector(".rocket-system");
+    const rocketMover = newBtn.querySelector(".rocket-mover");
+    const rocketFlames = newBtn.querySelector(".rocket-flames");
+    const rocketFlamesFlicker = newBtn.querySelector(".rocket-flames-flicker");
+    const ropes = newBtn.querySelectorAll(".rope-top, .rope-bottom");
+
+    if (ropes.length > 0) {
+      anime.set(ropes, { strokeDashoffset: anime.setDashoffset, opacity: 0 });
+    }
+
+    // Continuous flame flicker loop (always runs, but only visible when rocketFlames opacity > 0)
+    if (rocketFlamesFlicker) {
+      anime({
+        targets: rocketFlamesFlicker,
+        scaleX: [1, 1.4, 0.85, 1.2],
+        scaleY: [1, 0.85, 1.1, 0.95],
+        duration: 350,
+        loop: true,
+        direction: 'alternate',
+        easing: 'easeInOutSine'
+      });
+    }
+
+    let hoverTl;
+
+    newBtn.addEventListener("mouseenter", () => {
+      if (newBtn.dataset.clicked) return;
+      if (hoverTl) hoverTl.pause();
+      
+      hoverTl = anime.timeline({
+        easing: "easeOutQuad",
+      });
+
+      // 1. Rocket scales up
+      hoverTl.add({
+        targets: rocketSystem,
+        scale: [0.7, 1],
+        duration: 100,
+      }, 0);
+
+      // 2. Flames ignite
+      hoverTl.add({
+        targets: rocketFlames,
+        opacity: [0, 1],
+        duration: 100,
+      }, 50);
+
+      const flightDistance = 120;
+      const tailStartX = -18.9;
+      const buttonEdgeX = 32;
+      const distToEdge = buttonEdgeX - tailStartX; // 50.9
+      const flightDuration = 300;
+      const percentToEdge = distToEdge / flightDistance; // 0.424
+
+      // 3. Rocket flies out
+      hoverTl.add({
+        targets: rocketMover,
+        translateX: ["0px", `${flightDistance}px`], 
+        duration: flightDuration,
+        easing: "easeOutSine",
+      }, 120);
+
+      // 4. Ropes unspool matching the tail exactly
+      hoverTl.add({
+        targets: ropes,
+        strokeDashoffset: [anime.setDashoffset, 0],
+        opacity: [0, 1],
+        duration: flightDuration * (1 - percentToEdge),
+        easing: "easeOutSine"
+      }, 120 + (flightDuration * percentToEdge)); 
+
+      // 5. Button gets pulled slightly right
+      hoverTl.add({
+        targets: newBtn,
+        translateX: "8px",
+        duration: flightDuration * (1 - percentToEdge),
+        easing: "easeOutSine"
+      }, 120 + (flightDuration * percentToEdge)); 
+    });
+
+    newBtn.addEventListener("mouseleave", () => {
+      if (newBtn.dataset.clicked) return;
+      if (hoverTl) hoverTl.pause();
+
+      hoverTl = anime.timeline({
+        easing: "easeOutQuad",
+      });
+
+      // Quick reset for clean exit
+      hoverTl.add({
+        targets: ropes,
+        opacity: 0,
+        duration: 150,
+      }, 0);
+
+      hoverTl.add({
+        targets: rocketSystem,
+        scale: 0.7,
+        duration: 150,
+      }, 0);
+
+      hoverTl.add({
+        targets: rocketMover,
+        translateX: "0px",
+        duration: 150,
+      }, 0);
+
+      hoverTl.add({
+        targets: rocketFlames,
+        opacity: 0,
+        duration: 150,
+      }, 0);
+
+      hoverTl.add({
+        targets: newBtn,
+        translateX: "0px",
+        duration: 300,
+      }, 0);
+    });
+
+    newBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      newBtn.dataset.clicked = "true";
+      
+      const href = newBtn.getAttribute("href");
+      
+      // Lock hover styles forcefully to prevent snapback when pointer events are disabled
+      newBtn.classList.add("!border-text-main/50");
+      newBtn.style.pointerEvents = "none";
+      
+      if (hoverTl) hoverTl.pause();
+
+      // Launch rocket and button together cleanly without sudden scaling or yanking
+      anime({
+        targets: newBtn,
+        translateX: window.innerWidth,
+        opacity: [1, 0],
+        duration: 800,
+        easing: "easeInExpo",
+        complete: () => {
+          if (href) window.location.href = href;
+        }
+      });
+    });
+  };
+
+  initRocketBtn();
+  document.addEventListener("astro:page-load", initRocketBtn);
+</script>
