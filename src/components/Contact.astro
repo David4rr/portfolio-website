@@ -11,7 +11,7 @@ import romeImg from '../assets/rome_illustration.jpg';
         Get In Touch<span class="text-accent">.</span>
       </h2>
       <p class="text-text-muted mb-8 max-w-md mx-auto md:mx-0 text-[1.05rem] leading-relaxed">Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-      <a href={`mailto:${import.meta.env.CONTACT_EMAIL || "hello@example.com"}`} class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500">Say Hello</a>
+      <a href={`mailto:${import.meta.env.CONTACT_EMAIL || "hello@example.com"}`} id="slime-btn" class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg transition-colors duration-300 origin-center">Say Hello</a>
     </div>
     
     <!-- Poetic Intermission 3 (Rome Architecture) - Placed in the right column -->
@@ -27,3 +27,77 @@ import romeImg from '../assets/rome_illustration.jpg';
 
   </div>
 </section>
+
+<script>
+  import anime from 'animejs';
+
+  document.addEventListener("astro:page-load", () => {
+    const btn = document.getElementById("slime-btn");
+    
+    if (!btn) return;
+    
+    const newBtn = btn.cloneNode(true) as HTMLAnchorElement;
+    btn.parentNode?.replaceChild(newBtn, btn);
+
+    let isHovered = false;
+
+    // Smooth magnetic tracking on mousemove
+    newBtn.addEventListener("mousemove", (e) => {
+      isHovered = true;
+      const rect = newBtn.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Calculate distance of cursor from the center
+      const distX = e.clientX - centerX;
+      const distY = e.clientY - centerY;
+      
+      // Dense slime feels heavy, so it only pulls a fraction of the distance (30%)
+      const pullX = distX * 0.3; 
+      const pullY = distY * 0.3;
+
+      anime({
+        targets: newBtn,
+        translateX: pullX,
+        translateY: pullY,
+        scale: 1.05,
+        duration: 200, 
+        easing: 'easeOutSine',
+      });
+    });
+
+    // Snap back elastically like dense slime releasing
+    newBtn.addEventListener("mouseleave", () => {
+      isHovered = false;
+      anime({
+        targets: newBtn,
+        translateX: 0,
+        translateY: 0,
+        scale: 1,
+        duration: 1200,
+        easing: 'easeOutElastic(1, 0.3)'
+      });
+    });
+
+    // Heavy squish on click
+    newBtn.addEventListener("mousedown", () => {
+      anime({
+        targets: newBtn,
+        scale: 0.95,
+        duration: 150,
+        easing: 'easeOutQuad'
+      });
+    });
+
+    // Spring back up on release
+    newBtn.addEventListener("mouseup", () => {
+      if (!isHovered) return;
+      anime({
+        targets: newBtn,
+        scale: 1.05,
+        duration: 600,
+        easing: 'easeOutElastic(1, 0.4)'
+      });
+    });
+  });
+</script>

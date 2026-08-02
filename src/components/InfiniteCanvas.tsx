@@ -41,31 +41,66 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
 export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [aspectRatios, setAspectRatios] = useState<Record<string, number>>({});
+  const [sizesLoaded, setSizesLoaded] = useState(false);
 
-  // Artificial delay to show the loader, 
-  // ensuring the full cinematic rocket animation completes before hiding
+  // Load image aspect ratios to make cards perfectly fit the uploaded images
+  useEffect(() => {
+    const ratios: Record<string, number> = {};
+    let loadedCount = 0;
+    const realProjects = projects.filter(p => p.isReal && p.image);
+    
+    if (realProjects.length === 0) {
+      setSizesLoaded(true);
+      return;
+    }
+
+    realProjects.forEach(p => {
+      const img = new window.Image();
+      img.onload = () => {
+        ratios[p.id] = img.naturalWidth / img.naturalHeight;
+        loadedCount++;
+        if (loadedCount === realProjects.length) {
+          setAspectRatios({...ratios});
+          setSizesLoaded(true);
+        }
+      };
+      img.onerror = () => {
+        ratios[p.id] = 16/9; // fallback
+        loadedCount++;
+        if (loadedCount === realProjects.length) {
+          setAspectRatios({...ratios});
+          setSizesLoaded(true);
+        }
+      };
+      img.src = p.image;
+    });
+  }, [projects]);
+
+  // Artificial delay to show the loader
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2200); // 2.2 seconds: allows 1.2s for setup + 1s of majestic flying
+    }, 2200); 
     return () => clearTimeout(timer);
   }, []);
 
-  // 1. Calculate Layout (Dense Grid Oval Packing)
+  // 1. Calculate Layout (Dense Grid Oval Packing with Dynamic Irregular Aspect Ratios)
   const laidOutProjects = useMemo(() => {
-    const CELL = 280;
-    const GAP = 8; // Very tight, elegant gap
+    if (!sizesLoaded) return [];
+
+    const CELL = 80;
+    const GAP = 12; 
 
     // Generate grid coordinates and sort by oval distance
     const coords: { x: number, y: number }[] = [];
-    const radius = 40;
+    const radius = 60; // Larger radius for finer grid
     for (let x = -radius; x <= radius; x++) {
       for (let y = -radius; y <= radius; y++) {
         coords.push({ x, y });
       }
     }
     coords.sort((a, b) => {
-      // Scale y down to make the distribution an oval/rectangle wider than tall
       const distA = Math.sqrt(a.x * a.x + (a.y * 1.5) * (a.y * 1.5));
       const distB = Math.sqrt(b.x * b.x + (b.y * 1.5) * (b.y * 1.5));
       return distA - distB;
@@ -91,32 +126,40 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
       }
     };
 
-    // Sort projects so 'center-poetry' is placed first
     const sorted = [...projects].sort((a, b) => {
       if (a.id === 'center-poetry') return -1;
       if (b.id === 'center-poetry') return 1;
-      return 0; // maintain original order for rest
+      return 0; 
     });
 
     sorted.forEach((p, index) => {
-      let gw = 1;
-      let gh = 1;
+      let gw = 3;
+      let gh = 3;
+      let exactW = 0;
+      let exactH = 0;
       
-      if (p.type === 'mobile') {
-        gw = 1;
-        gh = 2; // Tall
-      } else if (p.type === 'web') {
-        gw = 2;
-        gh = 1; // Wide
-      } else if (p.type === 'center') {
-        gw = 2;
-        gh = 2; // Large square for the center
-      }
-      
-      // Randomly make some concepts 2x2 for dramatic scale
-      if (!p.isReal && index % 7 === 0 && p.type !== 'center') {
-        gw = 2;
-        gh = 2;
+      if (p.type === 'center') {
+        gw = 5;
+        gh = 5; 
+        exactW = gw * CELL + (gw - 1) * GAP;
+        exactH = gh * CELL + (gh - 1) * GAP;
+      } else if (!p.isReal) {
+        gw = index % 3 === 0 ? 4 : 3;
+        gh = gw === 4 ? 3 : 4;
+        exactW = gw * CELL + (gw - 1) * GAP;
+        exactH = gh * CELL + (gh - 1) * GAP;
+      } else {
+        const ratio = aspectRatios[p.id] || (p.type === 'mobile' ? 0.5 : 1.77);
+        // Target an area of roughly 16-20 cells
+        gh = Math.round(Math.sqrt(20 / ratio));
+        gh = Math.max(2, Math.min(gh, 8));
+        
+        exactH = gh * CELL + (gh - 1) * GAP;
+        exactW = exactH * ratio;
+        
+        // Calculate how many grid columns are needed to safely enclose this width
+        gw = Math.ceil((exactW + GAP) / (CELL + GAP));
+        gw = Math.max(2, Math.min(gw, 12));
       }
 
       for (const c of coords) {
@@ -124,10 +167,12 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
           markOccupied(c.x, c.y, gw, gh);
           result.push({
             ...p,
+            // x and y represent the absolute center of the reserved grid space
             x: c.x * (CELL + GAP) + ((gw - 1) * (CELL + GAP)) / 2,
             y: c.y * (CELL + GAP) + ((gh - 1) * (CELL + GAP)) / 2,
-            w: gw * CELL + (gw - 1) * GAP,
-            h: gh * CELL + (gh - 1) * GAP,
+            // The card itself gets the exact pixel dimensions to avoid any cropping!
+            w: exactW,
+            h: exactH,
           });
           break;
         }
@@ -135,22 +180,29 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
     });
     
     return result;
-  }, [projects]);
+  }, [projects, sizesLoaded, aspectRatios]);
 
   const [pos, setPos] = useState(() => {
     const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
     const cy = typeof window !== 'undefined' ? window.innerHeight / 2 : 500;
-    
-    if (laidOutProjects.length > 0) {
-      return { 
-        x: cx - laidOutProjects[0].x, 
-        y: cy - laidOutProjects[0].y 
-      };
+    return { x: cx, y: cy }; 
+  });
+  
+  const hasCentered = useRef(false);
+
+  // Automatically center the canvas on the main 'center-poetry' node after layout
+  useEffect(() => {
+    if (laidOutProjects.length > 0 && !hasCentered.current && typeof window !== 'undefined') {
+      const centerProj = laidOutProjects.find(p => p.id === 'center-poetry');
+      if (centerProj) {
+        setPos({
+          x: window.innerWidth / 2 - centerProj.x,
+          y: window.innerHeight / 2 - centerProj.y
+        });
+        hasCentered.current = true;
+      }
     }
-    return { x: cx, y: cy };
-  }); // Absolute viewport coordinate offset
-
-
+  }, [laidOutProjects]);
 
   const [isDragging, setIsDragging] = useState(false);
   const lastPos = useRef({ x: 0, y: 0 });

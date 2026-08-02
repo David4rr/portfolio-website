@@ -144,11 +144,21 @@ const projects = allProjects.slice(0, 4);
 
                 <!-- Rocket System -->
                 <div class="rocket-system absolute w-[100px] h-[100px] flex items-center justify-center overflow-visible origin-center" style="transform: scale(0.7);">
-                  <svg class="w-full h-full overflow-visible" viewBox="-50 -50 100 100" fill="none" stroke="currentColor">
+                  <svg class="w-full h-full overflow-visible" viewBox="-50 -50 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                     
-                    <!-- Fixed Ropes: Start at button edge (x=32), end at final rocket tail (x=101.1) -->
-                    <path class="rope-top text-text-main/50 opacity-0" d="M 32 -18 L 101.1 -9" stroke="currentColor" stroke-width="1.5" />
-                    <path class="rope-bottom text-text-main/50 opacity-0" d="M 32 18 L 101.1 9" stroke="currentColor" stroke-width="1.5" />
+                    <defs>
+                      <!-- Clip path fixed at button edge (x=32) -->
+                      <clipPath id="rope-clip">
+                        <rect x="32" y="-50" width="200" height="100" />
+                      </clipPath>
+                    </defs>
+
+                    <!-- Ropes Container (Static Clip Window) -->
+                    <g clip-path="url(#rope-clip)">
+                      <!-- Ropes are static lines whose x2 attribute perfectly tracks the tail -->
+                      <line class="rope-top text-text-main/50" x1="32" y1="-18" x2="-18.9" y2="-9" stroke="currentColor" stroke-width="1.5" />
+                      <line class="rope-bottom text-text-main/50" x1="32" y1="18" x2="-18.9" y2="9" stroke="currentColor" stroke-width="1.5" />
+                    </g>
 
                     <!-- Rocket Mover -->
                     <g class="rocket-mover">
@@ -172,7 +182,7 @@ const projects = allProjects.slice(0, 4);
                           <path d="M 50 14 Q 65 30 50 46" stroke-width="3" />
                         </g>
 
-                        <g class="text-accent" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="2">
+                        <g class="transition-colors duration-300 group-hover:text-accent" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="2">
                           <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" />
                           <path d="M 76 22 Q 68 30 76 38" />
                           <path d="M 74 22 Q 95 25 115 30" />
@@ -253,10 +263,6 @@ const projects = allProjects.slice(0, 4);
     const rocketFlamesFlicker = newBtn.querySelector(".rocket-flames-flicker");
     const ropes = newBtn.querySelectorAll(".rope-top, .rope-bottom");
 
-    if (ropes.length > 0) {
-      anime.set(ropes, { strokeDashoffset: anime.setDashoffset, opacity: 0 });
-    }
-
     // Continuous flame flicker loop (always runs, but only visible when rocketFlames opacity > 0)
     if (rocketFlamesFlicker) {
       anime({
@@ -309,16 +315,15 @@ const projects = allProjects.slice(0, 4);
         easing: "easeOutSine",
       }, 120);
 
-      // 4. Ropes unspool matching the tail exactly
+      // Ropes track exactly with the rocket tail by animating x2
       hoverTl.add({
         targets: ropes,
-        strokeDashoffset: [anime.setDashoffset, 0],
-        opacity: [0, 1],
-        duration: flightDuration * (1 - percentToEdge),
+        x2: [-18.9, 101.1],
+        duration: flightDuration,
         easing: "easeOutSine"
-      }, 120 + (flightDuration * percentToEdge)); 
+      }, 120);
 
-      // 5. Button gets pulled slightly right
+      // 4. Button gets pulled slightly right
       hoverTl.add({
         targets: newBtn,
         translateX: "8px",
@@ -338,7 +343,7 @@ const projects = allProjects.slice(0, 4);
       // Quick reset for clean exit
       hoverTl.add({
         targets: ropes,
-        opacity: 0,
+        x2: -18.9,
         duration: 150,
       }, 0);
 

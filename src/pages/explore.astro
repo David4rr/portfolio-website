@@ -39,10 +39,17 @@ notionProjects.forEach((p) => {
     <!-- UI Overlay -->
     <div class="absolute top-8 left-8 z-50 pointer-events-auto">
       <a
+        id="back-btn"
         href="/#projects"
-        class="inline-flex items-center gap-3 text-text-muted hover:text-text-main transition-colors uppercase font-sans text-[10px] tracking-widest bg-bg/80 backdrop-blur-md px-4 py-2 rounded-full border border-border-subtle"
+        class="relative inline-flex items-center gap-3 text-text-muted hover:text-text-main transition-colors uppercase font-sans text-[10px] tracking-widest bg-bg/80 backdrop-blur-md px-4 py-2 rounded-full border border-border-subtle opacity-0 overflow-hidden"
       >
-        <span>&larr; Return to Home</span>
+        <span class="relative z-10 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7"/>
+            <path d="M19 12H5"/>
+          </svg>
+          Return to Home
+        </span>
       </a>
     </div>
 
@@ -50,3 +57,85 @@ notionProjects.forEach((p) => {
     <InfiniteCanvas projects={allProjects} client:only="preact" />
   </main>
 </BaseLayout>
+
+<script>
+  import anime from 'animejs';
+
+  document.addEventListener("astro:page-load", () => {
+    const btn = document.getElementById("back-btn");
+    if (!btn) return;
+
+    // Clone to clean up event listeners
+    const newBtn = btn.cloneNode(true) as HTMLAnchorElement;
+    btn.parentNode?.replaceChild(newBtn, btn);
+
+    // Entrance animation
+    anime({
+      targets: newBtn,
+      translateX: [-50, 0],
+      opacity: [0, 1],
+      duration: 1200,
+      easing: 'easeOutElastic(1, 0.5)',
+      delay: 500
+    });
+
+    let floatAnim;
+
+    // Gentle floating like a leaf on water
+    newBtn.addEventListener("mouseenter", () => {
+      floatAnim = anime({
+        targets: newBtn,
+        translateY: [0, -4, 2, -1, 0],
+        rotate: [0, 1, -1, 0],
+        duration: 2500,
+        easing: 'easeInOutSine',
+        loop: true
+      });
+    });
+
+    newBtn.addEventListener("mouseleave", () => {
+      if (floatAnim) floatAnim.pause();
+      anime({
+        targets: newBtn,
+        translateY: 0,
+        rotate: 0,
+        duration: 600,
+        easing: 'easeOutElastic(1, 0.5)'
+      });
+    });
+
+    // Water ripple effect on click
+    newBtn.addEventListener("mousedown", (e) => {
+      const rect = newBtn.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const ripple = document.createElement("div");
+      ripple.style.position = "absolute";
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+      ripple.style.width = "0px";
+      ripple.style.height = "0px";
+      // Using a subtle blue/accent water color
+      ripple.style.backgroundColor = "rgba(100, 150, 255, 0.3)";
+      ripple.style.borderRadius = "50%";
+      ripple.style.transform = "translate(-50%, -50%)";
+      ripple.style.pointerEvents = "none";
+      
+      newBtn.appendChild(ripple);
+
+      // Expand ripple and fade out
+      anime({
+        targets: ripple,
+        width: "150px",
+        height: "150px",
+        opacity: [1, 0],
+        duration: 700,
+        easing: 'easeOutCirc',
+        complete: () => {
+          ripple.remove();
+        }
+      });
+    });
+  });
+</script>
