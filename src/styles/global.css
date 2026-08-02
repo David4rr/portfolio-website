@@ -81,6 +81,9 @@
   }
 }
 @layer utilities {
+  html, body {
+    overscroll-behavior: none;
+  }
   main {
     perspective: 1200px;
   }

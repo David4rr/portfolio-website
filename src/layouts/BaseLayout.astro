@@ -57,5 +57,26 @@ const { title } = Astro.props;
     <slot />
 
     <script src="../scripts/section-tear.js"></script>
+    <script>
+      import Lenis from 'lenis';
+
+      document.addEventListener('astro:page-load', () => {
+        const isExplore = window.location.pathname.includes('/explore');
+        if (!isExplore) {
+          window.lenis = new Lenis({
+            autoRaf: true,
+            smoothWheel: true,
+            duration: 1.2,
+          });
+        }
+      });
+
+      document.addEventListener('astro:before-swap', () => {
+        if (window.lenis) {
+          window.lenis.destroy();
+          window.lenis = null;
+        }
+      });
+    </script>
   </body>
 </html>

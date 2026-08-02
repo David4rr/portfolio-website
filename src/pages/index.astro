@@ -13,7 +13,7 @@ import LiveClock from "../components/LiveClock.astro";
 import { getProjectsFromNotion } from "../lib/notion";
 
 import laurelWreathImg from "../assets/laurel_wreath.jpg";
-import astrolabeImg from "../assets/astrolabe.jpg";
+
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
@@ -106,13 +106,16 @@ const projects = allProjects.slice(0, 4);
                           </span>
                         </div>
                         
-                        <!-- Empty Space Poetry SVG Illustration (Only on Item 2) -->
+                        <!-- Roman Poetry Art Illustration -->
                         {i === 1 && (
-                          <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 -translate-y-8 md:-translate-y-12">
-                            <svg viewBox="0 0 100 100" class="w-32 h-32 md:w-48 md:h-48 stroke-current text-text-main/15 stroke-[1.5] fill-none opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-[1200ms] ease-out delay-200">
-                              <path d="M50 10 Q50 50 10 50 Q50 50 50 90 Q50 50 90 50 Q50 50 50 10" />
-                              <circle cx="50" cy="50" r="12" />
-                            </svg>
+                          <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                            <img 
+                              src="/roman_poetry_art.jpg" 
+                              alt="Roman Poetry Art" 
+                              class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[1500ms] ease-out grayscale mix-blend-luminosity" 
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-bg/10"></div>
+                            <div class="absolute inset-0 bg-gradient-to-r from-bg via-bg/40 to-transparent"></div>
                           </div>
                         )}
 
@@ -217,10 +220,10 @@ const projects = allProjects.slice(0, 4);
               class="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg z-10 opacity-80"
             >
             </div>
-            <Image
-              src={astrolabeImg}
-              alt="Classical Astrolabe and Compass"
-              class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000"
+            <img
+              src="/roman_poetry_art.jpg"
+              alt="Classical Roman Art"
+              class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000 grayscale"
             />
           </div>
 
