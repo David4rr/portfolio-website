@@ -17,7 +17,7 @@ export interface NotionProject {
 }
 
 // Helper to safely get env variables in Astro across Node and Cloudflare
-async function getRuntimeEnv(key: string) {
+export async function getRuntimeEnv(key: string) {
   // 1. Try Cloudflare Workers native environment variables (Astro 7+ standard)
   try {
     const moduleName = 'cloudflare:workers';

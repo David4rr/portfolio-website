@@ -4,6 +4,10 @@ import GithubActivity from "./GithubActivity";
 import AsciiAvatar from "./AsciiAvatar";
 import Typewriter from "./Typewriter";
 import framesJson from "../data/ascii-frames.json";
+import { getRuntimeEnv } from "../lib/notion";
+
+const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || await getRuntimeEnv('PUBLIC_CONTACT_EMAIL') || "hello@example.com";
+const githubUsername = await getRuntimeEnv('GITHUB_USERNAME') || await getRuntimeEnv('PUBLIC_GITHUB_USERNAME') || "David4rr";
 
 let framesData = "[]";
 let initialArt = "";
@@ -99,7 +103,7 @@ try {
         </div>
         Explore the Work
       </a>
-      <a href={`mailto:${import.meta.env.CONTACT_EMAIL || "hello@example.com"}`} class="group inline-flex items-center justify-center gap-2 font-serif italic text-text-muted hover:text-accent active:text-accent active:scale-95 transition-all duration-300 text-sm">
+      <a href={`mailto:${contactEmail}`} class="group inline-flex items-center justify-center gap-2 font-serif italic text-text-muted hover:text-accent active:text-accent active:scale-95 transition-all duration-300 text-sm">
         Or send a letter
         <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
           <span class="absolute inset-0 bg-text-muted rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0" />
@@ -112,7 +116,7 @@ try {
     </div>
 
     <!-- GitHub Telegraph (Live Feed) -->
-    <GithubActivity username={import.meta.env.GITHUB_USERNAME || "David4rr"} client:visible />
+    <GithubActivity username={githubUsername} client:visible />
   </div>
 </section>
 

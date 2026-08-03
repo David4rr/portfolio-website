@@ -1,5 +1,6 @@
 ---
-// ponytail: Contact section
+import { getRuntimeEnv } from '../lib/notion';
+const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || await getRuntimeEnv('PUBLIC_CONTACT_EMAIL') || "hello@example.com";
 import { Image } from 'astro:assets';
 
 ---
@@ -11,7 +12,7 @@ import { Image } from 'astro:assets';
         Get In Touch<span class="text-accent">.</span>
       </h2>
       <p class="text-text-muted mb-8 max-w-md mx-auto md:mx-0 text-[1.05rem] leading-relaxed">Whether you have a question or just want to say hi, I'll try my best to get back to you!</p>
-      <a href={`mailto:${import.meta.env.CONTACT_EMAIL || "hello@example.com"}`} id="slime-btn" class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg transition-colors duration-300 origin-center">Say Hello</a>
+      <a href={`mailto:${contactEmail}`} id="slime-btn" class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg transition-colors duration-300 origin-center">Say Hello</a>
     </div>
     
     <!-- Poetic Intermission 3 (Rome Architecture) - Placed in the right column -->
