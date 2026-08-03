@@ -89,6 +89,8 @@ const projects = allProjects.slice(0, 4);
                             alt={project.title}
                             width={800}
                             height={800}
+                            loading={i === 0 ? "eager" : "lazy"}
+                            fetchpriority={i === 0 ? "high" : "auto"}
                             class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
                           />
                         )}

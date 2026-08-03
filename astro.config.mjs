@@ -19,7 +19,10 @@ export default defineConfig({
     ? node({ mode: 'standalone' }) 
     : cloudflare({ imageService: 'cloudflare', platformProxy: { enabled: false } }),
   image: {
-    domains: ['images.unsplash.com'],
+    domains: ['images.unsplash.com', 'sxclngaxqylwkcypthoo.supabase.co', 'prod-files-secure.s3.us-west-2.amazonaws.com'],
+  },
+  build: {
+    inlineStylesheets: 'always'
   },
   vite: {
     plugins: [tailwindcss()]
