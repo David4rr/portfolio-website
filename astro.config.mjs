@@ -17,7 +17,7 @@ export default defineConfig({
   output: 'server',
   adapter: isDev 
     ? node({ mode: 'standalone' }) 
-    : cloudflare({ imageService: 'cloudflare' }),
+    : cloudflare({ imageService: 'cloudflare', platformProxy: { enabled: false } }),
   image: {
     domains: ['images.unsplash.com'],
   },

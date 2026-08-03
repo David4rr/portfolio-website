@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "node scripts/generate-ascii.mjs && astro dev",
-    "build": "node scripts/generate-ascii.mjs && astro build",
+    "build": "node scripts/generate-ascii.mjs && astro build && node scripts/fix-wrangler-json.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
