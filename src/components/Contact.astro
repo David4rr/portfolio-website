@@ -21,7 +21,9 @@ import { Image } from 'astro:assets';
       <div class="absolute inset-0 bg-gradient-to-l from-bg via-transparent to-bg z-10 opacity-90"></div>
       <img 
         src="/roman_poetry_art.jpg" 
-        alt="Timeless Roman Architecture" 
+        alt="Timeless Roman Architecture"
+        loading="lazy"
+        decoding="async"
         class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000 origin-right grayscale"
       />
     </div>

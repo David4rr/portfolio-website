@@ -110,7 +110,9 @@ const projects = allProjects.slice(0, 4);
                           <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
                             <img 
                               src="/roman_poetry_art.jpg" 
-                              alt="Roman Poetry Art" 
+                              alt="Roman Poetry Art"
+                              loading="lazy"
+                              decoding="async"
                               class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[1500ms] ease-out grayscale mix-blend-luminosity" 
                             />
                             <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-bg/10"></div>
@@ -137,7 +139,7 @@ const projects = allProjects.slice(0, 4);
           </div>
 
           <div class="mt-16 flex justify-center w-full">
-            <a href="/explore" id="rocket-btn" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 transition-colors duration-300 cursor-pointer select-none">
+            <a href="/explore" id="rocket-btn" aria-label="View more projects" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 transition-colors duration-300 cursor-pointer select-none">
               
               <span class="relative z-10 btn-text pointer-events-none">View More Projects</span>
 
@@ -222,6 +224,8 @@ const projects = allProjects.slice(0, 4);
             <img
               src="/roman_poetry_art.jpg"
               alt="Classical Roman Art"
+              loading="lazy"
+              decoding="async"
               class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000 grayscale"
             />
           </div>
