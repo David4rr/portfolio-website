@@ -22,7 +22,10 @@ export default defineConfig({
     inlineStylesheets: 'always'
   },
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    build: {
+      modulePreload: false
+    }
   },
 
   integrations: [sitemap(), preact()]

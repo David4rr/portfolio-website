@@ -112,18 +112,19 @@ const { username } = Astro.props;
     }
 
     const executeFetch = () => {
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(fetchActivity);
-      } else {
-        setTimeout(fetchActivity, 1000);
-      }
+      fetchActivity();
     };
 
-    if (document.readyState === 'complete') {
-      executeFetch();
-    } else {
-      window.addEventListener('load', executeFetch);
-    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          executeFetch();
+          observer.disconnect();
+        }
+      });
+    }, { rootMargin: '100px' });
+
+    observer.observe(container);
     interval = setInterval(fetchActivity, 600000);
 
     document.addEventListener('astro:before-preparation', () => {
