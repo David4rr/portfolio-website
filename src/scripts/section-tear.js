@@ -49,6 +49,15 @@ const updateSectionData = () => {
 
 const updateTearOff = () => {
   if (sectionData.length === 0) updateSectionData();
+  
+  // Disable tear-off effect on mobile to prevent glitchy scrolling and resizing
+  if (window.innerWidth < 768) {
+    sectionData.forEach(({ el: sec }) => {
+      sec.style = ''; // Reset all JS-applied inline styles
+    });
+    return;
+  }
+
   const wh = window.innerHeight;
   const scrollY = window.scrollY;
 

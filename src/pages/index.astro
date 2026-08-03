@@ -29,7 +29,7 @@ const projects = allProjects.slice(0, 4);
     <!-- 1. Hero -->
     <section
       data-section
-      class="sticky top-0 h-[100dvh] overflow-hidden w-full bg-bg z-40"
+      class="relative md:sticky md:top-0 min-h-[100svh] md:h-[100dvh] overflow-hidden w-full bg-bg z-40"
     >
       <div
         data-reveal="letter-unfold"
@@ -47,13 +47,13 @@ const projects = allProjects.slice(0, 4);
     <div id="projects" class="absolute w-full h-0 pointer-events-none"></div>
 
     <!-- 2. Projects -->
-    <section data-section class="sticky top-0 min-h-screen w-full bg-bg z-30">
+    <section data-section class="relative md:sticky md:top-0 min-h-[100svh] md:min-h-screen w-full bg-bg z-30">
       <div
         data-reveal="word-cascade"
         class="h-full max-w-[1200px] mx-auto px-4 md:px-8 w-full"
       >
         <div
-          class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100vh-3rem)]"
+          class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100svh-3rem)]"
         >
           <div>
             <h2
@@ -212,7 +212,7 @@ const projects = allProjects.slice(0, 4);
     </section>
 
     <!-- 3. Activity -->
-    <section data-section class="sticky top-0 min-h-screen w-full bg-bg z-20">
+    <section data-section class="relative md:sticky md:top-0 min-h-[100svh] md:min-h-screen w-full bg-bg z-20">
       <div
         data-reveal="ink-bloom"
         class="h-full max-w-[1200px] mx-auto px-4 md:px-8 w-full"
@@ -247,7 +247,7 @@ const projects = allProjects.slice(0, 4);
     <!-- 4. Contact -->
     <section
       data-section
-      class="sticky top-0 h-screen w-full bg-bg z-10 flex flex-col"
+      class="relative md:sticky md:top-0 min-h-[100svh] md:h-screen w-full bg-bg z-10 flex flex-col"
       id="contact"
     >
       <div
