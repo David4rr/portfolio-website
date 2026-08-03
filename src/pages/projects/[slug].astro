@@ -9,15 +9,22 @@ import { marked } from 'marked';
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
 
+// Pass Cloudflare runtime secrets if available
+const runtimeEnv = typeof Astro !== 'undefined' && Astro.locals?.runtime?.env ? Astro.locals.runtime.env : {};
+
+// Get the slug from the URL
 const { slug } = Astro.params;
-const projects = await getProjectsFromNotion();
+
+// Fetch projects
+const projects = await getProjectsFromNotion(runtimeEnv);
 const project = projects.find(p => p.slug === slug);
 
 if (!project) {
   return Astro.redirect('/404');
 }
 
-const mdContent = await getProjectContent(project.id);
+// Fetch content
+const mdContent = await getProjectContent(project.id, runtimeEnv);
 const htmlContent = marked.parse(mdContent);
 ---
 <BaseLayout title={project.title}>

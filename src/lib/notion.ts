@@ -1,27 +1,6 @@
 import { Client } from '@notionhq/client';
 import { NotionToMarkdown } from 'notion-to-md';
 
-// Helper to safely get env variables in Astro
-function getEnv(key: string) {
-  // Try import.meta.env first (Astro default)
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
-  // Fallback to process.env (Node.js runtime / Vercel)
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  return undefined;
-}
-
-const token = getEnv('NOTION_ACCESS_TOKEN');
-
-export const notion = new Client({
-  auth: token,
-});
-
-export const n2m = new NotionToMarkdown({ notionClient: notion });
-
 export interface NotionProject {
   id: string;
   slug: string;
@@ -37,16 +16,35 @@ export interface NotionProject {
   timeline?: string;
 }
 
+// Helper to safely get env variables in Astro across Node and Cloudflare
+function getRuntimeEnv(key: string, astroEnv?: Record<string, any>) {
+  // 1. Try passing from Astro.locals.runtime.env (Cloudflare)
+  if (astroEnv && astroEnv[key]) return astroEnv[key];
+  
+  // 2. Try import.meta.env (Astro build-time fallback)
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
+  }
+  
+  // 3. Fallback to process.env (Node.js runtime / Vercel)
+  if (typeof process !== 'undefined' && process.env && process.env[key]) {
+    return process.env[key];
+  }
+  
+  return undefined;
+}
+
 // Function to fetch all published projects
-export async function getProjectsFromNotion(): Promise<NotionProject[]> {
-  const databaseId = getEnv('NOTION_DATABASE_ID');
+export async function getProjectsFromNotion(astroEnv?: Record<string, any>): Promise<NotionProject[]> {
+  const databaseId = getRuntimeEnv('NOTION_DATABASE_ID', astroEnv);
+  const token = getRuntimeEnv('NOTION_ACCESS_TOKEN', astroEnv);
   
   try {
     if (!databaseId) {
-      throw new Error("NOTION_DATABASE_ID is missing in your .env file!");
+      throw new Error("NOTION_DATABASE_ID is missing!");
     }
     if (!token) {
-      throw new Error("NOTION_ACCESS_TOKEN is missing or undefined. Please restart your dev server.");
+      throw new Error("NOTION_ACCESS_TOKEN is missing!");
     }
     
     const requestBody = {
@@ -198,8 +196,14 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
 }
 
 // Function to fetch content for a specific page ID
-export async function getProjectContent(pageId: string): Promise<string> {
+export async function getProjectContent(pageId: string, astroEnv?: Record<string, any>): Promise<string> {
   try {
+    const token = getRuntimeEnv('NOTION_ACCESS_TOKEN', astroEnv);
+    if (!token) throw new Error("NOTION_ACCESS_TOKEN is missing!");
+    
+    const notion = new Client({ auth: token });
+    const n2m = new NotionToMarkdown({ notionClient: notion });
+    
     const mdblocks = await n2m.pageToMarkdown(pageId);
     const mdString = n2m.toMarkdownString(mdblocks);
     return mdString.parent || '';
