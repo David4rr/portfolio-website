@@ -18,7 +18,7 @@ export interface NotionProject {
 
 // Helper to safely get env variables in Astro across Node and Cloudflare
 function getRuntimeEnv(key: string, astroEnv?: Record<string, any>) {
-  // 1. Try passing from Astro.locals.runtime.env (Cloudflare)
+  // 1. Try passing from the injected process.env (Cloudflare / Vercel)
   if (astroEnv && astroEnv[key]) return astroEnv[key];
   
   // 2. Try import.meta.env (Astro build-time fallback)
