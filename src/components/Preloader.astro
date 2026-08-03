@@ -1,9 +1,9 @@
 ---
-import RocketLoader from "./RocketLoader.tsx";
+import RocketLoader from "./RocketLoader.astro";
 ---
 <div id="preloader-overlay" class="fixed inset-0 z-[9999] bg-bg flex flex-col items-center justify-center transition-opacity duration-1000" style="display: none;">
   <div class="mb-4 flex items-center justify-center scale-150">
-    <RocketLoader client:load text="" />
+    <RocketLoader text="" />
   </div>
   
   <div class="flex flex-col items-center gap-6 text-center mt-4">

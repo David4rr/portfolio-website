@@ -1,0 +1,123 @@
+---
+// GithubActivity.astro
+interface Props {
+  username: string;
+}
+const { username } = Astro.props;
+---
+
+<div id="gh-activity-container" data-username={username} class="w-full max-w-lg border-t border-border-subtle pt-4 animate-slide-up" style="animation-delay: 0.5s">
+  <h3 class="font-sans uppercase tracking-[0.2em] text-[9px] text-text-muted/60 mb-2 text-center">
+    Live Telegraph
+  </h3>
+  <ul id="gh-activity-list" class="flex flex-col gap-1 font-serif text-[clamp(0.8rem,1vw,0.9rem)] text-text-muted text-left">
+    <li class="flex items-center justify-between">
+      <span class="flex items-center gap-3">
+        <span class="text-[9px] text-accent/50">◍</span> Awaiting transmission...
+      </span>
+    </li>
+  </ul>
+</div>
+
+<script>
+  function getTimeString(createdAt) {
+    const diff = Date.now() - new Date(createdAt).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours === 0) return 'just now';
+    if (hours >= 24 && hours < 48) return 'yesterday';
+    if (hours >= 48) return `${Math.floor(hours / 24)}d ago`;
+    return `${hours}h ago`;
+  }
+
+  function getActionString(type) {
+    if (type === "PushEvent") return "Pushed to";
+    if (type === "WatchEvent") return "Starred";
+    if (type === "CreateEvent") return "Created";
+    if (type === "PullRequestEvent") return "Opened PR on";
+    if (type === "IssuesEvent") return "Opened issue on";
+    return "Contributed to";
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const container = document.getElementById('gh-activity-container');
+    const list = document.getElementById('gh-activity-list');
+    if (!container || !list) return;
+
+    const username = container.dataset.username;
+    if (!username) return;
+
+    let timeout;
+    let interval;
+    let isRunning = true;
+
+    async function fetchActivity() {
+      if (!isRunning) return;
+      try {
+        const res = await fetch(`https://api.github.com/users/${username}/events/public`);
+        if (!res.ok) {
+          showError();
+          return;
+        }
+        const data = await res.json();
+        
+        const filtered = data
+          .filter((ev) =>
+            [
+              "PushEvent",
+              "WatchEvent",
+              "CreateEvent",
+              "PullRequestEvent",
+              "IssuesEvent",
+            ].includes(ev.type),
+          )
+          .slice(0, 3);
+          
+        if (filtered.length === 0) {
+          list.innerHTML = `
+            <li class="flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0">
+              <span class="flex items-center gap-3">
+                <span class="text-[10px]">◍</span> No recent activity found.
+              </span>
+            </li>
+          `;
+          return;
+        }
+
+        let html = '';
+        for (const ev of filtered) {
+          html += `
+            <li class="flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0">
+              <span class="flex items-center gap-3">
+                <span class="text-[10px]">◍</span> ${getActionString(ev.type)} ${ev.repo.name}
+              </span>
+              <span class="opacity-60 text-sm">· ${getTimeString(ev.created_at)}</span>
+            </li>
+          `;
+        }
+        list.innerHTML = html;
+      } catch (e) {
+        console.error("Failed to load GitHub activity:", e);
+        showError();
+      }
+    }
+
+    function showError() {
+      list.innerHTML = `
+        <li class="flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0">
+          <span class="flex items-center gap-3">
+            <span class="text-[10px]">◍</span> Error receiving transmission.
+          </span>
+        </li>
+      `;
+    }
+
+    timeout = setTimeout(fetchActivity, 4000);
+    interval = setInterval(fetchActivity, 600000);
+
+    document.addEventListener('astro:before-preparation', () => {
+      isRunning = false;
+      clearTimeout(timeout);
+      clearInterval(interval);
+    }, { once: true });
+  });
+</script>

@@ -1,0 +1,78 @@
+---
+// Typewriter.astro
+---
+
+<span id="typewriter-text"></span>
+<span id="typewriter-cursor" class="font-light text-accent ml-[2px]">|</span>
+
+<script>
+  const roles = [
+    "Mobile & Web Developer",
+    "AI & Machine Learning Enthusiast",
+    "Building Seamless Digital Experiences"
+  ];
+  
+  // Astro view transitions setup
+  document.addEventListener('astro:page-load', () => {
+    const textEl = document.getElementById('typewriter-text');
+    const cursorEl = document.getElementById('typewriter-cursor');
+    if (!textEl || !cursorEl) return;
+    
+    // reset state
+    let roleIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timeoutId;
+    let isRunning = true;
+
+    function type() {
+      if (!isRunning) return;
+      const currentRole = roles[roleIndex];
+      const isPaused = charIndex === 0 || charIndex === currentRole.length;
+      
+      if (isPaused) {
+        cursorEl.classList.add('animate-type-blink');
+      } else {
+        cursorEl.classList.remove('animate-type-blink');
+      }
+
+      if (!isDeleting) {
+        if (charIndex < currentRole.length) {
+          const typingSpeed = 50 + Math.random() * 60;
+          timeoutId = setTimeout(() => {
+            charIndex++;
+            textEl.textContent = currentRole.slice(0, charIndex);
+            type();
+          }, typingSpeed);
+        } else {
+          timeoutId = setTimeout(() => {
+            isDeleting = true;
+            type();
+          }, 2000);
+        }
+      } else {
+        if (charIndex > 0) {
+          timeoutId = setTimeout(() => {
+            charIndex--;
+            textEl.textContent = currentRole.slice(0, charIndex);
+            type();
+          }, 30);
+        } else {
+          timeoutId = setTimeout(() => {
+            isDeleting = false;
+            roleIndex = (roleIndex + 1) % roles.length;
+            type();
+          }, 300);
+        }
+      }
+    }
+    
+    type();
+    
+    // Cleanup on navigation
+    document.addEventListener('astro:before-preparation', () => {
+      isRunning = false;
+      clearTimeout(timeoutId);
+    }, { once: true });
+  });
+</script>
