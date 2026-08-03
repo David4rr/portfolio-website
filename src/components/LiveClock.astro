@@ -2,8 +2,8 @@
 // LiveClock.astro
 const { location = "Jakarta, ID" } = Astro.props;
 ---
-<div class="absolute bottom-8 right-8 text-right flex-col items-end gap-1 opacity-60 hover:opacity-100 transition-opacity z-20 pointer-events-auto hidden md:flex">
-  <p class="font-sans text-[9px] uppercase tracking-[0.2em] text-text-muted">{location}</p>
+<div class="absolute bottom-8 right-8 text-right flex-col items-end gap-1 z-20 pointer-events-auto hidden md:flex">
+  <p class="font-sans text-[10px] uppercase tracking-[0.2em] text-text-main">{location}</p>
   <p id="live-clock-display" class="font-serif text-sm text-text-main tabular-nums tracking-wider">...</p>
 </div>
 
