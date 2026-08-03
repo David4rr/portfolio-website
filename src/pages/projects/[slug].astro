@@ -87,6 +87,8 @@ const htmlContent = marked.parse(mdContent);
                 <img 
                   src={imgUrl} 
                   alt={`${project.title} gallery ${i+1}`}
+                  width="800"
+                  height="800"
                   loading="lazy"
                   decoding="async"
                   class="w-full h-full object-contain rounded-[1px]"
@@ -110,6 +112,8 @@ const htmlContent = marked.parse(mdContent);
           <img 
             src={project.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
             alt={project.title} 
+            width="800"
+            height="800"
             loading="lazy"
             decoding="async"
             class="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 

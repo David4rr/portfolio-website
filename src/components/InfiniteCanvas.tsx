@@ -29,6 +29,8 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
       <img 
         src={src} 
         alt={alt}
+        width={800}
+        height={800}
         onLoad={() => setLoaded(true)}
         class={`absolute inset-0 w-full h-full object-cover pointer-events-none brightness-[0.95] transition-opacity duration-[1500ms] ease-out ${loaded ? 'opacity-100' : 'opacity-0'}`}
         loading="lazy"
