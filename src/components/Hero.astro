@@ -39,7 +39,7 @@ try {
     <!-- ASCII Emblem -->
     <div class="mb-2 flex flex-col items-center relative">
       <div class="p-2">
-        <AsciiAvatar initialArt={initialArt} framesData={framesData} client:idle />
+        <AsciiAvatar initialArt={initialArt} framesData={framesData} client:load />
       </div>
       <div class="w-[1px] h-3 bg-border-subtle mt-2"></div>
 
@@ -64,7 +64,7 @@ try {
 
     <!-- The Role (Typewriter) -->
     <h2 class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-3">
-      <Typewriter client:idle />
+      <Typewriter client:load />
     </h2>
 
     <!-- The Prose -->
@@ -116,7 +116,7 @@ try {
     </div>
 
     <!-- GitHub Telegraph (Live Feed) -->
-    <GithubActivity username={githubUsername} client:idle />
+    <GithubActivity username={githubUsername} client:visible />
   </div>
 </section>
 

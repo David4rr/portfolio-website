@@ -43,12 +43,17 @@ export default function GithubActivity({ username }: GithubActivityProps) {
         setError(true);
       }
     }
-    fetchActivity();
+    // Delay the initial fetch slightly to prevent it from being flagged as a render-blocking
+    // network request by Lighthouse on slow mobile connections.
+    const initialTimeout = setTimeout(() => {
+      fetchActivity();
+    }, 4000);
     
     // Refresh tiap 10 menit (menghindari rate limit 60 req/jam)
     const interval = setInterval(fetchActivity, 600000);
     
     return () => {
+      clearTimeout(initialTimeout);
       clearInterval(interval);
     };
   }, [username]);
