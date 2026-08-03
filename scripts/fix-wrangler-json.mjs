@@ -30,6 +30,12 @@ if (fs.existsSync(clientDir) && fs.existsSync(serverDir)) {
     fs.unlinkSync(wranglerJsonPath);
   }
 
+  // 5. Delete the .wrangler directory created by Astro during build
+  const dotWranglerPath = path.resolve('.wrangler');
+  if (fs.existsSync(dotWranglerPath)) {
+    fs.rmSync(dotWranglerPath, { recursive: true, force: true });
+  }
+
   console.log('Successfully reshaped Astro output for Cloudflare Pages!');
 } else {
   console.log('Could not find dist/client or dist/server. Skipping reshape.');
