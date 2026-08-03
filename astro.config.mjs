@@ -17,10 +17,7 @@ export default defineConfig({
   output: 'server',
   adapter: isDev 
     ? node({ mode: 'standalone' }) 
-    : cloudflare({ imageService: 'cloudflare', platformProxy: { enabled: false } }),
-  image: {
-    domains: ['images.unsplash.com', 'sxclngaxqylwkcypthoo.supabase.co', 'prod-files-secure.s3.us-west-2.amazonaws.com'],
-  },
+    : cloudflare({ platformProxy: { enabled: false } }),
   build: {
     inlineStylesheets: 'always'
   },

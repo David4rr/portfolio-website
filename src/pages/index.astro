@@ -83,17 +83,20 @@ const projects = allProjects.slice(0, 4);
                     >
                       <!-- Front Layer: Image (Starts full, shrinks to center on hover) -->
                       <div class="absolute inset-0 w-full h-full z-10 transition-all duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)] [clip-path:inset(0_0_0_0)] group-hover:[clip-path:inset(50%_50%_50%_50%)] pointer-events-none">
-                        {project.image && (
-                          <Image 
-                            src={project.image} 
-                            alt={project.title}
-                            width={800}
-                            height={800}
-                            loading={i === 0 ? "eager" : "lazy"}
-                            fetchpriority={i === 0 ? "high" : "auto"}
-                            class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
-                          />
-                        )}
+                        {project.image && (() => {
+                          const optimizedSrc = project.image.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(project.image)}&w=800&output=webp` : project.image;
+                          return (
+                            <img 
+                              src={optimizedSrc} 
+                              alt={project.title}
+                              width="800"
+                              height="800"
+                              loading={i === 0 ? "eager" : "lazy"}
+                              fetchpriority={i === 0 ? "high" : "auto"}
+                              class="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-[900ms] ease-[cubic-bezier(0.77,0,0.175,1)]" 
+                            />
+                          );
+                        })()}
                       </div>
                       
                       <!-- Base Layer: Content (Always there, revealed when image shrinks) -->

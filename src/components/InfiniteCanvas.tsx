@@ -27,7 +27,7 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
          </div>
       </div>
       <img 
-        src={src} 
+        src={src.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=800&output=webp` : src} 
         alt={alt}
         width={800}
         height={800}
