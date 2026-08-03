@@ -27,7 +27,7 @@ const htmlContent = marked.parse(mdContent);
 <BaseLayout title={`${project.title} | David Arrozaqi`}>
   <Nav />
   
-  <main class="min-h-screen pt-32 pb-32 bg-bg">
+  <main class="min-h-screen pt-32 pb-32 bg-bg overflow-x-hidden w-full">
     <div class="max-w-xl mx-auto px-6 md:px-8">
       
       {/* Return link - minimalist top center */}
@@ -407,8 +407,8 @@ const htmlContent = marked.parse(mdContent);
             // Slide away
             anime({
               targets: topCard,
-              translateX: 180,
-              translateY: -30,
+              translateX: window.innerWidth < 768 ? 80 : 180,
+              translateY: window.innerWidth < 768 ? -15 : -30,
               rotate: 15,
               scale: 0.9,
               opacity: 0,
@@ -539,44 +539,67 @@ const htmlContent = marked.parse(mdContent);
         visitBtn.addEventListener('click', (e) => {
           e.preventDefault();
           const href = visitBtn.getAttribute('href');
-          const rocket = visitBtn.querySelector('.btn-rocket');
-          const btnText = visitBtn.querySelector('.btn-text');
+          const rocket = visitBtn.querySelector('.btn-rocket') as HTMLElement;
+          const btnText = visitBtn.querySelector('.btn-text') as HTMLElement;
           
-          if (!rocket || !href) return;
+          if (!rocket || !href || visitBtn.dataset.clicked) return;
+          visitBtn.dataset.clicked = "true";
           
-          // Force button styles to allow rocket to escape
-          visitBtn.classList.remove('group'); // Reverts rocket to stroke-text-main instantly
-          visitBtn.style.overflow = 'visible';
-          visitBtn.style.borderColor = 'transparent';
-          visitBtn.style.background = 'transparent';
-          visitBtn.style.boxShadow = 'none';
-          if(btnText) (btnText as HTMLElement).style.display = 'none';
-          
-          // Massive warp speed entrance!
-          anime({
-            targets: rocket,
-            scale: [1, 40],
-            translateX: [0, 800],
-            translateY: [0, -400],
-            rotate: [-12, -25],
-            opacity: [1, 0],
-            duration: 1200,
-            easing: 'easeInExpo',
-            complete: () => {
-              // Redirect once the flash covers the screen
-              window.open(href, '_blank');
-              
-              // Reset state for back navigation
-              setTimeout(() => {
-                visitBtn.classList.add('group');
-                visitBtn.style.overflow = 'hidden';
-                visitBtn.style.borderColor = '';
-                visitBtn.style.background = '';
-                if(btnText) (btnText as HTMLElement).style.display = '';
-                anime.set(rocket, { scale: 1, translateX: 0, translateY: 0, rotate: 0, opacity: '' });
-              }, 1000);
-            }
-          });
+          const startWarp = () => {
+            // Force button styles to allow rocket to escape
+            visitBtn.classList.remove('group'); 
+            rocket.classList.remove('transition-all', 'duration-500');
+            visitBtn.style.overflow = 'visible';
+            visitBtn.style.borderColor = 'transparent';
+            visitBtn.style.background = 'transparent';
+            if(btnText) btnText.style.display = 'none';
+            
+            // Massive warp speed entrance!
+            anime({
+              targets: rocket,
+              scale: [1, 40],
+              translateX: [0, window.innerWidth < 768 ? 400 : 800],
+              translateY: [0, -400],
+              rotate: [-12, -25],
+              opacity: [1, 0],
+              duration: window.innerWidth < 768 ? 900 : 1200,
+              easing: 'easeInExpo',
+              complete: () => {
+                // Redirect once the flash covers the screen
+                window.open(href, '_blank');
+                
+                // Reset state for back navigation
+                setTimeout(() => {
+                  visitBtn.dataset.clicked = "";
+                  visitBtn.classList.add('group');
+                  rocket.classList.add('transition-all', 'duration-500');
+                  visitBtn.style.overflow = 'hidden';
+                  visitBtn.style.borderColor = '';
+                  visitBtn.style.background = '';
+                  if(btnText) btnText.style.display = '';
+                  anime.set(rocket, { scale: 1, translateX: 0, translateY: 0, rotate: 0, opacity: '' });
+                }, 1000);
+              }
+            });
+          };
+
+          // If on mobile (or no hover occurred), smoothly reveal the rocket first before warp
+          const styles = window.getComputedStyle(rocket);
+          if (styles.opacity === "0" || styles.opacity === "0.001") {
+            visitBtn.classList.add('bg-text-main', 'text-bg');
+            if (btnText) btnText.style.opacity = '0';
+            
+            anime({
+              targets: rocket,
+              opacity: [0, 1],
+              translateY: [24, 0],
+              duration: 300,
+              easing: 'easeOutQuad',
+              complete: startWarp
+            });
+          } else {
+            startWarp();
+          }
         });
       }
     });

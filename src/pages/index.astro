@@ -120,7 +120,7 @@ const projects = allProjects.slice(0, 4);
                               height="1200"
                               loading="lazy"
                               decoding="async"
-                              class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[1500ms] ease-out grayscale mix-blend-luminosity" 
+                              class="absolute inset-0 w-full h-full object-cover opacity-20 md:opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[1500ms] ease-out grayscale md:mix-blend-luminosity" 
                             />
                             <div class="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-bg/10"></div>
                             <div class="absolute inset-0 bg-gradient-to-r from-bg via-bg/40 to-transparent"></div>
@@ -145,8 +145,8 @@ const projects = allProjects.slice(0, 4);
             </div>
           </div>
 
-          <div class="mt-16 flex justify-center w-full">
-            <a href="/explore" id="rocket-btn" aria-label="View more projects" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 transition-colors duration-300 cursor-pointer select-none">
+          <div class="mt-16 flex justify-center w-full relative">
+            <a href="/explore" id="rocket-btn" aria-label="View more projects" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 active:scale-95 transition-colors duration-300 cursor-pointer select-none">
               
               <span class="relative z-10 btn-text pointer-events-none">View More Projects</span>
 
@@ -235,7 +235,7 @@ const projects = allProjects.slice(0, 4);
               height="1200"
               loading="lazy"
               decoding="async"
-              class="w-full h-auto mix-blend-multiply dark:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 opacity-50 transition-all duration-1000 grayscale"
+              class="w-full h-auto opacity-20 md:opacity-50 md:mix-blend-multiply dark:md:mix-blend-screen dark:invert-[0.95] dark:hue-rotate-180 transition-all duration-1000 grayscale"
             />
           </div>
 
@@ -383,11 +383,12 @@ const projects = allProjects.slice(0, 4);
 
     newBtn.addEventListener("click", async (e) => {
       e.preventDefault();
+      if (newBtn.dataset.clicked) return;
       newBtn.dataset.clicked = "true";
       
       const href = newBtn.getAttribute("href");
       
-      // Lock hover styles forcefully to prevent snapback when pointer events are disabled
+      // Lock hover styles forcefully to prevent snapback
       newBtn.classList.add("!border-text-main/50");
       newBtn.style.pointerEvents = "none";
       
@@ -395,17 +396,38 @@ const projects = allProjects.slice(0, 4);
       
       const { default: anime } = await import('animejs/lib/anime.es.js');
 
-      // Launch rocket and button together cleanly without sudden scaling or yanking
-      anime({
-        targets: newBtn,
-        translateX: window.innerWidth,
-        opacity: [1, 0],
-        duration: 800,
-        easing: "easeInExpo",
-        complete: () => {
-          if (href) window.location.href = href;
-        }
-      });
+      const launchRocket = () => {
+        anime({
+          targets: newBtn,
+          translateX: "100vw",
+          opacity: [1, 0],
+          duration: 800,
+          easing: "easeInExpo",
+          complete: () => {
+            if (href) window.location.href = href;
+          }
+        });
+      };
+
+      // On mobile/touch devices, mouseenter might not fire fully. 
+      // Play the full hover sequence first before launching.
+      if (window.innerWidth < 768) {
+        const clickTl = anime.timeline({ easing: "easeOutQuad" });
+        clickTl.add({ targets: rocketSystem, scale: [0.7, 1], duration: 100 }, 0);
+        clickTl.add({ targets: rocketFlames, opacity: [0, 1], duration: 100 }, 50);
+        
+        const flightDistance = 120;
+        const distToEdge = 50.9;
+        const flightDuration = 300;
+        const percentToEdge = distToEdge / flightDistance;
+
+        clickTl.add({ targets: rocketMover, translateX: ["0px", `${flightDistance}px`], duration: flightDuration, easing: "easeOutSine" }, 120);
+        clickTl.add({ targets: ropes, x2: [-18.9, 101.1], duration: flightDuration, easing: "easeOutSine" }, 120);
+        clickTl.add({ targets: newBtn, translateX: "8px", duration: flightDuration * (1 - percentToEdge), easing: "easeOutSine", complete: launchRocket }, 120 + (flightDuration * percentToEdge));
+      } else {
+        // On desktop, the hover animation has already run or is running. Just launch!
+        launchRocket();
+      }
     });
   };
 
