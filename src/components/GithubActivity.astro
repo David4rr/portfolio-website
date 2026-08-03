@@ -111,13 +111,19 @@ const { username } = Astro.props;
       `;
     }
 
-    timeout = setTimeout(() => {
+    const executeFetch = () => {
       if (window.requestIdleCallback) {
         window.requestIdleCallback(fetchActivity);
       } else {
-        fetchActivity();
+        setTimeout(fetchActivity, 1000);
       }
-    }, 8000);
+    };
+
+    if (document.readyState === 'complete') {
+      executeFetch();
+    } else {
+      window.addEventListener('load', executeFetch);
+    }
     interval = setInterval(fetchActivity, 600000);
 
     document.addEventListener('astro:before-preparation', () => {
