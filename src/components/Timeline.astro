@@ -149,8 +149,6 @@ const education = {
 </section>
 
 <script>
-  import anime from 'animejs/lib/anime.es.js';
-
   const btn = document.getElementById('resume-download-btn');
   const baseBorder = btn?.querySelector('.base-border');
   const btnArea = btn?.querySelector('.btn-area');
@@ -167,14 +165,18 @@ const education = {
     let isLoading = false;
     let loadingTime = 2500;
     let progress = { value: '0%' };
+    let animeInstance: any = null; // Store it here!
     
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (isLoading) return;
       isLoading = true;
       progress.value = '0%';
       if (loadingProgress) loadingProgress.innerHTML = '0%';
 
       if (baseBorder) (baseBorder as HTMLElement).style.opacity = '0';
+      
+      const { default: anime } = await import('animejs/lib/anime.es.js');
+      animeInstance = anime;
 
       anime({
         targets: btnArea,
@@ -193,6 +195,7 @@ const education = {
     });
 
     function startLoading() {
+      const anime = animeInstance;
       anime({
         targets: loadingIcon,
         opacity: [0, 1],
@@ -237,6 +240,7 @@ const education = {
     }
 
     function completeLoading() {
+      const anime = animeInstance;
       anime({
         targets: [loadingIcon, loadingProgress],
         translateY: [0, -20],
@@ -255,6 +259,7 @@ const education = {
     }
 
     function showDone() {
+      const anime = animeInstance;
       anime({
         targets: tick1,
         strokeDashoffset: [52, 0],

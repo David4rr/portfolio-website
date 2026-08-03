@@ -1,64 +1,14 @@
-import anime from 'animejs';
-
 // --- 1. IntersectionObserver for internal section reveals ---
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
     const el = entry.target;
-    const type = el.dataset.reveal;
     
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) {
-      el.querySelectorAll('[data-animate], [data-word], [data-card]').forEach(e => {
-        if(e) e.style.opacity = '1';
-      });
-      observer.unobserve(el);
-      return;
-    }
-    
-    if (type === 'ink-bloom') {
-      const target = el.querySelector('[data-animate]');
-      if (target) {
-        const obj = { p: 0 };
-        anime({
-          targets: obj,
-          p: [0, 140],
-          duration: 1200,
-          easing: 'easeOutExpo',
-          update: () => {
-            target.style.clipPath = `circle(${obj.p}% at 50% 50%)`;
-          }
-        });
-        anime({
-          targets: target,
-          opacity: [0, 1],
-          duration: 1200,
-          easing: 'easeOutExpo',
-        });
-      }
-    } else if (type === 'word-cascade') {
-      const items = el.querySelectorAll('[data-word], [data-card]');
-      if (items.length > 0) {
-        anime({
-          targets: items,
-          opacity: [0, 1],
-          translateY: [12, 0],
-          delay: anime.stagger(60),
-          duration: 800,
-          easing: 'easeOutQuart'
-        });
-      }
-    } else if (type === 'letter-unfold') {
-      const target = el.querySelector('[data-animate]');
-      if (target) {
-        anime({
-          targets: target,
-          scaleY: [0, 1],
-          opacity: [0, 1],
-          duration: 1000,
-          easing: 'easeOutQuint',
-        });
-      }
+      el.classList.add('is-revealed-reduced');
+    } else {
+      el.classList.add('is-revealed');
     }
     
     observer.unobserve(el);

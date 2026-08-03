@@ -34,8 +34,6 @@ import { Image } from 'astro:assets';
 </section>
 
 <script>
-  import anime from 'animejs';
-
   document.addEventListener("astro:page-load", () => {
     const btn = document.getElementById("slime-btn");
     
@@ -47,8 +45,9 @@ import { Image } from 'astro:assets';
     let isHovered = false;
 
     // Smooth magnetic tracking on mousemove
-    newBtn.addEventListener("mousemove", (e) => {
+    newBtn.addEventListener("mousemove", async (e) => {
       isHovered = true;
+      const { default: anime } = await import('animejs');
       const rect = newBtn.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
@@ -72,8 +71,9 @@ import { Image } from 'astro:assets';
     });
 
     // Snap back elastically like dense slime releasing
-    newBtn.addEventListener("mouseleave", () => {
+    newBtn.addEventListener("mouseleave", async () => {
       isHovered = false;
+      const { default: anime } = await import('animejs');
       anime({
         targets: newBtn,
         translateX: 0,
@@ -85,7 +85,8 @@ import { Image } from 'astro:assets';
     });
 
     // Heavy squish on click
-    newBtn.addEventListener("mousedown", () => {
+    newBtn.addEventListener("mousedown", async () => {
+      const { default: anime } = await import('animejs');
       anime({
         targets: newBtn,
         scale: 0.95,
@@ -95,8 +96,9 @@ import { Image } from 'astro:assets';
     });
 
     // Spring back up on release
-    newBtn.addEventListener("mouseup", () => {
+    newBtn.addEventListener("mouseup", async () => {
       if (!isHovered) return;
+      const { default: anime } = await import('animejs');
       anime({
         targets: newBtn,
         scale: 1.05,

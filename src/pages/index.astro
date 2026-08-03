@@ -263,9 +263,8 @@ const projects = allProjects.slice(0, 4);
 </BaseLayout>
 
 <script>
-  import anime from "animejs/lib/anime.es.js";
-
-  const initRocketBtn = () => {
+  const initRocketBtn = async () => {
+    const { default: anime } = await import("animejs/lib/anime.es.js");
     const btn = document.getElementById("rocket-btn");
     if (!btn) return;
 
@@ -278,25 +277,19 @@ const projects = allProjects.slice(0, 4);
     const rocketFlamesFlicker = newBtn.querySelector(".rocket-flames-flicker");
     const ropes = newBtn.querySelectorAll(".rope-top, .rope-bottom");
 
-    // Continuous flame flicker loop (always runs, but only visible when rocketFlames opacity > 0)
+    // Continuous flame flicker loop handled by CSS now: .animate-rocket-flicker
     if (rocketFlamesFlicker) {
-      anime({
-        targets: rocketFlamesFlicker,
-        scaleX: [1, 1.4, 0.85, 1.2],
-        scaleY: [1, 0.85, 1.1, 0.95],
-        duration: 350,
-        loop: true,
-        direction: 'alternate',
-        easing: 'easeInOutSine'
-      });
+      rocketFlamesFlicker.classList.add('animate-rocket-flicker');
     }
 
     let hoverTl;
 
-    newBtn.addEventListener("mouseenter", () => {
+    newBtn.addEventListener("mouseenter", async () => {
       if (newBtn.dataset.clicked) return;
       if (hoverTl) hoverTl.pause();
       
+      const { default: anime } = await import('animejs/lib/anime.es.js');
+
       hoverTl = anime.timeline({
         easing: "easeOutQuad",
       });
@@ -347,9 +340,11 @@ const projects = allProjects.slice(0, 4);
       }, 120 + (flightDuration * percentToEdge)); 
     });
 
-    newBtn.addEventListener("mouseleave", () => {
+    newBtn.addEventListener("mouseleave", async () => {
       if (newBtn.dataset.clicked) return;
       if (hoverTl) hoverTl.pause();
+      
+      const { default: anime } = await import('animejs/lib/anime.es.js');
 
       hoverTl = anime.timeline({
         easing: "easeOutQuad",
@@ -387,7 +382,7 @@ const projects = allProjects.slice(0, 4);
       }, 0);
     });
 
-    newBtn.addEventListener("click", (e) => {
+    newBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       newBtn.dataset.clicked = "true";
       
@@ -398,6 +393,8 @@ const projects = allProjects.slice(0, 4);
       newBtn.style.pointerEvents = "none";
       
       if (hoverTl) hoverTl.pause();
+      
+      const { default: anime } = await import('animejs/lib/anime.es.js');
 
       // Launch rocket and button together cleanly without sudden scaling or yanking
       anime({
