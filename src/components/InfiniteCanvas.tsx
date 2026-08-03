@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import anime from 'animejs/lib/anime.es.js';
-import RocketLoader from './RocketLoader';
 export interface Project {
   id: string;
   title: string;
@@ -521,11 +520,38 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
         })}
       </div>
 
-      {/* Loading Overlay */}
       <div 
         class={`absolute inset-0 z-50 flex items-center justify-center bg-bg transition-opacity duration-1000 pointer-events-none ${isLoading ? 'opacity-100' : 'opacity-0'}`}
       >
-        <RocketLoader />
+        <div class="flex flex-col items-center justify-center space-y-6">
+          <svg 
+            viewBox="-60 0 180 60" 
+            class="w-64 h-24 overflow-visible animate-rocket-hover -rotate-12"
+          >
+            <g class="stroke-text-muted/30 stroke-[1px]">
+              <line x1="120" y1="10" x2="140" y2="10" class="animate-seq-speed" style={{ animationDelay: '1.2s' }} />
+              <line x1="80" y1="50" x2="110" y2="50" class="animate-seq-speed" style={{ animationDelay: '1.25s' }} />
+              <line x1="50" y1="60" x2="90" y2="60" class="animate-seq-speed" style={{ animationDelay: '1.3s' }} />
+            </g>
+            <g class="animate-seq-flame origin-[20px_30px]">
+              <path d="M 16 12 L -50 30 L 16 48" class="fill-accent/30 stroke-none" />
+              <path d="M 16 18 L -25 30 L 16 42" class="fill-accent/60 stroke-none" />
+              <path d="M 16 24 L -5 30 L 16 36" class="fill-bg-elevated stroke-none" />
+            </g>
+            <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" class="stroke-text-main animate-seq-ai fill-none" stroke-width="4.5" stroke-linecap="round" />
+            <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" class="stroke-text-main animate-seq-ai fill-none" stroke-width="4.5" stroke-linecap="round" />
+            <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" class="stroke-text-main animate-seq-ai fill-none" stroke-width="4" stroke-linecap="round" />
+            <path d="M 50 14 Q 65 30 50 46" class="stroke-text-main animate-seq-ai fill-none" stroke-width="3" stroke-linecap="round" />
+            <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+            <path d="M 76 22 Q 68 30 76 38" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" /> 
+            <path d="M 74 22 Q 95 25 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" /> 
+            <path d="M 71 30 Q 85 30 95 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" /> 
+            <path d="M 74 38 Q 95 35 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" /> 
+          </svg>
+          <div class="font-serif italic text-text-muted text-sm md:text-base tracking-wide animate-pulse mt-4">
+            Igniting...
+          </div>
+        </div>
       </div>
     </div>
   );
