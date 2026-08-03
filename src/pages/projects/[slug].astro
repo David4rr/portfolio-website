@@ -9,14 +9,11 @@ import { marked } from 'marked';
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
 
-// Pass Cloudflare runtime secrets if available (Using process.env since Astro 6+ removed Astro.locals.runtime.env)
-const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
-
 // Get the slug from the URL
 const { slug } = Astro.params;
 
 // Fetch projects
-const projects = await getProjectsFromNotion(runtimeEnv);
+const projects = await getProjectsFromNotion();
 const project = projects.find(p => p.slug === slug);
 
 if (!project) {
@@ -24,7 +21,7 @@ if (!project) {
 }
 
 // Fetch content
-const mdContent = await getProjectContent(project.id, runtimeEnv);
+const mdContent = await getProjectContent(project.id);
 const htmlContent = marked.parse(mdContent);
 ---
 <BaseLayout title={project.title}>

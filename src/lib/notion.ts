@@ -17,9 +17,16 @@ export interface NotionProject {
 }
 
 // Helper to safely get env variables in Astro across Node and Cloudflare
-function getRuntimeEnv(key: string, astroEnv?: Record<string, any>) {
-  // 1. Try passing from the injected process.env (Cloudflare / Vercel)
-  if (astroEnv && astroEnv[key]) return astroEnv[key];
+async function getRuntimeEnv(key: string) {
+  // 1. Try Cloudflare Workers native environment variables (Astro 7+ standard)
+  try {
+    const moduleName = 'cloudflare:workers';
+    // @ts-ignore
+    const cf = await import(/* @vite-ignore */ moduleName);
+    if (cf && cf.env && cf.env[key]) return cf.env[key];
+  } catch (e) {
+    // We are running in local Node.js development, just ignore
+  }
   
   // 2. Try import.meta.env (Astro build-time fallback)
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
@@ -35,9 +42,9 @@ function getRuntimeEnv(key: string, astroEnv?: Record<string, any>) {
 }
 
 // Function to fetch all published projects
-export async function getProjectsFromNotion(astroEnv?: Record<string, any>): Promise<NotionProject[]> {
-  const databaseId = getRuntimeEnv('NOTION_DATABASE_ID', astroEnv);
-  const token = getRuntimeEnv('NOTION_ACCESS_TOKEN', astroEnv);
+export async function getProjectsFromNotion(): Promise<NotionProject[]> {
+  const databaseId = await getRuntimeEnv('NOTION_DATABASE_ID');
+  const token = await getRuntimeEnv('NOTION_ACCESS_TOKEN');
   
   try {
     if (!databaseId) {
@@ -196,9 +203,9 @@ export async function getProjectsFromNotion(astroEnv?: Record<string, any>): Pro
 }
 
 // Function to fetch content for a specific page ID
-export async function getProjectContent(pageId: string, astroEnv?: Record<string, any>): Promise<string> {
+export async function getProjectContent(pageId: string): Promise<string> {
   try {
-    const token = getRuntimeEnv('NOTION_ACCESS_TOKEN', astroEnv);
+    const token = await getRuntimeEnv('NOTION_ACCESS_TOKEN');
     if (!token) throw new Error("NOTION_ACCESS_TOKEN is missing!");
     
     const notion = new Client({ auth: token });
