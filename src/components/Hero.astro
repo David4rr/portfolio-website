@@ -23,7 +23,7 @@ try {
 ---
 
 <section
-  class="flex flex-col justify-center section-padding pt-28 pb-8 md:py-4 lg:py-8 relative w-full h-full"
+  class="flex flex-col justify-center section-padding pt-20 pb-2 md:pt-16 md:pb-1 relative w-full h-full"
   id="hero"
 >
   <!-- Decorative subtle grid/lines for paper feel -->
@@ -37,11 +37,11 @@ try {
     class="flex flex-col items-center text-center max-w-4xl mx-auto w-full relative z-10"
   >
     <!-- ASCII Emblem -->
-    <div class="mb-2 flex flex-col items-center relative">
-      <div class="p-2">
+    <div class="mb-0 flex flex-col items-center relative">
+      <div class="p-0">
         <AsciiAvatar initialArt={initialArt} framesData={framesData} />
       </div>
-      <div class="w-[1px] h-3 bg-border-subtle mt-2"></div>
+      <div class="w-[1px] h-1 bg-border-subtle mt-1"></div>
 
       <div class="absolute left-full top-1/2 -translate-y-1/2 ml-4 flex-col items-start hidden md:flex pointer-events-none opacity-60 w-40">
         <svg class="w-16 h-16 text-accent mb-2 -ml-4" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -58,19 +58,19 @@ try {
     </div>
 
     <!-- The Title -->
-    <h1 class="font-serif text-[clamp(2.5rem,6vw,5rem)] font-normal leading-none tracking-tight mb-2 whitespace-normal sm:whitespace-nowrap text-text-main">
+    <h1 class="font-serif text-[clamp(2rem,5vw,4.5rem)] font-normal leading-none tracking-tight mb-0 mt-1 whitespace-normal sm:whitespace-nowrap text-text-main">
       David Arrozaqi<span class="text-accent">.</span>
     </h1>
 
     <!-- The Role (Typewriter) -->
-    <h2 class="font-sans text-[clamp(0.7rem,1.5vw,0.85rem)] uppercase tracking-[0.3em] text-text-muted mb-3">
+    <h2 class="font-sans text-[clamp(0.65rem,1.5vw,0.8rem)] uppercase tracking-[0.3em] text-text-muted mb-1 mt-1">
       <Typewriter />
     </h2>
 
     <!-- The Prose -->
     <div class="max-w-2xl mx-auto">
       <p
-        class="font-serif text-text-muted text-[clamp(0.95rem,1.4vw,1.15rem)] leading-relaxed mb-3 px-4"
+        class="font-serif text-text-muted text-[clamp(0.85rem,1.2vw,1rem)] leading-snug mb-1 px-4"
       >
         I weave logic and design into seamless digital experiences across the
         modern web, mobile platforms, and artificial intelligence. My focus is
@@ -79,20 +79,20 @@ try {
       </p>
 
       <!-- The Aside -->
-      <div class="flex justify-center items-center gap-4 mb-4 opacity-80">
-        <span class="w-6 h-[1px] bg-border-subtle"></span>
-        <p class="font-serif text-[0.75rem] italic text-text-muted">
+      <div class="flex justify-center items-center gap-3 mb-1 opacity-80">
+        <span class="w-4 h-[1px] bg-border-subtle"></span>
+        <p class="font-serif text-[0.7rem] italic text-text-muted">
           * I firmly believe that the most elegant algorithms are fueled by strong coffee.
         </p>
-        <span class="w-6 h-[1px] bg-border-subtle"></span>
+        <span class="w-4 h-[1px] bg-border-subtle"></span>
       </div>
     </div>
 
     <!-- Actions -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-4">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-2">
       <a
         href="/#projects"
-        class="group inline-flex items-center justify-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
+        class="group inline-flex items-center justify-center gap-2 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
         >
         <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
           <span class="absolute inset-0 bg-text-main/50 rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0" />
