@@ -169,9 +169,28 @@ window.addEventListener('resize', () => {
   sectionData = []; // clear cache to recalculate new layout heights
   requestAnimationFrame(updateTearOff);
 }, { passive: true });
+
+// Add ResizeObserver to catch height changes from lazy-loaded images or fonts
+let layoutObserver = null;
+
 // trigger on load and on Astro view transition navigation
 document.addEventListener('astro:page-load', () => {
   sectionData = []; // clear old DOM nodes from previous page instance
+  
+  if (layoutObserver) {
+    layoutObserver.disconnect();
+  }
+  
+  layoutObserver = new ResizeObserver(() => {
+    sectionData = [];
+    requestAnimationFrame(updateTearOff);
+  });
+  
+  const mainEl = document.querySelector('main');
+  if (mainEl) {
+    layoutObserver.observe(mainEl);
+  }
+  
   updateTearOff();
 });
 
