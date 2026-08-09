@@ -42,20 +42,38 @@ items.forEach((item, index) => {
     const nums = document.querySelectorAll('.scroll-num');
     const sections = document.querySelectorAll('section[data-section]');
     
+    // Cleanup previous instances for Astro View Transitions
+    if (window._scrollIndicatorRAF) cancelAnimationFrame(window._scrollIndicatorRAF);
+    if (window._scrollIndicatorRO) window._scrollIndicatorRO.disconnect();
+    
     if (!scrollItems.length || !sections.length) return;
     
     let currentScroll = window.scrollY;
-    let targetScroll = window.scrollY;
     let offsets = [];
 
     const calculateOffsets = () => {
-      offsets = Array.from(sections).map(sec => sec.offsetTop);
+      let currentTop = 0;
+      offsets = Array.from(sections).map(sec => {
+        const top = currentTop;
+        currentTop += sec.offsetHeight;
+        return top;
+      });
     };
+    
+    // Recalculate offsets if page height changes (e.g. images loading)
+    window._scrollIndicatorRO = new ResizeObserver(calculateOffsets);
+    window._scrollIndicatorRO.observe(document.body);
     calculateOffsets();
-    window.addEventListener('resize', calculateOffsets);
     
     const updateMarker = () => {
-      currentScroll += (targetScroll - currentScroll) * 0.15;
+      const targetScroll = window.scrollY;
+      
+      // Snap instantly if navigating back or jumping far
+      if (Math.abs(targetScroll - currentScroll) > 800) {
+        currentScroll = targetScroll;
+      } else {
+        currentScroll += (targetScroll - currentScroll) * 0.15;
+      }
       
       let progress = 0;
       let activeSectionIndex = 0;
@@ -110,14 +128,10 @@ items.forEach((item, index) => {
         }
       });
       
-      requestAnimationFrame(updateMarker);
+      window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
     };
     
-    window.addEventListener('scroll', () => {
-      targetScroll = window.scrollY;
-    }, { passive: true });
-    
-    requestAnimationFrame(updateMarker);
+    window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
     
     nums.forEach((num) => {
       num.addEventListener('click', () => {
@@ -128,5 +142,4 @@ items.forEach((item, index) => {
   };
 
   document.addEventListener('astro:page-load', setupScrollIndicator);
-  if (document.readyState === 'complete') setupScrollIndicator();
 </script>

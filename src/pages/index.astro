@@ -396,6 +396,17 @@ const formatPoetryTitle = (title: string) => {
     const rocketFlamesFlicker = newBtn.querySelector(".rocket-flames-flicker");
     const ropes = newBtn.querySelectorAll(".rope-top, .rope-bottom");
 
+    // Fix Astro ViewTransitions Cache Bug: Reset state if button was previously clicked
+    delete newBtn.dataset.clicked;
+    newBtn.classList.remove("!border-text-main/50");
+    newBtn.style.pointerEvents = "";
+    newBtn.style.opacity = "";
+    newBtn.style.transform = "";
+    if (rocketMover) rocketMover.style.transform = "";
+    if (rocketSystem) rocketSystem.style.transform = "scale(0.7)";
+    if (rocketFlames) rocketFlames.style.opacity = "0";
+    ropes.forEach(rope => rope.setAttribute("x2", "-18.9"));
+
     // Continuous flame flicker loop handled by CSS now: .animate-rocket-flicker
     if (rocketFlamesFlicker) {
       rocketFlamesFlicker.classList.add('animate-rocket-flicker');
@@ -553,4 +564,9 @@ const formatPoetryTitle = (title: string) => {
 
   initRocketBtn();
   document.addEventListener("astro:page-load", initRocketBtn);
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      initRocketBtn();
+    }
+  });
 </script>
