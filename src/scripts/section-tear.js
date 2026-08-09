@@ -269,9 +269,20 @@ document.addEventListener('click', (e) => {
   `;
 
   document.documentElement.classList.add('theme-transitioning');
+
+  const navEl = document.getElementById('main-nav');
+  if (navEl) {
+    navEl.classList.remove('bg-bg/90', 'backdrop-blur-md');
+    navEl.classList.add('bg-bg');
+  }
+
   // @ts-ignore
   const transition = document.startViewTransition(switchTheme);
   transition.finished.finally(() => {
     document.documentElement.classList.remove('theme-transitioning');
+    if (navEl) {
+      navEl.classList.add('bg-bg/90', 'backdrop-blur-md');
+      navEl.classList.remove('bg-bg');
+    }
   });
 });
