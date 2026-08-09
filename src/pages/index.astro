@@ -10,6 +10,7 @@ import TechStack from "../components/TechStack.astro";
 import Contact from "../components/Contact.astro";
 import Footer from "../components/Footer.astro";
 import LiveClock from "../components/LiveClock.astro";
+import ScrollIndicator from "../components/ScrollIndicator.astro";
 import { getProjectsFromNotion } from "../lib/notion";
 
 import laurelWreathImg from "../assets/laurel_wreath.jpg";
@@ -48,6 +49,7 @@ const formatPoetryTitle = (title: string) => {
 <BaseLayout title="David Arrozaqi | Creative Developer">
   <Preloader />
   <Nav />
+  <ScrollIndicator />
   <main class="w-full relative overflow-x-clip">
     <!-- 1. Hero -->
     <section

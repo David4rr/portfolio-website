@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@layer base {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  html {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 @theme {
   --color-bg: var(--bg);
   --color-bg-elevated: var(--bg-elevated);

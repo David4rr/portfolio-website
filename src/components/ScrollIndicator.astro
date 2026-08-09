@@ -1,0 +1,132 @@
+---
+const items = [
+  { id: "hero", num: "00", label: "PROLOGUE" },
+  { id: "projects", num: "01", label: "MAGNUM OPUS" },
+  { id: "activity", num: "02", label: "CHRONICLES" },
+  { id: "contact", num: "03", label: "EPILOGUE" }
+];
+
+const renderItems = [];
+items.forEach((item, index) => {
+  renderItems.push({ type: 'num', data: item, activeIndex: index });
+  if (index < items.length - 1) {
+    for (let i = 0; i < 9; i++) {
+      renderItems.push({ type: 'tick' });
+    }
+  }
+});
+---
+<div class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 h-[280px] hidden md:flex flex-col justify-between items-center group font-sans w-8 pointer-events-auto">
+  {renderItems.map((item, i) => (
+    item.type === 'num' ? (
+      <div class="relative flex items-center justify-center w-full">
+        <div class="scroll-item scroll-num font-mono text-[11px] text-text-muted cursor-pointer transition-colors duration-300" data-index={item.activeIndex}>
+          {item.data.num}
+        </div>
+        <!-- Title that expands on hover -->
+        <div class="absolute left-full ml-2 flex items-center overflow-hidden w-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-48 opacity-0 group-hover:opacity-100 pointer-events-none py-2">
+           <div class="absolute inset-0 bg-gradient-to-r from-bg-main via-bg-main/90 to-transparent z-[-1] -ml-2"></div>
+           <span class="w-4 h-[1px] bg-accent/50 mr-3 shrink-0"></span>
+           <span class="font-serif italic text-text-main text-[11px] tracking-[0.2em] whitespace-nowrap drop-shadow-[0_0_2px_var(--color-bg-main)]">{item.data.label}</span>
+        </div>
+      </div>
+    ) : (
+      <div class="scroll-item tick-line w-1.5 h-[2px] bg-text-muted/30 transition-all duration-150"></div>
+    )
+  ))}
+</div>
+
+<script>
+  const setupScrollIndicator = () => {
+    const scrollItems = document.querySelectorAll('.scroll-item');
+    const nums = document.querySelectorAll('.scroll-num');
+    const sections = document.querySelectorAll('section[data-section]');
+    
+    if (!scrollItems.length || !sections.length) return;
+    
+    let currentScroll = window.scrollY;
+    let targetScroll = window.scrollY;
+    let offsets = [];
+
+    const calculateOffsets = () => {
+      offsets = Array.from(sections).map(sec => sec.offsetTop);
+    };
+    calculateOffsets();
+    window.addEventListener('resize', calculateOffsets);
+    
+    const updateMarker = () => {
+      currentScroll += (targetScroll - currentScroll) * 0.15;
+      
+      let progress = 0;
+      let activeSectionIndex = 0;
+      const maxIndex = offsets.length - 1;
+
+      if (offsets.length > 0) {
+        if (currentScroll <= offsets[0]) {
+          progress = 0;
+          activeSectionIndex = 0;
+        } else if (currentScroll >= offsets[maxIndex]) {
+          progress = 1;
+          activeSectionIndex = maxIndex;
+        } else {
+          for (let i = 0; i < maxIndex; i++) {
+            if (currentScroll >= offsets[i] && currentScroll < offsets[i+1]) {
+              const segmentProgress = (currentScroll - offsets[i]) / (offsets[i+1] - offsets[i]);
+              progress = (i + segmentProgress) / maxIndex;
+              activeSectionIndex = segmentProgress > 0.5 ? i + 1 : i;
+              break;
+            }
+          }
+        }
+      }
+      
+      const activeItemIndex = Math.round(progress * (scrollItems.length - 1));
+      
+      scrollItems.forEach((item, i) => {
+        if (i === activeItemIndex) {
+          if (item.classList.contains('tick-line')) {
+            item.classList.remove('w-1.5', 'bg-text-muted/30');
+            item.classList.add('w-3', 'bg-accent');
+          } else {
+            // It's a number
+            item.classList.add('text-accent', 'font-bold');
+            item.classList.remove('text-text-muted', 'text-text-main');
+          }
+        } else {
+          if (item.classList.contains('tick-line')) {
+            item.classList.add('w-1.5', 'bg-text-muted/30');
+            item.classList.remove('w-3', 'bg-accent');
+          } else {
+            item.classList.remove('text-accent', 'font-bold');
+            const numIndex = parseInt(item.getAttribute('data-index') || '-1');
+            if (numIndex === activeSectionIndex) {
+              item.classList.add('text-text-main');
+              item.classList.remove('text-text-muted');
+            } else {
+              item.classList.add('text-text-muted');
+              item.classList.remove('text-text-main');
+            }
+          }
+        }
+      });
+      
+      requestAnimationFrame(updateMarker);
+    };
+    
+    window.addEventListener('scroll', () => {
+      targetScroll = window.scrollY;
+    }, { passive: true });
+    
+    requestAnimationFrame(updateMarker);
+    
+    nums.forEach((num) => {
+      num.addEventListener('click', () => {
+        const index = parseInt(num.getAttribute('data-index') || '0');
+        window.scrollTo({ top: offsets[index], behavior: 'smooth' });
+      });
+    });
+  };
+
+  document.addEventListener('astro:page-load', setupScrollIndicator);
+  if (document.readyState === 'complete') setupScrollIndicator();
+</script>
