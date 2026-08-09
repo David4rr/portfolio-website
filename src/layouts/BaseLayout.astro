@@ -12,7 +12,7 @@ const githubUsername = await getRuntimeEnv('GITHUB_USERNAME') || await getRuntim
 const faviconUrl = `https://github.com/${githubUsername}.png`;
 ---
 
-<html lang="en" class="overflow-x-hidden w-full">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -67,7 +67,7 @@ const faviconUrl = `https://github.com/${githubUsername}.png`;
       });
     </script>
   </head>
-  <body class="bg-bg text-text-main font-sans antialiased overflow-x-hidden w-full">
+  <body class="bg-bg text-text-main font-sans antialiased">
     <slot />
 
     <script src="../scripts/section-tear.js"></script>
