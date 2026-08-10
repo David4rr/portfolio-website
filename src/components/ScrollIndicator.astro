@@ -20,7 +20,7 @@ items.forEach((item, index) => {
   {renderItems.map((item, i) => (
     item.type === 'num' ? (
       <div class="relative flex items-center justify-center w-full">
-        <div class="scroll-item scroll-num font-mono text-[11px] text-text-muted cursor-pointer transition-colors duration-300" data-index={item.activeIndex}>
+        <div class="scroll-item scroll-num font-mono text-[11px] text-text-main/80 cursor-pointer transition-colors duration-300" data-index={item.activeIndex}>
           {item.data.num}
         </div>
         <!-- Title that expands on hover -->
@@ -108,7 +108,7 @@ items.forEach((item, index) => {
           } else {
             // It's a number
             item.classList.add('text-accent', 'font-bold');
-            item.classList.remove('text-text-muted', 'text-text-main');
+            item.classList.remove('text-text-main/80', 'text-text-main');
           }
         } else {
           if (item.classList.contains('tick-line')) {
@@ -119,9 +119,9 @@ items.forEach((item, index) => {
             const numIndex = parseInt(item.getAttribute('data-index') || '-1');
             if (numIndex === activeSectionIndex) {
               item.classList.add('text-text-main');
-              item.classList.remove('text-text-muted');
+              item.classList.remove('text-text-main/80');
             } else {
-              item.classList.add('text-text-muted');
+              item.classList.add('text-text-main/80');
               item.classList.remove('text-text-main');
             }
           }
