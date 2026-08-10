@@ -61,7 +61,7 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
   <div class="flex justify-end items-center gap-3">
     <!-- Mobile Clock -->
     <div class="flex md:hidden flex-col items-end mr-1">
-      <span class="font-sans text-[7px] uppercase tracking-[0.2em] text-text-muted">JKT, ID</span>
+      <span class="font-sans text-[7px] uppercase tracking-[0.2em] text-text-muted">LOCAL TIME</span>
       <span id="nav-mobile-clock" class="font-serif text-[11px] text-text-main tabular-nums tracking-wide">--:--</span>
     </div>
     
@@ -98,12 +98,17 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
     
     const updateTime = () => {
       try {
-        display.textContent = new Intl.DateTimeFormat('en-US', {
-          timeZone: 'Asia/Jakarta',
+        const now = new Date();
+        const timeStr = new Intl.DateTimeFormat('en-US', {
           hour: '2-digit',
           minute: '2-digit',
-          hour12: true
-        }).format(new Date());
+          hour12: false
+        }).format(now);
+        
+        const offset = -now.getTimezoneOffset() / 60;
+        const gmtStr = `GMT${offset >= 0 ? '+' : ''}${offset}`;
+        
+        display.textContent = `${timeStr} • ${gmtStr}`;
       } catch (e) {
         // Fallback if timezone not supported
       }

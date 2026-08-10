@@ -1,6 +1,6 @@
 ---
 // LiveClock.astro
-const { location = "Jakarta, ID" } = Astro.props;
+const { location = "LOCAL TIME" } = Astro.props;
 ---
 <div class="absolute bottom-8 right-8 text-right flex-col items-end gap-1 z-20 pointer-events-auto hidden md:flex">
   <p class="font-sans text-[10px] uppercase tracking-[0.2em] text-text-main">{location}</p>
@@ -14,13 +14,19 @@ const { location = "Jakarta, ID" } = Astro.props;
     
     const updateTime = () => {
       try {
-        display.textContent = new Intl.DateTimeFormat('en-US', {
-          timeZone: 'Asia/Jakarta',
+        const now = new Date();
+        const timeStr = new Intl.DateTimeFormat('en-US', {
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
-          hour12: true
-        }).format(new Date());
+          hour12: false
+        }).format(now);
+        
+        const formattedTime = timeStr.replace(/:/g, ' : ');
+        const offset = -now.getTimezoneOffset() / 60;
+        const gmtStr = `GMT${offset >= 0 ? '+' : ''}${offset}`;
+        
+        display.textContent = `${formattedTime} • ${gmtStr}`;
       } catch (e) {
         display.textContent = new Date().toLocaleTimeString('en-US');
       }
