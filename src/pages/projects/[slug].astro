@@ -5,6 +5,7 @@ import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
 import { marked } from 'marked';
+import { Image } from 'astro:assets';
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
@@ -76,7 +77,7 @@ const htmlContent = marked.parse(mdContent);
             data-captions={JSON.stringify(project.galleryCaptions || [])}
           >
             {/* Ghost image to naturally set the container height to the first image's aspect ratio */}
-            <img src={project.gallery[0]} class="w-full h-auto opacity-0 pointer-events-none block" aria-hidden="true" />
+            <Image src={project.gallery[0]} alt="" width={800} height={800} class="w-full h-auto opacity-0 pointer-events-none block" aria-hidden="true" loading="lazy" />
             
             {project.gallery.map((imgUrl, i) => (
               <div 
@@ -84,11 +85,11 @@ const htmlContent = marked.parse(mdContent);
                 style={{ zIndex: project.gallery.length - i }}
                 data-index={i}
               >
-                <img 
-                  src={imgUrl.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(imgUrl)}&w=800&output=webp` : imgUrl} 
+                <Image 
+                  src={imgUrl} 
                   alt={`${project.title} gallery ${i+1}`}
-                  width="800"
-                  height="800"
+                  width={800}
+                  height={800}
                   loading="lazy"
                   decoding="async"
                   class="w-full h-full object-contain rounded-[1px]"
@@ -109,14 +110,14 @@ const htmlContent = marked.parse(mdContent);
         </div>
       ) : (
         <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto relative mb-20 aspect-[3/4] overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30">
-          <img 
-            src={project.image ? (project.image.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(project.image)}&w=800&output=webp` : project.image) : "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
+          <Image 
+            src={project.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
             alt={project.title} 
-            width="800"
-            height="800"
+            width={800}
+            height={1066}
             loading="lazy"
             decoding="async"
-            class="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" 
+            class="w-full h-full object-cover rounded-[1px]"
           />
         </div>
       )}

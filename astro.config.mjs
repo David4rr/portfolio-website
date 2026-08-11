@@ -21,6 +21,9 @@ export default defineConfig({
   build: {
     inlineStylesheets: 'always'
   },
+  image: {
+    domains: ["wsrv.nl", "prod-files-secure.s3.us-west-2.amazonaws.com", "images.unsplash.com"],
+  },
   vite: {
     plugins: [tailwindcss()],
     build: {

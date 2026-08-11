@@ -5,7 +5,7 @@ const linkedinUrl = await getRuntimeEnv('LINKEDIN_URL') || await getRuntimeEnv('
 const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv('PUBLIC_INSTAGRAM_URL') || "https://instagram.com";
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";
 import { Image } from 'astro:assets';
-
+import schoolOfAthensImg from '../assets/school_of_athens.jpg';
 ---
 <section class="w-full flex-1 h-full flex flex-col justify-center py-[clamp(4rem,8vw,8rem)] text-center md:text-left max-w-5xl mx-auto relative border-t border-border-subtle/50 px-4 md:px-0">
   <div class="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-24 w-full my-auto">
@@ -41,16 +41,17 @@ import { Image } from 'astro:assets';
     <!-- Poetic Intermission 3 (Rome Architecture) - Placed in the right column -->
     <div class="w-full md:w-1/2 max-w-md mx-auto md:mx-0 pointer-events-none relative z-10 text-right md:-mr-12">
 
-      <img 
-        src="/school_of_athens.jpg" 
-        alt="The School of Athens"
-        width="800"
-        height="1200"
-        loading="lazy"
-        decoding="async"
-        class="w-full h-auto opacity-100 origin-right"
-        style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);"
-      />
+      <div class="w-full aspect-[4/3] relative overflow-hidden" style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);">
+        <Image 
+          src={schoolOfAthensImg} 
+          alt="The School of Athens"
+          width={800}
+          height={800}
+          loading="lazy"
+          decoding="async"
+          class="w-full h-full object-cover opacity-100 origin-right"
+        />
+      </div>
     </div>
 
   </div>

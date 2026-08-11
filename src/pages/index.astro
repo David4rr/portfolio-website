@@ -14,6 +14,7 @@ import ScrollIndicator from "../components/ScrollIndicator.astro";
 import { getProjectsFromNotion } from "../lib/notion";
 
 import laurelWreathImg from "../assets/laurel_wreath.jpg";
+import schoolOfAthensImg from "../assets/school_of_athens.jpg";
 
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
@@ -103,7 +104,8 @@ const formatPoetryTitle = (title: string) => {
                       data-card
                       href={`/projects/${project.slug}`}
                       class="project-bento-card cursor-pointer group relative flex flex-col md:flex-row md:items-center gap-6 md:gap-8 py-6 md:py-10 px-2 md:px-6 border-b border-border-subtle/50 hover:bg-border-subtle/5 transition-all duration-700"
-                      data-image={optimizedSrc}
+                      data-slug={project.slug}
+                      data-has-image={!!project.image}
                     >
                       <!-- Index -->
                       <div class="flex-shrink-0 w-full md:w-20 text-text-muted font-serif italic text-sm md:text-base">
@@ -157,8 +159,18 @@ const formatPoetryTitle = (title: string) => {
             
             <!-- Floating Cursor Image Container -->
             <div id="project-cursor-wrapper" class="fixed top-0 left-0 pointer-events-none z-[100]"> <!-- positioning handled purely by JS -->
-              <div id="project-cursor-image" class="w-[450px] rounded-2xl overflow-hidden opacity-0 scale-50 shadow-2xl origin-center bg-bg border border-border-subtle">
-                <img id="project-cursor-img-tag" src="" alt="Project Preview" class="w-full h-auto block" />
+              <div id="project-cursor-image" class="w-[450px] rounded-2xl overflow-hidden opacity-0 scale-50 shadow-2xl origin-center bg-bg border border-border-subtle relative">
+                {projects.map(project => project.image ? (
+                  <Image 
+                    src={project.image} 
+                    alt={`Preview of ${project.title}`} 
+                    width={600} 
+                    height={450} 
+                    class="w-full h-auto absolute hidden cursor-project-img" 
+                    data-slug={project.slug} 
+                    loading="eager"
+                  />
+                ) : null)}
               </div>
             </div>
 
@@ -167,9 +179,9 @@ const formatPoetryTitle = (title: string) => {
                 const cards = document.querySelectorAll('.project-bento-card');
                 const cursorWrapper = document.getElementById('project-cursor-wrapper');
                 const cursorImg = document.getElementById('project-cursor-image');
-                const imgTag = document.getElementById('project-cursor-img-tag') as HTMLImageElement;
+                const imgTags = document.querySelectorAll('.cursor-project-img');
                 
-                if (!cursorWrapper || !cursorImg || !imgTag || cards.length === 0) return;
+                if (!cursorWrapper || !cursorImg || cards.length === 0) return;
 
                 // Move wrapper to body to guarantee viewport coordinate system
                 if (cursorWrapper.parentNode !== document.body) {
@@ -214,11 +226,24 @@ const formatPoetryTitle = (title: string) => {
                 cards.forEach(card => {
                   card.addEventListener('mouseenter', (e: MouseEvent) => {
                     isHovering = true;
-                    const src = card.getAttribute('data-image');
-                    if (src && src !== 'null' && src !== 'undefined') {
-                       imgTag.src = src;
+                    const slug = card.getAttribute('data-slug');
+                    const hasImg = card.getAttribute('data-has-image') === 'true';
+                    
+                    if (!hasImg || !slug) return;
+                    
+                    // Reset all images
+                    imgTags.forEach(img => {
+                      img.classList.remove('relative', 'block');
+                      img.classList.add('absolute', 'hidden');
+                    });
+                    
+                    // Show target image
+                    const targetImg = document.querySelector(`.cursor-project-img[data-slug="${slug}"]`);
+                    if (targetImg) {
+                      targetImg.classList.remove('absolute', 'hidden');
+                      targetImg.classList.add('relative', 'block');
                     } else {
-                       return;
+                      return; // image wasn't generated
                     }
                     
                     const pos = getClampedPosition(e.clientX, e.clientY);
@@ -345,16 +370,17 @@ const formatPoetryTitle = (title: string) => {
             class="w-full max-w-sm mx-auto py-8 flex flex-col items-center justify-center pointer-events-none relative border-t border-border-subtle/30 mt-4"
           >
 
-            <img
-              src="/school_of_athens.jpg"
-              alt="The School of Athens"
-              width="800"
-              height="1200"
-              loading="lazy"
-              decoding="async"
-              class="w-full h-auto opacity-100"
-              style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);"
-            />
+            <div class="w-full aspect-[4/3] relative overflow-hidden" style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);">
+              <Image
+                src={schoolOfAthensImg}
+                alt="The School of Athens"
+                width={800}
+                height={800}
+                loading="lazy"
+                decoding="async"
+                class="w-full h-full object-cover opacity-100"
+              />
+            </div>
           </div>
 
           <TechStack />
