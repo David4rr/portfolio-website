@@ -91,8 +91,8 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   const laidOutProjects = useMemo(() => {
     if (!sizesLoaded) return [];
 
-    const CELL = 80;
-    const GAP = 12; 
+    const CELL = 65;
+    const GAP = 10; 
 
     // Generate grid coordinates and sort by oval distance
     const coords: { x: number, y: number }[] = [];
@@ -442,11 +442,11 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                 }}
               >
                 <div class="absolute inset-4 md:inset-8 border border-border-subtle/40 pointer-events-none"></div>
-                <h2 class="font-serif text-3xl md:text-5xl text-text-main mb-8 md:mb-12 leading-relaxed italic">
+                <h2 class="font-serif text-2xl md:text-4xl text-text-main mb-6 md:mb-10 leading-relaxed italic">
                   "A culmination of thought,<br/>forged into reality."
                 </h2>
-                <div class="w-16 h-[1px] bg-accent/40 mb-8 md:mb-12"></div>
-                <p class="text-text-muted font-sans text-[10px] md:text-[12px] tracking-[0.25em] uppercase leading-loose">
+                <div class="w-14 h-[1px] bg-accent/40 mb-6 md:mb-10"></div>
+                <p class="text-text-muted font-sans text-[9px] md:text-[11px] tracking-[0.25em] uppercase leading-loose">
                   Pan, drag, and click<br/>to explore the archive.
                 </p>
               </div>
@@ -489,19 +489,19 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                   {/* Inner Manuscript Border */}
                   <div class="absolute inset-3 border border-border-subtle/50 pointer-events-none"></div>
                   
-                  <h3 class="font-serif text-[clamp(1.1rem,1.5vw,1.8rem)] leading-tight font-normal text-text-main mb-4 flex-shrink-0 px-2">
+                  <h3 class="font-serif text-[clamp(1rem,1.3vw,1.6rem)] leading-tight font-normal text-text-main mb-3 flex-shrink-0 px-2">
                     {p.title}
                   </h3>
                   
-                  <div class="w-8 h-[1px] bg-accent/40 mb-6 flex-shrink-0"></div>
+                  <div class="w-8 h-[1px] bg-accent/40 mb-5 flex-shrink-0"></div>
                   
                   <div class="overflow-hidden flex-shrink-0 px-4">
-                    <p class="text-text-muted text-[13px] font-serif tracking-wide leading-relaxed line-clamp-3 italic mb-8 pointer-events-none">
+                    <p class="text-text-muted text-[12px] font-serif tracking-wide leading-relaxed line-clamp-3 italic mb-6 pointer-events-none">
                       "{p.description}"
                     </p>
                   </div>
 
-                  <a href={targetHref} onClick={(e) => e.stopPropagation()} class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-3 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 cursor-pointer flex-shrink-0">
+                  <a href={targetHref} onClick={(e) => e.stopPropagation()} class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2.5 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 cursor-pointer flex-shrink-0">
                     View Details
                   </a>
 
