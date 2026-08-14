@@ -25,6 +25,7 @@ export default defineConfig({
     inlineStylesheets: 'always'
   },
   image: {
+    service: { entrypoint: './src/custom-image-service.mjs' },
     domains: ["wsrv.nl", "prod-files-secure.s3.us-west-2.amazonaws.com", "images.unsplash.com"],
   },
   vite: {
