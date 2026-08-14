@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig, passthroughImageService } from 'astro/config';
+import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -17,12 +17,14 @@ export default defineConfig({
   output: 'server',
   adapter: isDev 
     ? node({ mode: 'standalone' }) 
-    : cloudflare({ platformProxy: { enabled: false } }),
+    : cloudflare({ 
+        platformProxy: { enabled: false },
+        imageService: 'cloudflare'
+      }),
   build: {
     inlineStylesheets: 'always'
   },
   image: {
-    service: passthroughImageService(),
     domains: ["wsrv.nl", "prod-files-secure.s3.us-west-2.amazonaws.com", "images.unsplash.com"],
   },
   vite: {
