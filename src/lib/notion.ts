@@ -14,6 +14,8 @@ export interface NotionProject {
   content?: string;
   url?: string;
   timeline?: string;
+  featured?: boolean;
+  order?: number | null;
 }
 
 // Helper to safely get env variables in Astro across Node and Cloudflare
@@ -182,6 +184,30 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
          timeline = timelineProp.title.map((rt: any) => rt.plain_text).join('');
       }
 
+      // Featured (checkbox type)
+      const featuredProp = props.Featured || props.featured || props.Selected || props.selected || props.Highlight || props.highlight;
+      let featured = false;
+      if (featuredProp?.type === 'checkbox') {
+        featured = Boolean(featuredProp.checkbox);
+      } else {
+        const key = Object.keys(props).find(k => ['featured', 'selected', 'highlight'].includes(k.toLowerCase()));
+        if (key && props[key]?.type === 'checkbox') {
+          featured = Boolean(props[key].checkbox);
+        }
+      }
+
+      // Order / Priority (number type)
+      const orderProp = props.Order || props.order || props.Priority || props.priority || props.Rank || props.rank || props.Index || props.index;
+      let order: number | null = null;
+      if (orderProp?.type === 'number' && typeof orderProp.number === 'number') {
+        order = orderProp.number;
+      } else {
+        const key = Object.keys(props).find(k => ['order', 'priority', 'rank', 'index'].includes(k.toLowerCase()));
+        if (key && props[key]?.type === 'number' && typeof props[key].number === 'number') {
+          order = props[key].number;
+        }
+      }
+
       return {
         id: page.id,
         slug,
@@ -193,7 +219,9 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
         gallery,
         galleryCaptions,
         url,
-        timeline
+        timeline,
+        featured,
+        order
       };
     });
   } catch (error) {

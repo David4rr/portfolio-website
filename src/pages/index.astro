@@ -20,7 +20,27 @@ import schoolOfAthensImg from "../assets/school_of_athens.jpg";
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
 
 const allProjects = await getProjectsFromNotion();
-const projects = allProjects.slice(0, 5); // Allow up to 5 projects to match screenshot
+
+// Select featured projects if any are explicitly chosen in Notion; otherwise fallback to all projects (up to 5)
+const featuredProjects = allProjects.filter((p) => p.featured === true);
+const selectedProjects = featuredProjects.length > 0 ? featuredProjects : allProjects.slice(0, 5);
+
+// Sort selected projects by explicit order (ascending) when provided, preserving Notion order as secondary sort
+const projects = [...selectedProjects].sort((a, b) => {
+  const orderA = typeof a.order === 'number' && !isNaN(a.order) ? a.order : null;
+  const orderB = typeof b.order === 'number' && !isNaN(b.order) ? b.order : null;
+
+  if (orderA !== null && orderB !== null) {
+    return orderA - orderB;
+  }
+  if (orderA !== null && orderB === null) {
+    return -1;
+  }
+  if (orderA === null && orderB !== null) {
+    return 1;
+  }
+  return 0;
+});
 
 const formatPoetryTitle = (title: string) => {
   const words = title.split(' ');
