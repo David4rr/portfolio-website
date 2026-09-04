@@ -13,7 +13,7 @@ import LiveClock from "../components/LiveClock.astro";
 import ScrollIndicator from "../components/ScrollIndicator.astro";
 import { getProjectsFromNotion } from "../lib/notion";
 
-import schoolOfAthensImg from "../assets/school_of_athens.jpg";
+import GithubHeatmap from "../components/GithubHeatmap.astro";
 
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
@@ -108,23 +108,8 @@ const formatPoetryTitle = (title: string) => {
         <div data-animate class="h-full flex flex-col justify-center">
           <Timeline />
 
-          <!-- Poetic Intermission 2 (Astrolabe) - Placed as a bridge between timeline and techstack -->
-          <div
-            class="w-full max-w-sm mx-auto py-8 flex flex-col items-center justify-center pointer-events-none relative border-t border-border-subtle/30 mt-4"
-          >
-
-            <div class="w-full aspect-[4/3] relative overflow-hidden" style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);">
-              <Image
-                src={schoolOfAthensImg}
-                alt="The School of Athens"
-                width={800}
-                height={800}
-                loading="lazy"
-                decoding="async"
-                class="w-full h-full object-cover opacity-100"
-              />
-            </div>
-          </div>
+          <!-- Activity Heatmap - Square activity boxes bridging timeline and techstack -->
+          <GithubHeatmap />
 
           <TechStack />
         </div>

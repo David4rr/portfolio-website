@@ -1,0 +1,252 @@
+---
+// GithubHeatmap.astro - High-end Editorial GitHub Contribution Heatmap
+import { getRuntimeEnv } from "../lib/notion";
+
+interface Props {
+  username?: string;
+  class?: string;
+}
+
+const envUsername =
+  (await getRuntimeEnv("GITHUB_USERNAME")) ||
+  (await getRuntimeEnv("PUBLIC_GITHUB_USERNAME")) ||
+  "David4rr";
+
+const { username = envUsername, class: className = "" } = Astro.props;
+
+// Generate pre-rendered 53 weeks x 7 days skeleton grid for zero layout-shift
+const totalWeeks = 53;
+const daysPerWeek = 7;
+
+// Estimate month header positions across 53 weeks (rolling past 12 months)
+const now = new Date();
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const currentMonthIdx = now.getMonth(); // 0-11
+const monthHeaders: { label: string; col: number }[] = [];
+
+for (let i = 0; i < 12; i++) {
+  const mIdx = (currentMonthIdx - 11 + i + 12) % 12;
+  const col = Math.round((i / 12) * 52);
+  monthHeaders.push({ label: monthNames[mIdx], col });
+}
+---
+
+<div
+  id="github-heatmap-root"
+  data-username={username}
+  class={`w-full max-w-4xl mx-auto px-4 py-8 relative ${className}`}
+>
+  <div class="border border-border-subtle/60 bg-bg-subtle/30 rounded-2xl p-4 sm:p-6 backdrop-blur-[2px] transition-all duration-300 hover:border-border-subtle">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border-subtle/40">
+      <div>
+        <div class="flex items-center gap-2 font-sans uppercase tracking-[0.2em] text-[10px] text-text-muted/70 mb-1">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+          </span>
+          <span>Activity Chronicle</span>
+        </div>
+        <h3 class="font-serif text-lg sm:text-xl text-text-main font-normal tracking-tight">
+          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 transition-all duration-500">520+</span>contributions in the past year
+        </h3>
+      </div>
+
+    </div>
+
+    <!-- Scrollable Graph Container -->
+    <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0">
+      <div class="min-w-[720px] select-none">
+        <!-- Month labels -->
+        <div class="grid grid-cols-53 text-[10px] font-sans text-text-muted/60 mb-2 pl-7 pointer-events-none">
+          {Array.from({ length: totalWeeks }).map((_, colIdx) => {
+            const header = monthHeaders.find(h => h.col === colIdx);
+            return (
+              <span class="col-span-1 overflow-visible whitespace-nowrap">
+                {header ? header.label : ""}
+              </span>
+            );
+          })}
+        </div>
+
+        <!-- Grid with Day labels -->
+        <div class="flex gap-2 items-start">
+          <!-- Day of week indicators -->
+          <div class="flex flex-col justify-between h-[95px] text-[9px] font-sans text-text-muted/50 py-[2px] select-none">
+            <span class="leading-none">Mon</span>
+            <span class="leading-none">Wed</span>
+            <span class="leading-none">Fri</span>
+          </div>
+
+          <!-- 53 columns x 7 rows -->
+          <div id="gh-heatmap-grid" class="flex gap-[3px] flex-1">
+            {Array.from({ length: totalWeeks }).map((_, colIdx) => (
+              <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx}>
+                {Array.from({ length: daysPerWeek }).map((_, dayIdx) => (
+                  <div
+                    class="heatmap-cell aspect-square w-full rounded-[2px] bg-border-subtle/30 border border-border-subtle/20 transition-all duration-200 hover:scale-125 hover:z-20 hover:ring-1 hover:ring-accent"
+                    data-level="0"
+                    data-count="0"
+                    data-date=""
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer: Legend -->
+    <div class="flex items-center justify-end mt-4 pt-3 border-t border-border-subtle/30 text-[11px] font-sans text-text-muted/70">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] mr-1">Less</span>
+        <div class="w-[10px] h-[10px] rounded-[2px] bg-border-subtle/30 border border-border-subtle/20" title="Level 0"></div>
+        <div class="w-[10px] h-[10px] rounded-[2px] bg-accent/30 border border-accent/30" title="Level 1"></div>
+        <div class="w-[10px] h-[10px] rounded-[2px] bg-accent/60 border border-accent/50" title="Level 2"></div>
+        <div class="w-[10px] h-[10px] rounded-[2px] bg-accent/85 border border-accent/75" title="Level 3"></div>
+        <div class="w-[10px] h-[10px] rounded-[2px] bg-accent border border-accent shadow-[0_0_6px_var(--color-accent-glow)]" title="Level 4"></div>
+        <span class="text-[10px] ml-1">More</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Floating Tooltip -->
+  <div
+    id="gh-heatmap-tooltip"
+    class="absolute pointer-events-none transition-opacity duration-150 z-[100] px-2.5 py-1 text-[11px] font-sans bg-bg-elevated text-text-main border border-border-subtle rounded-md shadow-xl -translate-x-1/2 -translate-y-full mb-2 whitespace-nowrap"
+    style="opacity: 0;"
+  >
+    <span id="gh-heatmap-tooltip-text"></span>
+  </div>
+</div>
+
+<style>
+  /* 53 columns CSS grid template for month labels */
+  .grid-cols-53 {
+    display: grid;
+    grid-template-columns: repeat(53, minmax(0, 1fr));
+  }
+
+  /* Heatmap cell levels */
+  :global(.heatmap-cell[data-level="0"]) {
+    background-color: var(--border-subtle);
+    opacity: 0.25;
+  }
+  :global(.heatmap-cell[data-level="1"]) {
+    background-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    opacity: 0.9;
+  }
+  :global(.heatmap-cell[data-level="2"]) {
+    background-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+    opacity: 0.95;
+  }
+  :global(.heatmap-cell[data-level="3"]) {
+    background-color: color-mix(in srgb, var(--accent) 85%, transparent);
+    border-color: var(--accent);
+    opacity: 1;
+  }
+  :global(.heatmap-cell[data-level="4"]) {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+    opacity: 1;
+  }
+</style>
+
+<script>
+  function initHeatmap() {
+    const root = document.getElementById("github-heatmap-root");
+    if (!root) return;
+
+    const username = root.dataset.username || "David4rr";
+    const totalCountEl = document.getElementById("gh-heatmap-total-count");
+    const gridEl = document.getElementById("gh-heatmap-grid");
+    const tooltip = document.getElementById("gh-heatmap-tooltip");
+    const tooltipText = document.getElementById("gh-heatmap-tooltip-text");
+
+    if (!gridEl) return;
+
+    const cells = Array.from(gridEl.querySelectorAll(".heatmap-cell")) as HTMLElement[];
+
+    // Setup interactive tooltip
+    cells.forEach((cell) => {
+      cell.addEventListener("mouseenter", (e) => {
+        const count = cell.getAttribute("data-count");
+        const date = cell.getAttribute("data-date");
+        if (!date || !tooltip || !tooltipText) return;
+
+        const countNum = parseInt(count || "0", 10);
+        const formattedDate = formatDateString(date);
+        tooltipText.textContent = `${countNum === 0 ? "No" : countNum} ${countNum === 1 ? "contribution" : "contributions"} on ${formattedDate}`;
+
+        const rootRect = root.getBoundingClientRect();
+        const rect = cell.getBoundingClientRect();
+        tooltip.style.left = `${rect.left - rootRect.left + rect.width / 2}px`;
+        tooltip.style.top = `${rect.top - rootRect.top - 6}px`;
+        tooltip.style.opacity = "1";
+      });
+
+      cell.addEventListener("mouseleave", () => {
+        if (!tooltip) return;
+        tooltip.style.opacity = "0";
+      });
+    });
+
+    function formatDateString(isoStr: string): string {
+      try {
+        const [y, m, d] = isoStr.split("-").map(Number);
+        const dt = new Date(y, m - 1, d);
+        return dt.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      } catch {
+        return isoStr;
+      }
+    }
+
+    // Fetch live contribution data
+    async function loadContributions() {
+      try {
+        const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
+        if (!res.ok) throw new Error("Failed to fetch contribution data");
+        const data = await res.json();
+
+        if (data.total && typeof data.total.lastYear === "number" && totalCountEl) {
+          totalCountEl.textContent = String(data.total.lastYear);
+        }
+
+        const contributions: Array<{ date: string; count: number; level: number }> =
+          data.contributions || [];
+
+        if (contributions.length === 0) return;
+
+        // Populate cells from end to beginning so today is at the bottom-right
+        const totalCells = cells.length;
+        const contribLen = contributions.length;
+        const offset = totalCells - contribLen;
+
+        contributions.forEach((day, i) => {
+          const cellIdx = offset >= 0 ? offset + i : i;
+          if (cellIdx >= 0 && cellIdx < totalCells) {
+            const cell = cells[cellIdx];
+            cell.setAttribute("data-level", String(day.level));
+            cell.setAttribute("data-count", String(day.count));
+            cell.setAttribute("data-date", day.date);
+          }
+        });
+      } catch (err) {
+        console.warn("GitHub heatmap live fetch error, fallback active:", err);
+      }
+    }
+
+    loadContributions();
+  }
+
+  // Support Astro View Transitions
+  document.addEventListener("astro:page-load", initHeatmap);
+</script>
