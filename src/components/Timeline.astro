@@ -2,6 +2,12 @@
 // ponytail: Experience & Education Timeline
 const experiences = [
   {
+    role: "Freelancer",
+    company: "Self-Employed",
+    period: "Current",
+    description: "Building responsive web and mobile applications, crafting performant, custom digital solutions for clients."
+  },
+  {
     role: "Android Developer",
     company: "SocioDigitals - Surabaya",
     period: "Aug 2024 - Dec 2024",
@@ -82,10 +88,13 @@ const education = {
             
             <div class="flex flex-col md:flex-row md:items-baseline justify-between mb-1 gap-2">
               <h4 class="font-sans font-bold text-lg text-text-main">{exp.role}</h4>
-              <span class="font-mono text-[10px] text-text-muted tracking-widest uppercase shrink-0">{exp.period}</span>
+              <span class={`font-mono text-[10px] tracking-widest uppercase shrink-0 ${exp.period === "Current" ? "text-accent font-medium flex items-center gap-1.5" : "text-text-muted"}`}>
+                {exp.period === "Current" && <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>}
+                {exp.period}
+              </span>
             </div>
             
-            <p class="font-serif text-accent italic mb-4 text-[0.95rem]">{exp.company}</p>
+            {exp.company && <p class="font-serif text-accent italic mb-4 text-[0.95rem]">{exp.company}</p>}
             <p class="font-serif text-text-muted text-[0.95rem] leading-[1.7] max-w-2xl">{exp.description}</p>
           </div>
         ))}
