@@ -6,8 +6,8 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "node scripts/generate-ascii.mjs && astro dev",
-    "build": "node scripts/generate-ascii.mjs && astro build && node scripts/fix-wrangler-json.mjs",
+    "dev": "node scripts/generate-ascii.mjs && node scripts/generate-og.mjs && astro dev",
+    "build": "node scripts/generate-ascii.mjs && node scripts/generate-og.mjs && astro build && node scripts/fix-wrangler-json.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },

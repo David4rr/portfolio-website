@@ -25,7 +25,12 @@ if (!project) {
 const mdContent = await getProjectContent(project.id);
 const htmlContent = marked.parse(mdContent);
 ---
-<BaseLayout title={`${project.title} | David Arrozaqi`}>
+<BaseLayout 
+  title={`${project.title} | David Arrozaqi`}
+  description={project.description || `Explore ${project.title}, engineered by David Arrozaqi.`}
+  image={project.image || "/og-image.png"}
+  type="article"
+>
   <Nav />
   
   <main class="min-h-screen pt-32 pb-32 bg-bg overflow-x-clip w-full">
