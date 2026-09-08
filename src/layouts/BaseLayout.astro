@@ -20,11 +20,14 @@ const {
 const githubUsername = await getRuntimeEnv('GITHUB_USERNAME') || await getRuntimeEnv('PUBLIC_GITHUB_USERNAME') || "David4rr";
 const faviconUrl = `https://github.com/${githubUsername}.png`;
 
-// Resolve canonical and social image absolute URLs (required by WhatsApp, Twitter, LinkedIn)
-const siteOrigin = Astro.url.origin && !Astro.url.origin.includes('example.com')
-  ? Astro.url.origin 
-  : (await getRuntimeEnv('PUBLIC_SITE_URL') || await getRuntimeEnv('SITE_URL') || 'https://davidarrozaqi.com');
+// Resolve canonical and social image absolute URLs (required by Threads, WhatsApp, Twitter, LinkedIn)
+const host = Astro.request.headers.get('x-forwarded-host') || Astro.request.headers.get('host');
+const proto = Astro.request.headers.get('x-forwarded-proto') || 'https';
+const reqOrigin = host ? `${proto}://${host}` : Astro.url.origin;
 
+const siteOrigin = reqOrigin && !reqOrigin.includes('example.com')
+  ? reqOrigin 
+  : (await getRuntimeEnv('PUBLIC_SITE_URL') || await getRuntimeEnv('SITE_URL') || Astro.url.origin);
 const canonicalUrl = new URL(Astro.url.pathname, siteOrigin).href;
 const ogImageUrl = image.startsWith('http://') || image.startsWith('https://')
   ? image
