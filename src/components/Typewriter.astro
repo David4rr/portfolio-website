@@ -2,14 +2,14 @@
 // Typewriter.astro
 ---
 
-<span id="typewriter-text"></span>
+<span id="typewriter-text">Software Engineer</span>
 <span id="typewriter-cursor" class="font-light text-accent ml-[2px]">|</span>
 
 <script>
   const roles = [
-    "Mobile & Web Developer",
-    "AI & Machine Learning Enthusiast",
-    "Building Seamless Digital Experiences"
+    "Software Engineer",
+    "Android & Web Systems Developer",
+    "Creative Technologist"
   ];
   
   // Astro view transitions setup
@@ -20,7 +20,7 @@
     
     // reset state
     let roleIndex = 0;
-    let charIndex = 0;
+    let charIndex = roles[0].length;
     let isDeleting = false;
     let timeoutId;
     let isRunning = true;

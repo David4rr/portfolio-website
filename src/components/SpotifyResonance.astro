@@ -1,0 +1,205 @@
+---
+// src/components/SpotifyResonance.astro
+// Editorial real-time Spotify telemetry widget (supports desktop & mobile alignment)
+interface Props {
+  align?: "right" | "center";
+  class?: string;
+}
+
+const { align = "right", class: className = "" } = Astro.props;
+const isCenter = align === "center";
+---
+
+<div
+  class={`spotify-resonance-root group flex flex-col transition-opacity duration-500 opacity-90 hover:opacity-100 ${
+    isCenter ? "items-center text-center" : "items-end text-right"
+  } ${className}`}
+>
+  <!-- Telemetry Header -->
+  <div class={`flex items-center gap-1.5 mb-0.5 ${isCenter ? "justify-center" : "justify-end"}`}>
+    <!-- Mini Equalizer bars -->
+    <div class="spotify-eq flex items-end gap-[2px] h-2.5 w-3 pb-[1px]" aria-hidden="true">
+      <span class="eq-bar w-[1.5px] h-1 bg-text-muted/60 transition-all duration-300"></span>
+      <span class="eq-bar w-[1.5px] h-2 bg-text-muted/60 transition-all duration-300"></span>
+      <span class="eq-bar w-[1.5px] h-1.5 bg-text-muted/60 transition-all duration-300"></span>
+    </div>
+
+    <span
+      class="spotify-tag font-sans text-[8.5px] uppercase tracking-[0.22em] text-text-muted/70 transition-colors duration-300"
+    >
+      Resonance
+    </span>
+  </div>
+
+  <!-- Track Info Link -->
+  <a
+    href="#"
+    target="_blank"
+    rel="noopener noreferrer"
+    class={`spotify-link flex items-center gap-2 pointer-events-none group/link select-none transition-transform duration-300 ${
+      isCenter ? "justify-center" : "justify-end"
+    }`}
+  >
+    <div class={`flex flex-col max-w-[220px] sm:max-w-[240px] ${isCenter ? "items-center text-center" : "items-end text-right"}`}>
+      <span
+        class="spotify-title font-serif italic text-xs md:text-[13px] leading-tight text-text-main group-hover/link:text-accent transition-colors duration-300 truncate w-full"
+      >
+        Awaiting transmission...
+      </span>
+      <span
+        class="spotify-artist font-sans text-[9.5px] tracking-wide text-text-muted/80 truncate w-full mt-0.5"
+      >
+        Chamber Silence
+      </span>
+    </div>
+
+    <!-- Tiny Album Thumbnail -->
+    <div
+      class="spotify-art-wrap w-6 h-6 rounded border border-border-subtle overflow-hidden shrink-0 hidden bg-bg-elevated"
+    >
+      <img
+        src=""
+        alt="Album art"
+        class="spotify-art w-full h-full object-cover"
+        loading="lazy"
+      />
+    </div>
+  </a>
+</div>
+
+<style>
+  /* Custom animated equalizer keyframes */
+  @keyframes eqBounce1 {
+    0%, 100% { height: 3px; }
+    50% { height: 10px; }
+  }
+  @keyframes eqBounce2 {
+    0%, 100% { height: 9px; }
+    50% { height: 4px; }
+  }
+  @keyframes eqBounce3 {
+    0%, 100% { height: 4px; }
+    50% { height: 10px; }
+  }
+
+  :global(.eq-playing .eq-bar) {
+    background-color: var(--color-accent) !important;
+  }
+  :global(.eq-playing .eq-bar:nth-child(1)) {
+    animation: eqBounce1 1s ease-in-out infinite;
+  }
+  :global(.eq-playing .eq-bar:nth-child(2)) {
+    animation: eqBounce2 0.8s ease-in-out infinite 0.15s;
+  }
+  :global(.eq-playing .eq-bar:nth-child(3)) {
+    animation: eqBounce3 1.1s ease-in-out infinite 0.3s;
+  }
+</style>
+
+<script>
+  let spotifyInterval: any = null;
+  let isFetching = false;
+
+  async function updateSpotify() {
+    if (isFetching || document.visibilityState === 'hidden') return;
+    isFetching = true;
+
+    try {
+      const res = await fetch('/api/spotify.json');
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const eqElements = document.querySelectorAll('.spotify-eq');
+      const tagElements = document.querySelectorAll('.spotify-tag');
+      const linkElements = document.querySelectorAll('.spotify-link');
+      const titleElements = document.querySelectorAll('.spotify-title');
+      const artistElements = document.querySelectorAll('.spotify-artist');
+      const artWrapElements = document.querySelectorAll('.spotify-art-wrap');
+      const artImgElements = document.querySelectorAll('.spotify-art');
+
+      const isLive = data.isPlaying;
+      const tagLabel = isLive
+        ? 'Resonance • Live'
+        : (data.title && data.title !== 'Chamber Silence' ? 'Resonance • Recent' : 'Resonance');
+
+      const titleText = data.title || 'Chamber Silence';
+      const artistText = data.artist || (isLive ? 'Unknown Artist' : 'Awaiting transmission...');
+
+      eqElements.forEach(eq => {
+        if (isLive) {
+          eq.classList.add('eq-playing');
+        } else {
+          eq.classList.remove('eq-playing');
+        }
+      });
+
+      tagElements.forEach(tag => {
+        tag.textContent = tagLabel;
+        if (isLive) {
+          tag.classList.add('text-accent');
+          tag.classList.remove('text-text-muted/70');
+        } else {
+          tag.classList.remove('text-accent');
+          tag.classList.add('text-text-muted/70');
+        }
+      });
+
+      titleElements.forEach(title => {
+        title.textContent = titleText;
+      });
+
+      artistElements.forEach(artist => {
+        artist.textContent = artistText;
+      });
+
+      linkElements.forEach(link => {
+        if (data.songUrl) {
+          link.setAttribute('href', data.songUrl);
+          link.classList.remove('pointer-events-none');
+          link.classList.add('cursor-pointer');
+        } else {
+          link.removeAttribute('href');
+          link.classList.add('pointer-events-none');
+          link.classList.remove('cursor-pointer');
+        }
+      });
+
+      if (data.albumImageUrl) {
+        artImgElements.forEach(img => {
+          (img as HTMLImageElement).src = data.albumImageUrl;
+        });
+        artWrapElements.forEach(wrap => {
+          wrap.classList.remove('hidden');
+        });
+      } else {
+        artWrapElements.forEach(wrap => {
+          wrap.classList.add('hidden');
+        });
+      }
+    } catch (e) {
+      // Graceful silence on network hiccups
+    } finally {
+      isFetching = false;
+    }
+  }
+
+  function initSpotify() {
+    if (spotifyInterval) clearInterval(spotifyInterval);
+    updateSpotify();
+    spotifyInterval = setInterval(updateSpotify, 20000); // 20s telemetry poll
+  }
+
+  document.addEventListener('astro:page-load', initSpotify);
+  document.addEventListener('astro:before-preparation', () => {
+    if (spotifyInterval) clearInterval(spotifyInterval);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      updateSpotify();
+    }
+  });
+
+  if (document.readyState === 'complete') {
+    initSpotify();
+  }
+</script>

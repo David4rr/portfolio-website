@@ -6,13 +6,16 @@ interface Props {
 const { username } = Astro.props;
 ---
 
-<div id="gh-activity-container" data-username={username} class="w-full max-w-lg border-t border-border-subtle pt-1 animate-slide-up" style="animation-delay: 0.5s">
-  <h3 class="font-sans uppercase tracking-[0.2em] text-[9px] text-text-muted/60 mb-2 text-center">
-    Live Telegraph
-  </h3>
-  <ul id="gh-activity-list" class="flex flex-col gap-1 font-serif text-[clamp(0.8rem,1vw,0.9rem)] text-text-muted text-left">
+<div id="gh-activity-container" data-username={username} class="w-full">
+  <div class="flex items-center justify-between mb-2 pb-1 border-b border-border-subtle/30">
+    <h4 class="font-sans uppercase tracking-[0.2em] text-[9px] text-text-muted/70 flex items-center gap-1.5">
+      <span class="text-accent text-[8px]">◍</span> Live Dispatches
+    </h4>
+    <span class="font-mono text-[9px] text-text-muted/50 tracking-wider">Public Log</span>
+  </div>
+  <ul id="gh-activity-list" class="flex flex-col gap-1.5 font-serif text-xs md:text-[13px] text-text-muted text-left">
     <li class="flex items-center justify-between">
-      <span class="flex items-center gap-3">
+      <span class="flex items-center gap-2">
         <span class="text-[9px] text-accent/50">◍</span> Awaiting transmission...
       </span>
     </li>

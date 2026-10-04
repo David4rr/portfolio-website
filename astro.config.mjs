@@ -9,7 +9,7 @@ import preact from '@astrojs/preact';
 import cloudflare from '@astrojs/cloudflare';
 import node from '@astrojs/node';
 
-const isDev = process.env.npm_lifecycle_event === 'dev';
+const isDev = process.env.npm_lifecycle_event === 'dev' || process.argv.includes('dev');
 
 // https://astro.build/config
 export default defineConfig({

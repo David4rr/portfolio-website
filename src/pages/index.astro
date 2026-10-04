@@ -10,6 +10,7 @@ import TechStack from "../components/TechStack.astro";
 import Contact from "../components/Contact.astro";
 import Footer from "../components/Footer.astro";
 import LiveClock from "../components/LiveClock.astro";
+import SpotifyResonance from "../components/SpotifyResonance.astro";
 import ScrollIndicator from "../components/ScrollIndicator.astro";
 import { getProjectsFromNotion } from "../lib/notion";
 
@@ -89,16 +90,19 @@ const formatPoetryTitle = (title: string) => {
         </div>
       </div>
 
-      <!-- Live Clock outside max-w-[1200px] to be truly at screen edge -->
-      <LiveClock />
-
+      <!-- Telemetry Hub: Spotify Resonance & Live Clock (Screen Edge) -->
+      <div class="absolute bottom-6 md:bottom-8 right-6 md:right-8 text-right flex flex-col items-end gap-2.5 z-30 pointer-events-auto hidden md:flex">
+        <SpotifyResonance />
+        <div class="w-12 h-[1px] bg-border-subtle/40 my-0.5"></div>
+        <LiveClock />
+      </div>
       <!-- Poetry Scroll Indicator (Screen Edge) -->
       <div class="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 flex flex-col items-center gap-3 opacity-60 hover:opacity-100 transition-opacity duration-700 pointer-events-none z-20 w-8">
         <span class="font-serif italic text-text-muted text-[10px] tracking-[0.2em] uppercase origin-center md:origin-left whitespace-nowrap">Unfold</span>
         <div class="w-full flex justify-center">
           <svg width="12" height="40" viewBox="0 0 12 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="overflow-hidden">
             <rect x="5.5" y="0" width="1" height="40" fill="currentColor" class="text-text-muted/20" />
-            <rect id="scroll-line" x="5.5" y="-20" width="1" height="20" fill="currentColor" class="text-accent" />
+            <rect id="scroll-line" x="5.5" y="0" width="1" height="0" fill="currentColor" class="text-accent" />
           </svg>
         </div>
       </div>
@@ -619,13 +623,34 @@ const formatPoetryTitle = (title: string) => {
 
     const { default: anime } = await import('animejs/lib/anime.es.js');
     
-    (line as any).anime = anime({
+    line.setAttribute('y', '0');
+    line.setAttribute('height', '0');
+    line.setAttribute('opacity', '0');
+
+    (line as any).anime = anime.timeline({
+      loop: true,
+    })
+    // 1. Unfold: line draws/extends smoothly downward from top
+    .add({
       targets: line,
-      translateY: [0, 60],
-      opacity: [0, 1, 1, 0],
-      duration: 2000,
-      easing: 'easeInOutSine',
-      loop: true
+      height: [0, 26],
+      y: 0,
+      opacity: [0.3, 1],
+      duration: 1100,
+      easing: 'easeInOutCubic',
+    })
+    // 2. Unfurl release: tail catches up, dissolving into the bottom edge
+    .add({
+      targets: line,
+      y: [0, 40],
+      height: [26, 0],
+      opacity: [1, 0],
+      duration: 850,
+      easing: 'easeInOutCubic',
+    }, '-=150')
+    // 3. Poetic resting pause
+    .add({
+      duration: 500,
     });
   };
 

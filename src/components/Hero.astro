@@ -1,13 +1,12 @@
 ---
 // ponytail: hero section with interactive Matrix ASCII avatar
-import GithubActivity from "./GithubActivity.astro";
 import AsciiAvatar from "./AsciiAvatar.astro";
 import Typewriter from "./Typewriter.astro";
+import SpotifyResonance from "./SpotifyResonance.astro";
 import framesJson from "../data/ascii-frames.json";
 import { getRuntimeEnv } from "../lib/notion";
 
 const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || await getRuntimeEnv('PUBLIC_CONTACT_EMAIL') || "hello@example.com";
-const githubUsername = await getRuntimeEnv('GITHUB_USERNAME') || await getRuntimeEnv('PUBLIC_GITHUB_USERNAME') || "David4rr";
 
 let framesData = "[]";
 let initialArt = "";
@@ -23,7 +22,7 @@ try {
 ---
 
 <section
-  class="flex flex-col justify-center section-padding pt-20 pb-2 md:pt-16 md:pb-1 relative w-full h-full"
+  class="flex flex-col justify-center section-padding pt-20 pb-8 md:pt-16 md:pb-8 relative w-full h-full"
   id="hero"
 >
   <!-- Decorative subtle grid/lines for paper feel -->
@@ -58,38 +57,26 @@ try {
     </div>
 
     <!-- The Title -->
-    <h1 class="font-serif text-[clamp(2rem,5vw,4.5rem)] font-normal leading-none tracking-tight mb-0 mt-1 whitespace-normal sm:whitespace-nowrap text-text-main">
+    <h1 class="font-serif text-[clamp(2.4rem,5.5vw,4.75rem)] font-normal leading-none tracking-tight mb-2 mt-2 whitespace-normal sm:whitespace-nowrap text-text-main">
       David Arrozaqi<span class="text-accent">.</span>
     </h1>
 
     <!-- The Role (Typewriter) -->
-    <h2 class="font-sans text-[clamp(0.65rem,1.5vw,0.8rem)] uppercase tracking-[0.3em] text-text-muted mb-1 mt-1">
+    <h2 class="font-sans text-[clamp(0.7rem,1.4vw,0.85rem)] uppercase tracking-[0.25em] text-text-muted mb-4 mt-1">
       <Typewriter />
     </h2>
 
     <!-- The Prose -->
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-xl mx-auto mb-6">
       <p
-        class="font-serif text-text-muted text-[clamp(0.85rem,1.2vw,1rem)] leading-snug mb-1 px-4"
+        class="font-serif text-text-muted text-[clamp(0.9rem,1.25vw,1.05rem)] leading-relaxed px-4"
       >
-        I weave logic and design into seamless digital experiences across the
-        modern web, mobile platforms, and artificial intelligence. My focus is
-        on crafting interfaces that feel less like software, and more like an
-        intuitive extension of human thought.
+        Software engineer crafting robust web architectures, native Android systems, and interactive digital experiences. Focused on bridging disciplined engineering with bespoke editorial aesthetics.
       </p>
-
-      <!-- The Aside -->
-      <div class="flex justify-center items-center gap-3 mb-1 opacity-80">
-        <span class="w-4 h-[1px] bg-border-subtle"></span>
-        <p class="font-serif text-[0.7rem] italic text-text-muted">
-          * I firmly believe that the most elegant algorithms are fueled by strong coffee.
-        </p>
-        <span class="w-4 h-[1px] bg-border-subtle"></span>
-      </div>
     </div>
 
     <!-- Actions -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-2">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
       <a
         href="/#projects"
         class="group inline-flex items-center justify-center gap-2 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
@@ -115,8 +102,11 @@ try {
       </a>
     </div>
 
-    <!-- GitHub Telegraph (Live Feed) -->
-    <GithubActivity username={githubUsername} />
+    <!-- Mobile Spotify Resonance (Visible on mobile only) -->
+    <div class="md:hidden mt-3 mb-1 flex justify-center w-full">
+      <SpotifyResonance align="center" />
+    </div>
+
   </div>
 
 </section>

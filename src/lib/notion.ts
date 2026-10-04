@@ -18,30 +18,8 @@ export interface NotionProject {
   order?: number | null;
 }
 
-// Helper to safely get env variables in Astro across Node and Cloudflare
-export async function getRuntimeEnv(key: string) {
-  // 1. Try Cloudflare Workers native environment variables (Astro 7+ standard)
-  try {
-    const moduleName = 'cloudflare:workers';
-    // @ts-ignore
-    const cf = await import(/* @vite-ignore */ moduleName);
-    if (cf && cf.env && cf.env[key]) return cf.env[key];
-  } catch (e) {
-    // We are running in local Node.js development, just ignore
-  }
-  
-  // 2. Try import.meta.env (Astro build-time fallback)
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
-  
-  // 3. Fallback to process.env (Node.js runtime / Vercel)
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  
-  return undefined;
-}
+import { getRuntimeEnv } from "./env";
+export { getRuntimeEnv };
 
 // Function to fetch all published projects
 export async function getProjectsFromNotion(): Promise<NotionProject[]> {
