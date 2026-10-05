@@ -20,15 +20,20 @@ items.forEach((item, index) => {
   {renderItems.map((item, i) => (
     item.type === 'num' ? (
       <div class="relative flex items-center justify-center w-full">
-        <div class="scroll-item scroll-num font-mono text-[11px] text-text-main/80 cursor-pointer transition-colors duration-300" data-index={item.activeIndex}>
+        <div class="scroll-item scroll-num font-mono text-[11px] text-text-main/80 cursor-default select-none transition-colors duration-300" data-index={item.activeIndex}>
           {item.data.num}
         </div>
-        <!-- Title that expands on hover -->
-        <div class="absolute left-full ml-2 flex items-center overflow-hidden w-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-48 opacity-0 group-hover:opacity-100 pointer-events-none py-2">
-           <div class="absolute inset-0 bg-gradient-to-r from-bg-main via-bg-main/90 to-transparent z-[-1] -ml-2"></div>
-           <span class="w-4 h-[1px] bg-accent/50 mr-3 shrink-0"></span>
-           <span class="font-serif italic text-text-main text-[11px] tracking-[0.2em] whitespace-nowrap drop-shadow-[0_0_2px_var(--color-bg-main)]">{item.data.label}</span>
-        </div>
+        <!-- Title that expands on hover (clickable) -->
+        <button
+          type="button"
+          class="scroll-label group/label absolute left-full pl-3 flex items-center overflow-hidden w-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-52 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto py-2 cursor-pointer bg-transparent border-none text-left select-none focus:outline-none"
+          data-index={item.activeIndex}
+          aria-label={`Navigate to ${item.data.label}`}
+        >
+           <div class="absolute inset-0 bg-gradient-to-r from-bg-main via-bg-main/90 to-transparent z-[-1]"></div>
+           <span class="w-4 h-[1px] bg-accent/50 mr-3 shrink-0 transition-all duration-300 group-hover/label:w-6 group-hover/label:bg-accent"></span>
+           <span class="font-serif italic text-text-main text-[11px] tracking-[0.2em] whitespace-nowrap drop-shadow-[0_0_2px_var(--color-bg-main)] transition-colors duration-300 group-hover/label:text-accent">{item.data.label}</span>
+        </button>
       </div>
     ) : (
       <div class="scroll-item tick-line w-1.5 h-[2px] bg-text-muted/30 transition-all duration-150"></div>
@@ -39,7 +44,6 @@ items.forEach((item, index) => {
 <script>
   const setupScrollIndicator = () => {
     const scrollItems = document.querySelectorAll('.scroll-item');
-    const nums = document.querySelectorAll('.scroll-num');
     const sections = document.querySelectorAll('section[data-section]');
     
     // Cleanup previous instances for Astro View Transitions
@@ -133,10 +137,19 @@ items.forEach((item, index) => {
     
     window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
     
-    nums.forEach((num) => {
-      num.addEventListener('click', () => {
-        const index = parseInt(num.getAttribute('data-index') || '0');
-        window.scrollTo({ top: offsets[index], behavior: 'smooth' });
+    const labels = document.querySelectorAll('.scroll-label');
+    labels.forEach((label) => {
+      label.addEventListener('click', (e) => {
+        e.preventDefault();
+        const index = parseInt(label.getAttribute('data-index') || '0');
+        if (offsets[index] !== undefined) {
+          const target = offsets[index];
+          if (window.lenis) {
+            window.lenis.scrollTo(target);
+          } else {
+            window.scrollTo({ top: target, behavior: 'smooth' });
+          }
+        }
       });
     });
   };
