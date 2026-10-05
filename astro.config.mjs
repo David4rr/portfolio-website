@@ -26,6 +26,7 @@ export default defineConfig({
   },
   image: {
     domains: ["wsrv.nl", "prod-files-secure.s3.us-west-2.amazonaws.com", "images.unsplash.com"],
+    remotePatterns: [{ protocol: 'https', hostname: '**.r2.dev' }],
   },
   vite: {
     plugins: [tailwindcss()],

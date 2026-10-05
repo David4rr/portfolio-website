@@ -24,11 +24,22 @@ if (!project) {
 // Fetch content
 const mdContent = await getProjectContent(project.id);
 const htmlContent = marked.parse(mdContent);
+
+const optimizeImageUrl = (url?: string, width = 1200) => {
+  if (!url) return '';
+  if (url.startsWith('http')) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
+  }
+  return url;
+};
+
+const optimizedGallery = (project.gallery || []).map((img) => optimizeImageUrl(img, 1200));
+const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200", 1200);
 ---
 <BaseLayout 
   title={`${project.title} | David Arrozaqi`}
   description={project.description || `Explore ${project.title}, engineered by David Arrozaqi.`}
-  image={project.image || "/og-image.png"}
+  image={optimizedCover || "/og-image.png"}
   type="article"
 >
   <Nav />
@@ -75,19 +86,19 @@ const htmlContent = marked.parse(mdContent);
       </div>
 
       {/* Soft Image Integration / Stacked Cards */}
-      {project.gallery && project.gallery.length > 0 ? (
+      {optimizedGallery && optimizedGallery.length > 0 ? (
         <div class="premium-reveal opacity-0 w-full max-w-2xl mx-auto mb-16 flex flex-col items-center">
           <div 
             class="w-full relative cursor-pointer group card-stack-container mb-20"
             data-captions={JSON.stringify(project.galleryCaptions || [])}
           >
             {/* Ghost image to naturally set the container height to the first image's aspect ratio */}
-            <Image src={project.gallery[0]} alt="" width={800} height={800} class="w-full h-auto opacity-0 pointer-events-none block" aria-hidden="true" loading="lazy" />
+            <Image src={optimizedGallery[0]} alt="" width={800} height={800} class="w-full h-auto opacity-0 pointer-events-none block" aria-hidden="true" loading="lazy" />
             
-            {project.gallery.map((imgUrl, i) => (
+            {optimizedGallery.map((imgUrl, i) => (
               <div 
                 class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 card-polaroid border border-border-subtle will-change-transform origin-bottom flex items-center justify-center"
-                style={{ zIndex: project.gallery.length - i }}
+                style={{ zIndex: optimizedGallery.length - i }}
                 data-index={i}
               >
                 <Image 
@@ -116,7 +127,7 @@ const htmlContent = marked.parse(mdContent);
       ) : (
         <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto relative mb-20 aspect-[3/4] overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30">
           <Image 
-            src={project.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200"} 
+            src={optimizedCover} 
             alt={project.title} 
             width={800}
             height={1066}
