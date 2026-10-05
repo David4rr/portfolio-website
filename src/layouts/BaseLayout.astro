@@ -17,7 +17,7 @@ const {
   type = "website"
 } = Astro.props;
 
-const githubUsername = await getRuntimeEnv('GITHUB_USERNAME') || await getRuntimeEnv('PUBLIC_GITHUB_USERNAME') || "David4rr";
+const githubUsername = await getRuntimeEnv('GITHUB_USERNAME') || "David4rr";
 const faviconUrl = `https://github.com/${githubUsername}.png`;
 
 // Resolve canonical and social image absolute URLs (required by Threads, WhatsApp, Twitter, LinkedIn)

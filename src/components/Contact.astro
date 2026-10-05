@@ -1,6 +1,6 @@
 ---
 import { getRuntimeEnv } from '../lib/notion';
-const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || await getRuntimeEnv('PUBLIC_CONTACT_EMAIL') || "hello@example.com";
+const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || "hello@example.com";
 const linkedinUrl = await getRuntimeEnv('LINKEDIN_URL') || await getRuntimeEnv('PUBLIC_LINKEDIN_URL') || "https://linkedin.com";
 const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv('PUBLIC_INSTAGRAM_URL') || "https://instagram.com";
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";

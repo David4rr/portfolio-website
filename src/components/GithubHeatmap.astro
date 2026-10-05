@@ -10,7 +10,6 @@ interface Props {
 
 const envUsername =
   (await getRuntimeEnv("GITHUB_USERNAME")) ||
-  (await getRuntimeEnv("PUBLIC_GITHUB_USERNAME")) ||
   "David4rr";
 
 const { username = envUsername, class: className = "" } = Astro.props;

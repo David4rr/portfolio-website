@@ -6,7 +6,7 @@ import SpotifyResonance from "./SpotifyResonance.astro";
 import framesJson from "../data/ascii-frames.json";
 import { getRuntimeEnv } from "../lib/notion";
 
-const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || await getRuntimeEnv('PUBLIC_CONTACT_EMAIL') || "hello@example.com";
+const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || "hello@example.com";
 
 let framesData = "[]";
 let initialArt = "";
