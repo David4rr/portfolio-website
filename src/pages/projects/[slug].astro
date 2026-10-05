@@ -5,7 +5,6 @@ import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
 import { marked } from 'marked';
-import { Image } from 'astro:assets';
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
@@ -89,11 +88,16 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
       {optimizedGallery && optimizedGallery.length > 0 ? (
         <div class="premium-reveal opacity-0 w-full max-w-2xl mx-auto mb-16 flex flex-col items-center">
           <div 
-            class="w-full relative cursor-pointer group card-stack-container mb-20"
+            class="w-full relative cursor-pointer group card-stack-container mb-20 min-h-[220px]"
             data-captions={JSON.stringify(project.galleryCaptions || [])}
           >
             {/* Ghost image to naturally set the container height to the first image's aspect ratio */}
-            <Image src={optimizedGallery[0]} alt="" width={800} height={800} class="w-full h-auto opacity-0 pointer-events-none block" aria-hidden="true" loading="lazy" />
+            <img 
+              src={optimizedGallery[0]} 
+              alt="" 
+              class="w-full h-auto opacity-0 pointer-events-none block select-none" 
+              aria-hidden="true" 
+            />
             
             {optimizedGallery.map((imgUrl, i) => (
               <div 
@@ -101,14 +105,12 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
                 style={{ zIndex: optimizedGallery.length - i }}
                 data-index={i}
               >
-                <Image 
+                <img 
                   src={imgUrl} 
                   alt={`${project.title} gallery ${i+1}`}
-                  width={800}
-                  height={800}
-                  loading="lazy"
+                  loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
-                  class="w-full h-full object-contain rounded-[1px]"
+                  class="w-full h-full object-contain rounded-[1px] select-none"
                 />
               </div>
             ))}
@@ -125,15 +127,13 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
           </div>
         </div>
       ) : (
-        <div class="premium-reveal opacity-0 w-full max-w-sm mx-auto relative mb-20 aspect-[3/4] overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30">
-          <Image 
+        <div class="premium-reveal opacity-0 w-full max-w-xl mx-auto relative mb-20 overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30 flex items-center justify-center">
+          <img 
             src={optimizedCover} 
             alt={project.title} 
-            width={800}
-            height={1066}
             loading="lazy"
             decoding="async"
-            class="w-full h-full object-cover rounded-[1px]"
+            class="w-full h-auto object-contain rounded-[1px]"
           />
         </div>
       )}
