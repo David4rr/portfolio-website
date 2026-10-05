@@ -6,6 +6,11 @@ const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";
 import { Image } from 'astro:assets';
 import schoolOfAthensImg from '../assets/school_of_athens.jpg';
+
+interface Props {
+  isStandalone?: boolean;
+}
+const { isStandalone = false } = Astro.props;
 ---
 <section class="w-full flex-1 h-full flex flex-col justify-center py-[clamp(4rem,8vw,8rem)] text-center md:text-left max-w-5xl mx-auto relative border-t border-border-subtle/50 px-4 md:px-0">
   <div class="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-24 w-full my-auto">
@@ -47,7 +52,7 @@ import schoolOfAthensImg from '../assets/school_of_athens.jpg';
           alt="The School of Athens"
           width={800}
           height={800}
-          loading="lazy"
+          loading={isStandalone ? "eager" : "lazy"}
           decoding="async"
           class="w-full h-full object-cover opacity-100 origin-right"
         />

@@ -91,7 +91,7 @@ const formatPoetryTitle = (title: string) => {
       </div>
 
       <!-- Telemetry Hub: Spotify Resonance & Live Clock (Screen Edge) -->
-      <div class="absolute bottom-6 md:bottom-8 right-6 md:right-8 text-right flex flex-col items-end gap-2.5 z-30 pointer-events-auto hidden md:flex">
+      <div id="hero-telemetry" class="absolute bottom-6 md:bottom-8 right-6 md:right-8 text-right flex flex-col items-end gap-2.5 z-30 pointer-events-auto hidden md:flex transition-opacity duration-300">
         <SpotifyResonance />
         <div class="w-12 h-[1px] bg-border-subtle/40 my-0.5"></div>
         <LiveClock />
@@ -653,17 +653,45 @@ const formatPoetryTitle = (title: string) => {
       duration: 500,
     });
   };
+  const initHeroTelemetry = () => {
+    const telemetry = document.getElementById("hero-telemetry");
+    if (!telemetry) return;
+
+    const onScroll = () => {
+      const scrollY = window.scrollY;
+      const threshold = window.innerHeight * 0.25;
+      if (scrollY > threshold) {
+        telemetry.style.opacity = "0";
+        telemetry.style.pointerEvents = "none";
+      } else {
+        telemetry.style.opacity = (1 - scrollY / threshold).toString();
+        telemetry.style.pointerEvents = "auto";
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  };
 
   initRocketBtn();
   initInkDrop();
+  initHeroTelemetry();
   document.addEventListener("astro:page-load", () => {
     initRocketBtn();
     initInkDrop();
+    initHeroTelemetry();
+  });
+  document.addEventListener("astro:before-swap", () => {
+    const cw = document.getElementById("project-cursor-wrapper");
+    if (cw && cw.parentNode === document.body) {
+      document.body.removeChild(cw);
+    }
   });
   window.addEventListener("pageshow", (event) => {
     if (event.persisted) {
       initRocketBtn();
       initInkDrop();
+      initHeroTelemetry();
     }
   });
 </script>

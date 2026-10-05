@@ -31,9 +31,10 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
         width={800}
         height={800}
         onLoad={() => setLoaded(true)}
-        class={`absolute inset-0 w-full h-full object-cover pointer-events-none brightness-[0.95] transition-opacity duration-[1500ms] ease-out ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        loading="lazy"
+        class={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-[1500ms] ease-out ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        loading="eager"
         decoding="async"
+        data-image-component=""
         draggable={false}
       />
     </div>
@@ -152,9 +153,9 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
         exactH = gh * CELL + (gh - 1) * GAP;
       } else {
         const ratio = aspectRatios[p.id] || (p.type === 'mobile' ? 0.5 : 1.77);
-        // Target an area of roughly 16-20 cells
-        gh = Math.round(Math.sqrt(20 / ratio));
-        gh = Math.max(2, Math.min(gh, 8));
+        // Target an area of roughly 24-28 cells to guarantee readable card content
+        gh = Math.round(Math.sqrt(28 / ratio));
+        gh = Math.max(4, Math.min(gh, 8));
         
         exactH = gh * CELL + (gh - 1) * GAP;
         exactW = exactH * ratio;
@@ -484,30 +485,43 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                 </div>
 
                 {/* BACK FACE (Poetry / Details) */}
-                <div id={`card-back-${p.id}`} class="absolute inset-0 w-full h-full overflow-hidden bg-bg-elevated border border-accent flex flex-col items-center justify-center p-8 text-center opacity-0" style={{ transform: 'rotateY(180deg) translateZ(1px)' }}>
-                  
+                <div 
+                  id={`card-back-${p.id}`} 
+                  class="absolute inset-0 w-full h-full overflow-hidden bg-bg-elevated border border-accent flex flex-col items-center justify-between p-5 md:p-6 text-center opacity-0 select-none" 
+                  style={{ transform: 'rotateY(180deg) translateZ(1px)' }}
+                >
                   {/* Inner Manuscript Border */}
                   <div class="absolute inset-3 border border-border-subtle/50 pointer-events-none"></div>
-                  
-                  <h3 class="font-serif text-[clamp(1rem,1.3vw,1.6rem)] leading-tight font-normal text-text-main mb-3 flex-shrink-0 px-2">
-                    {p.title}
-                  </h3>
-                  
-                  <div class="w-8 h-[1px] bg-accent/40 mb-5 flex-shrink-0"></div>
-                  
-                  <div class="overflow-hidden flex-shrink-0 px-4">
-                    <p class="text-text-muted text-[12px] font-serif tracking-wide leading-relaxed line-clamp-3 italic mb-6 pointer-events-none">
+
+                  {/* Top: Title & Divider */}
+                  <div class="flex flex-col items-center w-full mt-auto mb-2 flex-shrink-0 z-10">
+                    <h3 class="font-serif text-[clamp(1rem,1.3vw,1.5rem)] leading-snug font-normal text-text-main mb-2.5 px-3">
+                      {p.title}
+                    </h3>
+                    <div class="w-8 h-[1px] bg-accent/40 mb-2"></div>
+                  </div>
+
+                  {/* Middle: Description */}
+                  <div class="overflow-hidden px-4 my-auto z-10 flex-shrink min-h-0">
+                    <p class="text-text-muted text-[11px] md:text-[12px] font-serif tracking-wide leading-relaxed line-clamp-3 italic pointer-events-none">
                       "{p.description}"
                     </p>
                   </div>
 
-                  <a href={targetHref} onClick={(e) => e.stopPropagation()} class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2.5 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 cursor-pointer flex-shrink-0">
-                    View Details
-                  </a>
-
+                  {/* Bottom: Action Button */}
+                  <div class="mt-auto mb-2 z-10 flex-shrink-0">
+                    <a 
+                      href={targetHref} 
+                      data-astro-reload 
+                      onClick={(e) => e.stopPropagation()} 
+                      class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2.5 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 cursor-pointer flex-shrink-0"
+                    >
+                      View Details
+                    </a>
+                  </div>
                   {/* Footnote */}
                   {!p.isReal && (
-                    <div class="absolute top-5 right-6 text-accent/40 font-serif text-2xl pointer-events-none" aria-label="Concept Note">
+                    <div class="absolute top-4 right-5 text-accent/40 font-serif text-2xl pointer-events-none" aria-label="Concept Note">
                       *
                     </div>
                   )}

@@ -36,6 +36,7 @@ const isCenter = align === "center";
     href="#"
     target="_blank"
     rel="noopener noreferrer"
+    aria-label="Spotify listening status"
     class={`spotify-link flex items-center gap-2 pointer-events-none group/link select-none transition-transform duration-300 ${
       isCenter ? "justify-center" : "justify-end"
     }`}
@@ -57,12 +58,11 @@ const isCenter = align === "center";
     <div
       class="spotify-art-wrap w-6 h-6 rounded border border-border-subtle overflow-hidden shrink-0 hidden bg-bg-elevated"
     >
-      <img
-        src=""
-        alt="Album art"
-        class="spotify-art w-full h-full object-cover"
-        loading="lazy"
-      />
+      <div
+        class="spotify-art w-full h-full bg-cover bg-center"
+        role="img"
+        aria-label="Spotify Album Art"
+      ></div>
     </div>
   </a>
 </div>
@@ -115,7 +115,7 @@ const isCenter = align === "center";
       const titleElements = document.querySelectorAll('.spotify-title');
       const artistElements = document.querySelectorAll('.spotify-artist');
       const artWrapElements = document.querySelectorAll('.spotify-art-wrap');
-      const artImgElements = document.querySelectorAll('.spotify-art');
+      const artElements = document.querySelectorAll('.spotify-art');
 
       const isLive = data.isPlaying;
       const tagLabel = isLive
@@ -165,10 +165,16 @@ const isCenter = align === "center";
       });
 
       if (data.albumImageUrl) {
-        artImgElements.forEach(img => {
-          (img as HTMLImageElement).src = data.albumImageUrl;
-        });
         artWrapElements.forEach(wrap => {
+          const isMobileInstance = wrap.closest('.md\\:hidden');
+          const isDesktopInstance = wrap.closest('.hidden.md\\:flex');
+          if (isMobileInstance && window.innerWidth >= 768) return;
+          if (isDesktopInstance && window.innerWidth < 768) return;
+
+          const artEl = wrap.querySelector('.spotify-art') as HTMLElement;
+          if (artEl) {
+            artEl.style.backgroundImage = `url("${data.albumImageUrl}")`;
+          }
           wrap.classList.remove('hidden');
         });
       } else {

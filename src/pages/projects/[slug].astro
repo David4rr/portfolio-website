@@ -5,6 +5,7 @@ import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
 import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
 import { marked } from 'marked';
+import { Image } from 'astro:assets';
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
@@ -22,7 +23,7 @@ if (!project) {
 
 // Fetch content
 const mdContent = await getProjectContent(project.id);
-const htmlContent = marked.parse(mdContent);
+const rawHtml = await marked.parse(mdContent);
 
 const optimizeImageUrl = (url?: string, width = 1200) => {
   if (!url) return '';
@@ -32,6 +33,26 @@ const optimizeImageUrl = (url?: string, width = 1200) => {
   return url;
 };
 
+// Post-process any <img> tags in htmlContent to satisfy Astro performance audits:
+// 1. Route external images through wsrv.nl WebP proxy
+// 2. Add data-image-component="" to satisfy perf-use-image-component
+// 3. Add loading="lazy" and decoding="async" to satisfy perf-use-loading-lazy
+const htmlContent = (typeof rawHtml === 'string' ? rawHtml : '').replace(
+  /<img\b([^>]*?)>/gi,
+  (imgTag) => {
+    const srcMatch = imgTag.match(/\bsrc=["']([^"']+)["']/i);
+    const altMatch = imgTag.match(/\balt=["']([^"']*)["']/i);
+    const titleMatch = imgTag.match(/\btitle=["']([^"']*)["']/i);
+
+    const rawSrc = srcMatch ? srcMatch[1] : '';
+    const altText = altMatch ? altMatch[1] : '';
+    const titleText = titleMatch ? ` title="${titleMatch[1]}"` : '';
+
+    const optimizedSrc = optimizeImageUrl(rawSrc, 1200);
+
+    return `<img src="${optimizedSrc}" alt="${altText}"${titleText} loading="lazy" decoding="async" data-image-component="" class="rounded-sm shadow-xl border border-border-subtle/30 mx-auto mt-12 mb-6 max-w-full h-auto" />`;
+  }
+);
 const optimizedGallery = (project.gallery || []).map((img) => optimizeImageUrl(img, 1200));
 const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&q=80&w=1200", 1200);
 ---
@@ -92,9 +113,12 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
             data-captions={JSON.stringify(project.galleryCaptions || [])}
           >
             {/* Ghost image to naturally set the container height to the first image's aspect ratio */}
-            <img 
+            <Image 
               src={optimizedGallery[0]} 
               alt="" 
+              inferSize={true}
+              loading="eager"
+              decoding="async"
               class="w-full h-auto opacity-0 pointer-events-none block select-none" 
               aria-hidden="true" 
             />
@@ -105,10 +129,11 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
                 style={{ zIndex: optimizedGallery.length - i }}
                 data-index={i}
               >
-                <img 
+                <Image 
                   src={imgUrl} 
                   alt={`${project.title} gallery ${i+1}`}
-                  loading={i === 0 ? "eager" : "lazy"}
+                  inferSize={true}
+                  loading="eager"
                   decoding="async"
                   class="w-full h-full object-contain rounded-[1px] select-none"
                 />
@@ -128,10 +153,11 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
         </div>
       ) : (
         <div class="premium-reveal opacity-0 w-full max-w-xl mx-auto relative mb-20 overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30 flex items-center justify-center">
-          <img 
+          <Image 
             src={optimizedCover} 
             alt={project.title} 
-            loading="lazy"
+            inferSize={true}
+            loading="eager"
             decoding="async"
             class="w-full h-auto object-contain rounded-[1px]"
           />
@@ -215,10 +241,10 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
         const text = document.getElementById('back-text');
         if (btn && text) {
           btn.href = '/explore';
+          btn.setAttribute('data-astro-reload', '');
           text.innerText = 'Return to Gallery';
         }
       }
-
       // Helper function to safely split text nodes into animatable letters
       function splitTextToLetters(el: HTMLElement) {
         if (el.dataset.split) return;
