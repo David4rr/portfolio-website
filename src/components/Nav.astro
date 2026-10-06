@@ -7,28 +7,16 @@ const linkedinUrl = await getRuntimeEnv('LINKEDIN_URL') || await getRuntimeEnv('
 const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv('PUBLIC_INSTAGRAM_URL') || "https://instagram.com";
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";
 ---
-<nav id="main-nav" class="fixed top-0 left-0 right-0 pt-4 pb-8 md:pt-5 md:pb-8 px-6 grid grid-cols-3 items-center z-50 bg-bg/90 backdrop-blur-md transition-colors duration-300">
-  <script>
-    const setupNav = () => {
-      const nav = document.getElementById('main-nav');
-      if (!nav) return;
-
-      const numPoints = 80;
-      const points = [];
-      points.push('100% 0%', '0% 0%');
-      for (let i = 0; i <= numPoints; i++) {
-        const x = (i / numPoints) * 100;
-        const isDeep = Math.random() > 0.8;
-        const y = isDeep ? (Math.random() * 5 + 85) : (Math.random() * 5 + 95);
-        points.push(`${x}% ${y}%`);
-      }
-      nav.style.clipPath = `polygon(${points.join(', ')})`;
-    };
-
-    document.addEventListener('astro:page-load', setupNav);
-    if (document.readyState === 'complete') setupNav();
-    else window.addEventListener('DOMContentLoaded', setupNav);
-  </script>
+<nav id="main-nav" class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-50 transition-colors duration-300">
+  <!-- iPhone-style Progressive Frosted Glass Blur -->
+  <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+    <!-- Progressive backdrop-blur layer feathered smoothly towards bottom -->
+    <div class="absolute inset-0 backdrop-blur-xl [mask-image:linear-gradient(to_bottom,black_0%,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_50%,transparent_100%)]"></div>
+    <!-- Progressive background parchment/theme tint -->
+    <div class="absolute inset-0 bg-gradient-to-b from-bg/95 via-bg/75 to-transparent"></div>
+    <!-- Feathered bottom hairline border -->
+    <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-border-subtle/35 to-transparent"></div>
+  </div>
   <div class="flex justify-start">
     <a href="/" class="font-bold text-xl tracking-tighter">Portfolio<span class="text-accent">.</span></a>
   </div>

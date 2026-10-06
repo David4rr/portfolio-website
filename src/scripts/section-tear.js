@@ -19,20 +19,8 @@ document.addEventListener('astro:page-load', () => {
   document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
 });
 
-// --- 2. Calendar Tear-Off scroll listener ---
+// --- 2. Pure GPU Parallax Card Stack (Ultra-Lightweight 120 FPS) ---
 let ticking = false;
-
-// Pre-generate jagged edge patterns for a natural paper tear look
-const jaggedPatterns = Array.from({ length: 10 }, () => {
-  const points = [];
-  const numPoints = 25; // Reduced from 60 to 25 for better performance
-  for (let i = 0; i <= numPoints; i++) {
-    const isDeep = Math.random() > 0.8;
-    const depth = isDeep ? (Math.random() * 80 + 30) : (Math.random() * 15);
-    points.push(depth);
-  }
-  return points;
-});
 
 // Cache section heights and offsets to avoid layout thrashing
 let sectionData = [];
@@ -50,10 +38,10 @@ const updateSectionData = () => {
 const updateTearOff = () => {
   if (sectionData.length === 0) updateSectionData();
   
-  // Disable tear-off effect on mobile to prevent glitchy scrolling and resizing
+  // Disable on mobile to maintain 100% native smooth touch scrolling
   if (window.innerWidth < 768) {
     sectionData.forEach(({ el: sec }) => {
-      sec.style = ''; // Reset all JS-applied inline styles
+      sec.style = '';
     });
     return;
   }
@@ -70,86 +58,52 @@ const updateTearOff = () => {
       sec.style.top = '0px';
     }
 
-    // 3. Determine Pinning (Make next section stack statically behind instead of sliding up)
+    // Pinned stacking behind incoming section
     const myTop = topOffset - scrollY;
     let ty = 0;
     if (i > 0 && myTop > 0 && myTop <= wh) {
-      // Pin tall sections to the top (0), short sections to the bottom (wh - h)
       const pinTarget = h < wh ? wh - h : 0;
       ty = pinTarget - myTop;
     }
 
-    // 4. Calculate progress of NEXT section tearing THIS section
+    // Progress of NEXT section overlapping THIS section (0 to 1)
     let progress = 0;
     const nextData = sectionData[i + 1];
     if (nextData) {
       const nextTop = nextData.topOffset - scrollY;
       const hNext = nextData.height;
-      const maxScroll = Math.max(0, wh - hNext); // The minimum nextTop can reach natively
+      const maxScroll = Math.max(0, wh - hNext);
       
       if (nextTop <= maxScroll) {
         progress = 1;
       } else if (nextTop < wh) {
-        // Map nextTop from `wh` (progress=0) down to `maxScroll` (progress=1)
         progress = 1 - ((nextTop - maxScroll) / (wh - maxScroll));
       }
     }
 
-    if (progress === 0) {
+    if (progress <= 0) {
       sec.style.clipPath = 'none';
-      sec.style.transform = ty !== 0 ? `translateY(${ty}px)` : 'none';
-      sec.style.opacity = '1';
       sec.style.filter = 'none';
+      sec.style.transform = ty !== 0 ? `translate3d(0, ${ty}px, 0)` : 'none';
+      sec.style.opacity = '1';
       sec.style.pointerEvents = '';
-    } else if (progress === 1) {
+    } else if (progress >= 1) {
       sec.style.opacity = '0';
       sec.style.clipPath = 'none';
-      sec.style.transform = 'none';
       sec.style.filter = 'none';
+      sec.style.transform = 'none';
       sec.style.pointerEvents = 'none';
     } else {
-      const topStickyOffset = parseFloat(sec.style.top) || 0;
-      const visibleStart = (-topStickyOffset / h) * 100;
-      const visibleEnd = ((-topStickyOffset + wh) / h) * 100;
+      // Pure GPU Composite: subtle folio scale-down + upward parallax drift + smooth dissolve
+      const scale = (1 - progress * 0.04).toFixed(4);
+      const liftY = (ty - progress * (wh * 0.25)).toFixed(1);
+      const opacity = Math.max(0, 1 - Math.pow(progress, 1.25)).toFixed(3);
 
-      const tearY = visibleStart + progress * (visibleEnd - visibleStart) - 5;
-      
-      let rotateZ = 0;
-      let rotateX = 0;
-      let opacity = 1;
-
-      if (progress > 0.15) {
-        const fall = (progress - 0.15) / 0.85; 
-        
-        ty += Math.pow(fall, 1.5) * (wh * 1.8); 
-        rotateZ = (i % 2 === 0 ? -1 : 1) * fall * 5; 
-        rotateX = fall * -15; // Max 15 degree flip instead of 70
-        
-        if (fall > 0.8) {
-          opacity = 1 - ((fall - 0.8) * 5); 
-        }
-      }
-
-      const pattern = jaggedPatterns[i % jaggedPatterns.length];
-      const points = [];
-      const numPoints = pattern.length - 1;
-      for (let j = 0; j <= numPoints; j++) {
-        const x = (j / numPoints) * 100;
-        const depthPx = pattern[j];
-        const depthPct = (depthPx / h) * 100;
-        points.push(`${x}% ${tearY - depthPct}%`);
-      }
-      
-      sec.style.clipPath = `polygon(${points.join(', ')}, 100% 100%, 0% 100%)`;
-      sec.style.transformOrigin = `50% ${tearY}%`;
-      sec.style.transform = `perspective(1200px) translateY(${ty}px) rotateZ(${rotateZ}deg) rotateX(${rotateX}deg)`;
-      sec.style.opacity = opacity.toString();
-      
-      if (progress > 0.15) {
-        sec.style.filter = 'none';
-      } else {
-        sec.style.filter = `drop-shadow(0 -5px 15px rgba(0,0,0,0.3))`;
-      }
+      sec.style.clipPath = 'none';
+      sec.style.filter = 'none';
+      sec.style.transform = `translate3d(0, ${liftY}px, 0) scale(${scale})`;
+      sec.style.opacity = opacity;
+      sec.style.pointerEvents = progress > 0.6 ? 'none' : '';
     }
   });
 };
@@ -270,19 +224,10 @@ document.addEventListener('click', (e) => {
 
   document.documentElement.classList.add('theme-transitioning');
 
-  const navEl = document.getElementById('main-nav');
-  if (navEl) {
-    navEl.classList.remove('bg-bg/90', 'backdrop-blur-md');
-    navEl.classList.add('bg-bg');
-  }
 
   // @ts-ignore
   const transition = document.startViewTransition(switchTheme);
   transition.finished.finally(() => {
     document.documentElement.classList.remove('theme-transitioning');
-    if (navEl) {
-      navEl.classList.add('bg-bg/90', 'backdrop-blur-md');
-      navEl.classList.remove('bg-bg');
-    }
   });
 });
