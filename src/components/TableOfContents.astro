@@ -349,12 +349,12 @@ const hasItems = items && items.length >= 2;
       }
     };
 
-    // Smooth Scroll Links - Center Heading in Viewport & Instant Indicator Switch
-    const jumpLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-jump-link');
-    jumpLinks.forEach(link => {
+    // Smooth Scroll All Anchor Links (TOC headings, Citations [1], Footnotes) to CENTER of Viewport
+    const allAnchorLinks = document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]');
+    allAnchorLinks.forEach(link => {
       link.addEventListener('click', (e) => {
         const href = link.getAttribute('href');
-        if (!href || !href.startsWith('#')) return;
+        if (!href || href === '#' || !href.startsWith('#')) return;
         const targetId = href.slice(1);
         const target = document.getElementById(targetId);
         if (!target) return;
@@ -362,7 +362,7 @@ const hasItems = items && items.length >= 2;
         e.preventDefault();
         closeDrawer();
 
-        // 1. Instantly switch indicator to target heading index
+        // 1. If target is one of the TOC headings, instantly switch indicator
         const targetIdx = headings.findIndex(h => h.id === targetId);
         if (targetIdx !== -1) {
           updateActiveIndicator(targetIdx);
@@ -375,7 +375,7 @@ const hasItems = items && items.length >= 2;
           isProgrammaticScroll = false;
         }, 1200);
 
-        // 3. Scroll heading to EXACT CENTER of the screen
+        // 3. Scroll element to EXACT CENTER of the screen
         const targetRect = target.getBoundingClientRect();
         const currentScroll = window.scrollY;
         const targetCenterOffset = currentScroll + targetRect.top - (window.innerHeight / 2) + (targetRect.height / 2);
@@ -386,6 +386,15 @@ const hasItems = items && items.length >= 2;
         } else {
           window.scrollTo({ top: clampedOffset, behavior: 'smooth' });
         }
+
+        // 4. Trigger visual flash highlight on target element
+        target.classList.remove('anchor-highlight');
+        void (target as HTMLElement).offsetWidth;
+        target.classList.add('anchor-highlight');
+        setTimeout(() => {
+          target.classList.remove('anchor-highlight');
+        }, 2200);
+
         history.pushState(null, '', href);
       });
     });
