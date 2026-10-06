@@ -15,12 +15,17 @@ import ScrollIndicator from "../components/ScrollIndicator.astro";
 import { getProjectsFromNotion } from "../lib/notion";
 
 import GithubHeatmap from "../components/GithubHeatmap.astro";
+import WritingSection from "../components/WritingSection.astro";
+import { getBlogPosts } from "../lib/blogger";
 
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
 
-const allProjects = await getProjectsFromNotion();
+const [allProjects, blogPosts] = await Promise.all([
+  getProjectsFromNotion(),
+  getBlogPosts(),
+]);
 
 // Select featured projects if any are explicitly chosen in Notion; otherwise fallback to all projects (up to 5)
 const featuredProjects = allProjects.filter((p) => p.featured === true);
@@ -225,11 +230,24 @@ const formatPoetryTitle = (title: string) => {
                     loading="eager"
                   />
                 ) : null})}
+                {blogPosts.map(post => {
+                  return post.image ? (
+                  <img 
+                    src={post.image} 
+                    alt={`Preview of ${post.title}`} 
+                    width="600" 
+                    height="450" 
+                    class="w-full h-auto absolute hidden cursor-project-img object-cover" 
+                    data-slug={post.slug} 
+                    loading="eager"
+                    decoding="async"
+                  />
+                ) : null})}
               </div>
             </div>
 
             <script>
-              document.addEventListener("astro:page-load", async () => {
+              const initProjectCursor = async () => {
                 const cards = document.querySelectorAll('.project-bento-card');
                 const cursorWrapper = document.getElementById('project-cursor-wrapper');
                 const cursorImg = document.getElementById('project-cursor-image');
@@ -281,18 +299,19 @@ const formatPoetryTitle = (title: string) => {
                   card.addEventListener('mouseenter', (e: MouseEvent) => {
                     isHovering = true;
                     const slug = card.getAttribute('data-slug');
-                    const hasImg = card.getAttribute('data-has-image') === 'true';
+                    const hasImg = card.getAttribute('data-has-image') === 'true' || card.dataset.hasImage === 'true' || card.hasAttribute('data-has-image');
                     
                     if (!hasImg || !slug) return;
                     
                     // Reset all images
-                    imgTags.forEach(img => {
+                    const allCursorImgs = cursorImg.querySelectorAll('.cursor-project-img');
+                    allCursorImgs.forEach(img => {
                       img.classList.remove('relative', 'block');
                       img.classList.add('absolute', 'hidden');
                     });
                     
                     // Show target image
-                    const targetImg = document.querySelector(`.cursor-project-img[data-slug="${slug}"]`);
+                    const targetImg = cursorImg.querySelector(`.cursor-project-img[data-slug="${slug}"]`);
                     if (targetImg) {
                       targetImg.classList.remove('absolute', 'hidden');
                       targetImg.classList.add('relative', 'block');
@@ -340,7 +359,14 @@ const formatPoetryTitle = (title: string) => {
                     });
                   });
                 });
-              });
+              };
+
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initProjectCursor);
+              } else {
+                initProjectCursor();
+              }
+              document.addEventListener("astro:page-load", initProjectCursor);
             </script>
           </div>
 
@@ -409,11 +435,21 @@ const formatPoetryTitle = (title: string) => {
         </div>
       </div>
     </section>
+    <div id="writing" class="absolute w-full h-0 pointer-events-none"></div>
 
-    <!-- 4. Contact -->
+    <!-- 4. Writing -->
+    <section data-section id="writing-section" class="relative md:sticky md:top-0 min-h-[100svh] md:min-h-screen w-full bg-bg z-10">
+      <div
+        class="h-full max-w-[1200px] mx-auto px-4 md:px-8 w-full"
+      >
+        <WritingSection posts={blogPosts} />
+      </div>
+    </section>
+
+    <!-- 5. Contact -->
     <section
       data-section
-      class="relative md:sticky md:top-0 min-h-[100svh] md:h-screen w-full bg-bg z-10 flex flex-col"
+      class="relative md:sticky md:top-0 min-h-[100svh] md:h-screen w-full bg-bg z-[5] flex flex-col"
       id="contact"
     >
       <div
@@ -429,13 +465,9 @@ const formatPoetryTitle = (title: string) => {
 </BaseLayout>
 
 <script>
-  const initRocketBtn = async () => {
-    const btn = document.getElementById("rocket-btn");
-    if (!btn) return;
-
+  const setupOneRocketBtn = (btn: HTMLElement) => {
     const newBtn = btn.cloneNode(true) as HTMLAnchorElement;
     btn.parentNode?.replaceChild(newBtn, btn);
-
     const rocketSystem = newBtn.querySelector(".rocket-system");
     const rocketMover = newBtn.querySelector(".rocket-mover");
     const rocketFlames = newBtn.querySelector(".rocket-flames");
@@ -608,12 +640,18 @@ const formatPoetryTitle = (title: string) => {
     });
   };
 
+  const initRocketBtn = () => {
+    const btns = document.querySelectorAll<HTMLAnchorElement>("#rocket-btn, .rocket-btn-element, #rocket-btn-writing");
+    btns.forEach(setupOneRocketBtn);
+  };
+
   const initInkDrop = async () => {
     const line = document.getElementById('scroll-line');
     if (!line) return;
     
     // Kill existing animation if any
-    if ((line as any).anime) (line as any).anime.pause();
+    const lineWithAnime = line as unknown as { anime?: { pause: () => void } };
+    if (lineWithAnime.anime) lineWithAnime.anime.pause();
 
     const { default: anime } = await import('animejs/lib/anime.es.js');
     
@@ -621,7 +659,7 @@ const formatPoetryTitle = (title: string) => {
     line.setAttribute('height', '0');
     line.setAttribute('opacity', '0');
 
-    (line as any).anime = anime.timeline({
+    lineWithAnime.anime = anime.timeline({
       loop: true,
     })
     // 1. Unfold: line draws/extends smoothly downward from top

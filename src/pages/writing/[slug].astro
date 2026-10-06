@@ -1,0 +1,325 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import { getBlogPostBySlug } from '../../lib/blogger';
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
+
+const { slug } = Astro.params;
+const post = await getBlogPostBySlug(slug || '');
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const fromExplore = Astro.url.searchParams.get('from') === 'explore';
+const returnHref = fromExplore ? '/explore' : '/#writing';
+const returnLabel = fromExplore ? 'Return to Gallery' : 'Return';
+
+const optimizeImageUrl = (url?: string, width = 1200): string => {
+  if (!url) return '';
+  if (url.includes('googleusercontent.com') || url.includes('blogger.com')) {
+    return url;
+  }
+  if (url.startsWith('http')) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
+  }
+  return url;
+};
+
+const optimizedCover = post.image ? optimizeImageUrl(post.image, 1200) : '';
+
+// Post-process inline images from Blogger content to satisfy Astro performance audits:
+// 1. Transform Blogger's archaic table captions (<table class="tr-caption-container">) into semantic <figure> & <figcaption>
+// 2. Unwrap raw image anchors (<a href="...googleusercontent..."><img ...></a>) to fix "Missing content: Headings and anchors must have an accessible name"
+// 3. Add data-image-component="" to satisfy perf-use-image-component
+// 4. First image is above the fold: loading="eager" (satisfies perf-use-loading-eager)
+// 5. Subsequent images are below the fold: loading="lazy" (satisfies perf-use-loading-lazy)
+let imageCount = 0;
+let sanitizedContent = post.content || '';
+
+// Step 1: Convert tr-caption-container tables to semantic <figure>
+sanitizedContent = sanitizedContent.replace(
+  /<table[^>]*?class=["'][^"']*?tr-caption-container[^"']*?["'][^>]*?>[\s\S]*?<\/table>/gi,
+  (tableMatch) => {
+    const srcMatch = tableMatch.match(/<img[^>]+src=["']([^"']+)["']/i);
+    const altMatch = tableMatch.match(/<img[^>]+alt=["']([^"']+)["']/i);
+    const captionMatch = tableMatch.match(/<td[^>]*?class=["'][^"']*?tr-caption[^"']*?["'][^>]*?>([\s\S]*?)<\/td>/i);
+    
+    if (!srcMatch) return tableMatch;
+    
+    const rawSrc = srcMatch[1];
+    const alt = (altMatch && altMatch[1].trim()) || post.title;
+    const caption = captionMatch ? captionMatch[1].trim() : '';
+    const optimizedSrc = optimizeImageUrl(rawSrc, 1200);
+
+    const isFirst = imageCount === 0;
+    imageCount++;
+    const loading = isFirst ? 'eager' : 'lazy';
+    const captionHtml = caption ? '<figcaption class="text-xs text-text-muted/80 mt-3 font-serif italic">' + caption + '</figcaption>' : '';
+
+    return '<figure class="my-10 text-center"><img src="' + optimizedSrc + '" alt="' + alt + '" loading="' + loading + '" decoding="async" data-image-component="" data-processed="true" class="rounded-sm shadow-xl border border-border-subtle/40 mx-auto max-w-full h-auto object-cover" />' + captionHtml + '</figure>';
+  }
+);
+
+// Step 2: Unwrap any remaining standalone <a href="..."><img ...></a> pointing to images
+sanitizedContent = sanitizedContent.replace(
+  /<a\b[^>]*?href=["'][^"']*?(?:googleusercontent|blogger|\.jpg|\.png|\.webp|\.jpeg)[^"']*?["'][^>]*?>\s*(<img\b[^>]*?>)\s*<\/a>/gi,
+  '$1'
+);
+
+// Step 3: Optimize only unprocessed standalone <img> tags
+sanitizedContent = sanitizedContent.replace(
+  /<img\b([^>]*?)>/gi,
+  (imgTag, attrs) => {
+    if (attrs.includes('data-processed="true"')) {
+      return imgTag.replace(' data-processed="true"', '');
+    }
+
+    const srcMatch = imgTag.match(/\bsrc=["']([^"']+)["']/i);
+    const altMatch = imgTag.match(/\balt=["']([^"']+)["']/i);
+    const titleMatch = imgTag.match(/\btitle=["']([^"']*)["']/i);
+
+    const rawSrc = srcMatch ? srcMatch[1] : '';
+    const altText = (altMatch && altMatch[1].trim()) || post.title;
+    const titleText = titleMatch ? ' title="' + titleMatch[1] + '"' : '';
+    const optimizedSrc = optimizeImageUrl(rawSrc, 1200);
+
+    const isFirst = imageCount === 0;
+    imageCount++;
+    const loading = isFirst ? 'eager' : 'lazy';
+
+    return '<img src="' + optimizedSrc + '" alt="' + altText + '"' + titleText + ' loading="' + loading + '" decoding="async" data-image-component="" class="rounded-sm shadow-xl border border-border-subtle/40 mx-auto my-10 max-w-full h-auto" />';
+  }
+);
+// Prevent double image: if Blogger content already has an image, do not show duplicate cover
+const hasImageInContent = /<img\b/i.test(post.content || '');
+const showCover = Boolean(optimizedCover && !hasImageInContent);
+
+const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+});
+---
+
+<BaseLayout 
+  title={`${post.title} | David Arrozaqi`}
+  description={post.excerpt}
+  image={optimizedCover || "/og-image.png"}
+  type="article"
+>
+  <Nav />
+  
+  <main class="min-h-screen pt-32 pb-32 bg-bg overflow-x-clip w-full">
+    <div class="max-w-2xl mx-auto px-6 md:px-8">
+      
+      {/* Return link - identical to project detail page */}
+      <div class="flex justify-center mb-16 md:mb-20">
+        <a id="magnetic-area" href={returnHref} class="p-6 cursor-pointer group">
+          <div id="back-button" class="flex items-center text-text-muted group-hover:text-accent transition-colors duration-300 uppercase font-sans text-[10px] tracking-[0.3em]">
+            <span class="w-12 flex justify-end items-center"><span class="return-line-left w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
+            <span id="back-text" class="w-24 text-center">{returnLabel}</span>
+            <span class="w-12 flex justify-start items-center"><span class="return-line-right w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
+          </div>
+        </a>
+      </div>
+
+      {/* Header */}
+      <header class="text-center mb-16">
+        <div class="font-mono text-xs uppercase tracking-[0.2em] text-text-muted mb-4">
+          {formattedDate}
+        </div>
+
+        <h1 class="font-serif text-3xl md:text-5xl leading-[1.25] text-text-main font-normal tracking-tight italic mb-6">
+          {post.title}
+        </h1>
+
+      </header>
+
+      {/* Standalone cover only if content does NOT already have an image (prevents double image bug) */}
+      {showCover && (
+        <div class="mb-14 overflow-hidden rounded-sm border border-border-subtle/50">
+          <img 
+            src={optimizedCover} 
+            alt={post.title}
+            class="w-full h-auto object-cover max-h-[500px]"
+            loading="eager"
+            decoding="async"
+            data-image-component=""
+          />
+        </div>
+      )}
+
+      {/* Article Body */}
+      <article 
+        class="prose prose-invert max-w-none text-text-main/90 font-serif text-base md:text-lg leading-relaxed space-y-6 [&>p]:leading-relaxed [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:mt-10 [&>h2]:mb-4 [&>h3]:font-serif [&>h3]:text-xl [&>h3]:mt-8 [&>h3]:mb-3 [&>a]:text-accent [&>a]:underline [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-4 [&>blockquote]:italic [&>pre]:bg-bg-elevated [&>pre]:p-4 [&>pre]:rounded"
+        set:html={sanitizedContent}
+      />
+
+      {/* Single Visit button matching project detail page */}
+      {post.url && (
+        <div class="mt-20 mb-16 flex flex-col items-center justify-center relative z-20">
+          <a 
+            href={post.url} 
+            target="_blank"
+            rel="noopener noreferrer"
+            id="visit-site-btn"
+            class="group relative inline-flex items-center justify-center overflow-hidden border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500 w-48 h-12"
+          >
+            {/* The Text */}
+            <span class="btn-text absolute transition-all duration-500 group-hover:opacity-0 group-hover:-translate-y-4">Visit Article</span>
+            
+            {/* The Rocket (Hidden initially, appears on hover) */}
+            <div class="btn-rocket absolute opacity-0 translate-y-6 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 w-40 h-16 flex items-center justify-center pointer-events-none origin-center">
+              <svg viewBox="-60 0 180 60" class="w-full h-full overflow-visible -rotate-12 animate-rocket-hover">
+                {/* Speed lines */}
+                <g class="stroke-text-muted/30 group-hover:stroke-bg/50 stroke-[1px] transition-colors duration-500">
+                  <line x1="120" y1="10" x2="140" y2="10" class="animate-seq-speed" style="animation-delay: 1.2s" />
+                  <line x1="80" y1="50" x2="110" y2="50" class="animate-seq-speed" style="animation-delay: 1.25s" />
+                  <line x1="50" y1="60" x2="90" y2="60" class="animate-seq-speed" style="animation-delay: 1.3s" />
+                </g>
+                {/* Flames */}
+                <g class="animate-seq-flame origin-[20px_30px]">
+                  <path d="M 16 12 L -50 30 L 16 48" class="fill-accent/60 stroke-none" />
+                  <path d="M 16 18 L -25 30 L 16 42" class="fill-accent stroke-none" />
+                  <path d="M 16 24 L -5 30 L 16 36" class="fill-bg stroke-none" />
+                </g>
+                {/* Structural Body - AI */}
+                <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
+                <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
+                <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4" stroke-linecap="round" />
+                <path d="M 50 14 Q 65 30 50 46" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="3" stroke-linecap="round" />
+                {/* Glowing Poetic Wiring - ME */}
+                <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                <path d="M 76 22 Q 68 30 76 38" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                <path d="M 74 22 Q 95 25 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                <path d="M 71 30 Q 85 30 95 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+                <path d="M 74 38 Q 95 35 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+          </a>
+        </div>
+      )}
+
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import anime from 'animejs';
+
+  const initBackButton = () => {
+    const fromParam = new URLSearchParams(window.location.search).get('from');
+    const btn = document.getElementById('magnetic-area') as HTMLAnchorElement | null;
+    const text = document.getElementById('back-text');
+    if (btn && text) {
+      if (fromParam === 'explore') {
+        btn.href = '/explore';
+        btn.setAttribute('data-astro-reload', '');
+        text.innerText = 'Return to Gallery';
+      } else {
+        btn.href = '/#writing';
+        btn.removeAttribute('data-astro-reload');
+        text.innerText = 'Return';
+      }
+    }
+  };
+
+  const setupReturnAnimation = () => {
+    initBackButton();
+
+    // Magnetic & breathing Return Button
+    const magneticArea = document.getElementById('magnetic-area');
+    const returnBtn = document.getElementById('back-button');
+    const leftLine = document.querySelector('.return-line-left');
+    const rightLine = document.querySelector('.return-line-right');
+    
+    if (magneticArea && returnBtn && leftLine && rightLine) {
+      // Idle breathing
+      let idleAnim = anime({
+        targets: [leftLine, rightLine],
+        width: ['12px', '28px'],
+        duration: 1800,
+        direction: 'alternate',
+        loop: true,
+        easing: 'easeInOutSine'
+      });
+
+      // Magnetic Hover Effect
+      magneticArea.addEventListener('mousemove', (e: Event) => {
+        const mouseEvent = e as MouseEvent;
+        const rect = magneticArea.getBoundingClientRect();
+        const x = (mouseEvent.clientX - rect.left) - (rect.width / 2);
+        const y = (mouseEvent.clientY - rect.top) - (rect.height / 2);
+        
+        anime({
+          targets: returnBtn,
+          translateX: x * 0.4,
+          translateY: y * 0.4,
+          duration: 0,
+          easing: 'linear'
+        });
+      });
+
+      magneticArea.addEventListener('mouseenter', () => {
+        idleAnim.pause();
+        
+        anime({
+          targets: leftLine,
+          width: '40px',
+          translateX: -6,
+          duration: 600,
+          easing: 'easeOutElastic(1, .5)'
+        });
+        
+        anime({
+          targets: rightLine,
+          width: '40px',
+          translateX: 6,
+          duration: 600,
+          easing: 'easeOutElastic(1, .5)'
+        });
+
+        anime({
+          targets: returnBtn,
+          letterSpacing: '0.5em',
+          duration: 400,
+          easing: 'easeOutExpo'
+        });
+      });
+
+      magneticArea.addEventListener('mouseleave', () => {
+        anime({
+          targets: returnBtn,
+          translateX: 0,
+          translateY: 0,
+          letterSpacing: '0.3em',
+          duration: 800,
+          easing: 'easeOutElastic(1, .5)'
+        });
+        anime({
+          targets: [leftLine, rightLine],
+          width: '12px',
+          translateX: 0,
+          duration: 400,
+          easing: 'easeOutQuad',
+          complete: () => {
+            idleAnim = anime({
+              targets: [leftLine, rightLine],
+              width: ['12px', '28px'],
+              duration: 1800,
+              direction: 'alternate',
+              loop: true,
+              easing: 'easeInOutSine'
+            });
+          }
+        });
+      });
+    }
+  };
+
+  document.addEventListener('astro:page-load', setupReturnAnimation);
+  setupReturnAnimation();
+</script>

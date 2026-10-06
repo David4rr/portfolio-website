@@ -2,12 +2,16 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import InfiniteCanvas from "../components/InfiniteCanvas.tsx";
 import { getProjectsFromNotion } from "../lib/notion";
+import { getBlogPosts } from "../lib/blogger";
 import type { Project } from '../components/InfiniteCanvas.tsx';
 
 // Plan A: ISR Caching - Cache for 60s, stale-while-revalidate for 1 hour
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
 
-const notionProjects = await getProjectsFromNotion();
+const [notionProjects, blogPosts] = await Promise.all([
+  getProjectsFromNotion(),
+  getBlogPosts(),
+]);
 
 const allProjects: Project[] = [];
 
@@ -32,8 +36,22 @@ notionProjects.forEach((p) => {
     isReal: true,
   });
 });
----
 
+// Push blog posts from Blogger
+blogPosts.forEach((post) => {
+  allProjects.push({
+    id: post.slug,
+    title: post.title,
+    description: post.excerpt,
+    image: post.image || "",
+    type: "blog",
+    isReal: true,
+  });
+});
+
+const fromWriting = Astro.url.searchParams.get('from') === 'writing';
+const backHref = fromWriting ? '/#writing' : '/#projects';
+---
 <BaseLayout 
   title="Explore Infinite Canvas | David Arrozaqi"
   description="An interactive infinite canvas exploring digital fragments, engineering projects, and creative poetry."
@@ -43,7 +61,7 @@ notionProjects.forEach((p) => {
     <div class="absolute top-8 left-8 z-50 pointer-events-auto">
       <a
         id="back-btn"
-        href="/#projects"
+        href={backHref}
         class="relative inline-flex items-center gap-3 text-text-muted hover:text-text-main transition-colors uppercase font-sans text-[10px] tracking-widest bg-bg/80 backdrop-blur-md px-4 py-2 rounded-full border border-border-subtle opacity-0 overflow-hidden"
       >
         <span class="relative z-10 flex items-center gap-2">
@@ -69,6 +87,13 @@ notionProjects.forEach((p) => {
     // Clone to clean up event listeners
     const newBtn = btn.cloneNode(true) as HTMLAnchorElement;
     btn.parentNode?.replaceChild(newBtn, btn);
+
+    const fromParam = new URLSearchParams(window.location.search).get('from');
+    if (fromParam === 'writing') {
+      newBtn.href = '/#writing';
+    } else {
+      newBtn.href = '/#projects';
+    }
 
     // Entrance animation
     anime({

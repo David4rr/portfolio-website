@@ -94,13 +94,14 @@ const updateTearOff = () => {
     } else {
       const scale = (1 - progress * 0.04).toFixed(4);
       const liftY = (ty - progress * (wh * 0.25)).toFixed(1);
-      const opacity = Math.max(0, 1 - Math.pow(progress, 1.25)).toFixed(3);
+      const fadeProgress = Math.min(1, progress / 0.45);
+      const opacity = Math.max(0, 1 - Math.pow(fadeProgress, 1.25)).toFixed(3);
 
       sec.style.clipPath = 'none';
       sec.style.filter = 'none';
       sec.style.transform = `translate3d(0, ${liftY}px, 0) scale(${scale})`;
       sec.style.opacity = opacity;
-      sec.style.pointerEvents = progress > 0.6 ? 'none' : '';
+      sec.style.pointerEvents = progress > 0.4 ? 'none' : '';
     }
   });
 };

@@ -25,8 +25,12 @@ export default defineConfig({
     inlineStylesheets: 'always'
   },
   image: {
-    domains: ["wsrv.nl", "prod-files-secure.s3.us-west-2.amazonaws.com", "images.unsplash.com"],
-    remotePatterns: [{ protocol: 'https', hostname: '**.r2.dev' }],
+    domains: ["wsrv.nl", "prod-files-secure.s3.us-west-2.amazonaws.com", "images.unsplash.com", "blogger.googleusercontent.com"],
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.r2.dev' },
+      { protocol: 'https', hostname: '**.googleusercontent.com' },
+      { protocol: 'https', hostname: '**.blogger.com' }
+    ],
   },
   vite: {
     plugins: [tailwindcss()],

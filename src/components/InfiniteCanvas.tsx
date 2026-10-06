@@ -5,7 +5,7 @@ export interface Project {
   title: string;
   description: string;
   image: string;
-  type: 'mobile' | 'web' | 'center';
+  type: 'mobile' | 'web' | 'center' | 'blog';
   isReal: boolean;
 }
 
@@ -18,6 +18,11 @@ interface PlacedProject extends Project {
 
 const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
   const [loaded, setLoaded] = useState(false);
+  const isGoogleCdn = src.includes('googleusercontent.com') || src.includes('blogger.com');
+  const optimizedSrc = isGoogleCdn
+    ? src
+    : (src.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=800&output=webp` : src);
+
   return (
     <div class="relative w-full h-full bg-bg-elevated overflow-hidden">
       <div class={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
@@ -26,7 +31,7 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
          </div>
       </div>
       <img 
-        src={src.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=800&output=webp` : src} 
+        src={optimizedSrc} 
         alt={alt}
         width={800}
         height={800}
@@ -34,6 +39,7 @@ const ImageWithLoader = ({ src, alt }: { src: string, alt: string }) => {
         class={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-[1500ms] ease-out ${loaded ? 'opacity-100' : 'opacity-0'}`}
         loading="eager"
         decoding="async"
+        fetchPriority="high"
         data-image-component=""
         draggable={false}
       />
@@ -60,6 +66,10 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
 
     realProjects.forEach(p => {
       const img = new window.Image();
+      const isGoogleCdn = p.image.includes('googleusercontent.com') || p.image.includes('blogger.com');
+      const optSrc = isGoogleCdn
+        ? p.image
+        : (p.image.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(p.image)}&w=800&output=webp` : p.image);
       img.onload = () => {
         ratios[p.id] = img.naturalWidth / img.naturalHeight;
         loadedCount++;
@@ -76,7 +86,7 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
           setSizesLoaded(true);
         }
       };
-      img.src = p.image;
+      img.src = optSrc;
     });
   }, [projects]);
 
@@ -152,7 +162,7 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
         exactW = gw * CELL + (gw - 1) * GAP;
         exactH = gh * CELL + (gh - 1) * GAP;
       } else {
-        const ratio = aspectRatios[p.id] || (p.type === 'mobile' ? 0.5 : 1.77);
+        const ratio = aspectRatios[p.id] || (p.type === 'mobile' ? 0.5 : p.type === 'blog' ? 1.4 : 1.77);
         // Target an area of roughly 24-28 cells to guarantee readable card content
         gh = Math.round(Math.sqrt(28 / ratio));
         gh = Math.max(4, Math.min(gh, 8));
@@ -454,9 +464,14 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
             );
           }
 
+          const isBlog = p.type === 'blog';
           const firstReal = projects.find(r => r.isReal)?.id || 'hello-world';
-          const targetHref = p.isReal ? `/projects/${p.id}?from=explore` : `/projects/${firstReal}?from=explore`;
-          
+          const targetHref = isBlog
+            ? `/writing/${p.id}?from=explore`
+            : p.isReal
+              ? `/projects/${p.id}?from=explore`
+              : `/projects/${firstReal}?from=explore`;
+          const actionLabel = isBlog ? 'Read Article' : 'View Details';
           return (
           <div
             key={p.id}
@@ -481,7 +496,15 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
               >
                 {/* FRONT FACE (DOM Image - acts as placeholder when WebGL is active) */}
                 <div id={`card-front-${p.id}`} class="absolute inset-0 w-full h-full overflow-hidden bg-bg border border-border-subtle opacity-100" style={{ transform: 'rotateY(0deg) translateZ(1px)' }}>
-                  <ImageWithLoader src={p.image} alt={p.title} />
+                  {p.image ? (
+                    <ImageWithLoader src={p.image} alt={p.title} />
+                  ) : (
+                    <div class="w-full h-full flex flex-col justify-between p-6 bg-bg-elevated border border-border-subtle select-none">
+                      <div class="font-serif italic text-accent/60 text-xs tracking-widest uppercase">Writing // Note</div>
+                      <h3 class="font-serif text-lg text-text-main line-clamp-3">{p.title}</h3>
+                      <div class="font-sans text-[10px] text-text-muted tracking-widest uppercase">Click to flip</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* BACK FACE (Poetry / Details) */}
@@ -516,7 +539,7 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                       onClick={(e) => e.stopPropagation()} 
                       class="inline-flex items-center gap-3 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2.5 rounded-full hover:bg-text-main hover:text-bg transition-all duration-500 cursor-pointer flex-shrink-0"
                     >
-                      View Details
+                      {actionLabel}
                     </a>
                   </div>
                   {/* Footnote */}

@@ -1,0 +1,149 @@
+---
+import type { BlogPost } from '../lib/blogger';
+
+interface Props {
+  posts: BlogPost[];
+}
+
+const { posts } = Astro.props;
+const displayPosts = posts.slice(0, 3);
+
+const formatPoetryTitle = (title: string) => {
+  const words = title.split(' ');
+  if (words.length > 1) {
+    const last = words.pop();
+    return `${words.join(' ')} <span class="italic font-light pr-1">${last}</span>`;
+  }
+  return title;
+};
+---
+
+<div class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100svh-3rem)]">
+  <div>
+    <h2
+      class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight"
+    >
+      Selected Writings<span class="text-accent">.</span>
+    </h2>
+
+    <div class="flex flex-col border-t border-border-subtle/50" id="writing-list-container">
+      {displayPosts.map((post, i) => {
+        const romanNumerals = ['I', 'II', 'III', 'IV', 'V'];
+        const numeral = romanNumerals[i] || (i + 1);
+        const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        });
+        
+        // Dynamic labels from Blogger: max 2 labels on top, date only on bottom
+        const labelText = post.labels && post.labels.length > 0
+          ? post.labels.slice(0, 2).map((l) => l.toUpperCase()).join(' \u2022 ')
+          : 'WRITING';
+
+        return (
+          <a
+            href={`/writing/${post.slug}`}
+            class="project-bento-card cursor-pointer group relative flex flex-col md:flex-row md:items-center gap-6 md:gap-8 py-6 md:py-10 px-2 md:px-6 border-b border-border-subtle/50 hover:bg-border-subtle/5 transition-all duration-700"
+            data-slug={post.slug}
+            data-has-image={post.image ? "true" : "false"}
+          >
+            <div class="flex-shrink-0 w-full md:w-20 text-text-muted font-serif italic text-sm md:text-base">
+              {numeral}.
+            </div>
+
+            <div class="flex-shrink-0 w-full md:w-[32%]">
+              <h3 
+                class="font-serif text-[1.75rem] md:text-[2.25rem] leading-tight text-text-main group-hover:text-accent transition-colors duration-700 tracking-tight pr-4 line-clamp-3" 
+                set:html={formatPoetryTitle(post.title)}
+              />
+            </div>
+
+            <div class="flex-1 w-full max-w-xl pr-4">
+              <p class="font-serif italic font-light text-sm md:text-[15px] leading-loose text-text-main/70 line-clamp-4">
+                "{post.excerpt}"
+              </p>
+            </div>
+
+            <div class="flex-shrink-0 w-full md:w-[20%] flex flex-col gap-2 font-serif text-text-muted/80">
+              <div class="text-text-main/90 tracking-[0.2em] uppercase text-[10px]">
+                {labelText}
+              </div>
+              <div class="font-light italic opacity-70 leading-relaxed text-xs">
+                {formattedDate}
+              </div>
+            </div>
+            <div class="flex w-full md:w-auto mt-4 md:mt-0 flex-shrink-0 items-center justify-end md:justify-center gap-4 md:ml-4">
+              <span class="font-serif italic text-text-main/70 md:opacity-0 md:-translate-x-4 md:group-hover:opacity-100 md:group-hover:translate-x-0 transition-all duration-500 text-sm md:text-base">
+                Explore
+              </span>
+              <div class="flex items-center justify-center w-8 h-8 text-text-main/50 group-hover:text-text-main transition-all duration-500 overflow-hidden relative flex-shrink-0">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 group-hover:translate-x-8 group-hover:-translate-y-8">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 -translate-x-8 translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+
+  <div class="mt-16 flex justify-center w-full relative">
+    <a
+      href="/explore?from=writing"
+      id="rocket-btn-writing"
+      aria-label="View more writings"
+      class="rocket-btn-element relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 active:scale-95 transition-colors duration-300 cursor-pointer select-none"
+    >
+      <span class="relative z-10 btn-text pointer-events-none">View More Writing</span>
+
+      <!-- Shared Container for Rocket -->
+      <div class="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
+        <div class="rocket-system absolute w-[100px] h-[100px] flex items-center justify-center overflow-visible origin-center" style="transform: scale(0.7);">
+          <svg class="w-full h-full overflow-visible" viewBox="-50 -50 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <defs>
+              <clipPath id="rope-clip-writing">
+                <rect x="32" y="-50" width="200" height="100" />
+              </clipPath>
+            </defs>
+            <g clip-path="url(#rope-clip-writing)">
+              <line class="rope-top text-text-main/50" x1="32" y1="-18" x2="-18.9" y2="-9" stroke="currentColor" stroke-width="1.5" />
+              <line class="rope-bottom text-text-main/50" x1="32" y1="18" x2="-18.9" y2="9" stroke="currentColor" stroke-width="1.5" />
+            </g>
+            <g class="rocket-mover">
+              <g class="rocket-body text-text-main" transform="scale(0.45) translate(-70, -30)">
+                <g class="rocket-flames opacity-0 text-accent">
+                  <g class="rocket-flames-flicker origin-[16px_30px]">
+                    <path d="M 16 12 L -50 30 L 16 48" fill="currentColor" stroke="none" opacity="0.3" />
+                    <path d="M 16 18 L -25 30 L 16 42" fill="currentColor" stroke="none" opacity="0.6" />
+                    <path d="M 16 24 L -5 30 L 16 36" fill="currentColor" stroke="none" />
+                  </g>
+                </g>
+                <g stroke="currentColor" fill="none" stroke-linecap="round">
+                  <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" stroke-width="4.5" />
+                  <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" stroke-width="4.5" />
+                  <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" stroke-width="4" />
+                  <path d="M 50 14 Q 65 30 50 46" stroke-width="3" />
+                </g>
+                <g class="transition-colors duration-300 group-hover:text-accent" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="2">
+                  <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" />
+                  <path d="M 76 22 Q 68 30 76 38" />
+                  <path d="M 74 22 Q 95 25 115 30" />
+                  <path d="M 71 30 Q 85 30 95 30" />
+                  <path d="M 74 38 Q 95 35 115 30" />
+                </g>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

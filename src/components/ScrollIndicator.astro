@@ -3,7 +3,8 @@ const items = [
   { id: "hero", num: "00", label: "PROLOGUE" },
   { id: "activity", num: "01", label: "CHRONICLES" },
   { id: "projects", num: "02", label: "MAGNUM OPUS" },
-  { id: "contact", num: "03", label: "EPILOGUE" }
+  { id: "writing", num: "03", label: "WRITINGS" },
+  { id: "contact", num: "04", label: "EPILOGUE" }
 ];
 
 const renderItems = [];
@@ -16,7 +17,7 @@ items.forEach((item, index) => {
   }
 });
 ---
-<div class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 h-[280px] hidden md:flex flex-col justify-between items-center group font-sans w-8 pointer-events-auto">
+<div class="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-50 h-[340px] hidden md:flex flex-col justify-between items-center group font-sans w-8 pointer-events-auto">
   {renderItems.map((item, i) => (
     item.type === 'num' ? (
       <div class="relative flex items-center justify-center w-full">
