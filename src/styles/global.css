@@ -98,13 +98,13 @@
     perspective: 1200px;
   }
   [data-section] {
-    will-change: transform, clip-path;
+    will-change: transform, opacity;
   }
 
   /* Anime.js Initial States */
   [data-reveal="ink-bloom"] [data-animate] {
-    clip-path: circle(0% at 50% 50%);
     opacity: 0;
+    transform: translateY(16px);
   }
   [data-reveal="word-cascade"] [data-word],
   [data-reveal="word-cascade"] [data-card] {
@@ -213,12 +213,13 @@
 }
 
 [data-reveal="ink-bloom"] [data-animate] {
-  clip-path: circle(0% at 50% 50%);
-  transition: clip-path 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 1.2s ease-out;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-reveal="ink-bloom"].is-revealed [data-animate] {
-  clip-path: circle(140% at 50% 50%);
   opacity: 1;
+  transform: translateY(0);
 }
 
 [data-reveal="word-cascade"] [data-word],

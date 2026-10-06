@@ -55,7 +55,7 @@ for (let i = 0; i < 12; i++) {
     </div>
 
     <!-- Scrollable Graph Container -->
-    <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0">
+    <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0 touch-pan-x overscroll-x-contain">
       <div class="min-w-[720px] select-none">
         <!-- Month labels -->
         <div class="grid grid-cols-53 text-[10px] font-sans text-text-muted/60 mb-2 pl-7 pointer-events-none">
@@ -84,7 +84,7 @@ for (let i = 0; i < 12; i++) {
               <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx}>
                 {Array.from({ length: daysPerWeek }).map((_, dayIdx) => (
                   <div
-                    class="heatmap-cell aspect-square w-full rounded-[2px] bg-border-subtle/30 border border-border-subtle/20 transition-all duration-200 hover:scale-125 hover:z-20 hover:ring-1 hover:ring-accent"
+                    class="heatmap-cell aspect-square w-full rounded-[2px] bg-border-subtle/30 border border-border-subtle/20 hover:scale-125 hover:z-20 hover:ring-1 hover:ring-accent transition-transform duration-150"
                     data-level="0"
                     data-count="0"
                     data-date=""
@@ -156,7 +156,6 @@ for (let i = 0; i < 12; i++) {
   :global(.heatmap-cell[data-level="4"]) {
     background-color: var(--accent);
     border-color: var(--accent);
-    box-shadow: 0 0 6px var(--accent-glow);
     opacity: 1;
   }
 </style>
@@ -176,28 +175,32 @@ for (let i = 0; i < 12; i++) {
 
     const cells = Array.from(gridEl.querySelectorAll(".heatmap-cell")) as HTMLElement[];
 
-    // Setup interactive tooltip
-    cells.forEach((cell) => {
-      cell.addEventListener("mouseenter", (e) => {
-        const count = cell.getAttribute("data-count");
-        const date = cell.getAttribute("data-date");
-        if (!date || !tooltip || !tooltipText) return;
+    // High-performance event delegation (2 listeners instead of 742)
+    gridEl.addEventListener("mouseover", (e) => {
+      const target = e.target as HTMLElement | null;
+      const cell = target?.closest(".heatmap-cell") as HTMLElement | null;
+      if (!cell) return;
 
-        const countNum = parseInt(count || "0", 10);
-        const formattedDate = formatDateString(date);
-        tooltipText.textContent = `${countNum === 0 ? "No" : countNum} ${countNum === 1 ? "contribution" : "contributions"} on ${formattedDate}`;
+      const count = cell.getAttribute("data-count");
+      const date = cell.getAttribute("data-date");
+      if (!date || !tooltip || !tooltipText) return;
 
-        const rootRect = root.getBoundingClientRect();
-        const rect = cell.getBoundingClientRect();
-        tooltip.style.left = `${rect.left - rootRect.left + rect.width / 2}px`;
-        tooltip.style.top = `${rect.top - rootRect.top - 6}px`;
-        tooltip.style.opacity = "1";
-      });
+      const countNum = parseInt(count || "0", 10);
+      const formattedDate = formatDateString(date);
+      tooltipText.textContent = `${countNum === 0 ? "No" : countNum} ${countNum === 1 ? "contribution" : "contributions"} on ${formattedDate}`;
 
-      cell.addEventListener("mouseleave", () => {
-        if (!tooltip) return;
-        tooltip.style.opacity = "0";
-      });
+      const rootRect = root.getBoundingClientRect();
+      const rect = cell.getBoundingClientRect();
+      tooltip.style.left = `${rect.left - rootRect.left + rect.width / 2}px`;
+      tooltip.style.top = `${rect.top - rootRect.top - 6}px`;
+      tooltip.style.opacity = "1";
+    });
+
+    gridEl.addEventListener("mouseout", (e) => {
+      const target = e.target as HTMLElement | null;
+      const cell = target?.closest(".heatmap-cell");
+      if (!cell || !tooltip) return;
+      tooltip.style.opacity = "0";
     });
 
     function formatDateString(isoStr: string): string {
