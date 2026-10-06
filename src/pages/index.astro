@@ -693,14 +693,18 @@ const formatPoetryTitle = (title: string) => {
     if (telemetryScrollListener) {
       window.removeEventListener("scroll", telemetryScrollListener);
     }
-
+    let lastTelemetryHidden = false;
     const onScroll = () => {
       const scrollY = window.scrollY;
       const threshold = window.innerHeight * 0.25;
       if (scrollY > threshold) {
-        telemetry.style.opacity = "0";
-        telemetry.style.pointerEvents = "none";
+        if (!lastTelemetryHidden) {
+          telemetry.style.opacity = "0";
+          telemetry.style.pointerEvents = "none";
+          lastTelemetryHidden = true;
+        }
       } else {
+        lastTelemetryHidden = false;
         telemetry.style.opacity = (1 - scrollY / threshold).toString();
         telemetry.style.pointerEvents = "auto";
       }

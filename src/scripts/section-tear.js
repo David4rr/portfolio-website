@@ -20,7 +20,6 @@ document.addEventListener('astro:page-load', () => {
 });
 
 // GPU Parallax Card Stack
-let ticking = false;
 let sectionData = [];
 let hasSections = false;
 let isMobile = false;
@@ -55,9 +54,22 @@ const updateSectionData = () => {
 
   hasSections = true;
   let currentTop = 0;
+  const wh = window.innerHeight;
   sectionData = Array.from(sections).map(sec => {
     const height = sec.offsetHeight;
-    const data = { el: sec, height, topOffset: currentTop };
+    if (height > wh) {
+      sec.style.top = `${wh - height}px`;
+    } else {
+      sec.style.top = '0px';
+    }
+    const data = {
+      el: sec,
+      height,
+      topOffset: currentTop,
+      lastTransform: '',
+      lastOpacity: '',
+      lastPointerEvents: '',
+    };
     currentTop += height;
     return data;
   });
@@ -71,12 +83,6 @@ const updateTearOff = () => {
 
   sectionData.forEach((data, i) => {
     const { el: sec, height: h, topOffset } = data;
-    
-    if (h > wh) {
-      sec.style.top = `${wh - h}px`;
-    } else {
-      sec.style.top = '0px';
-    }
 
     const myTop = topOffset - scrollY;
     let ty = 0;
@@ -99,36 +105,56 @@ const updateTearOff = () => {
       }
     }
 
-    if (progress <= 0) {
-      sec.style.clipPath = 'none';
-      sec.style.filter = 'none';
-      sec.style.transform = ty !== 0 ? `translate3d(0, ${ty}px, 0)` : 'none';
-      sec.style.opacity = '1';
-      sec.style.pointerEvents = '';
-    } else if (progress >= 1) {
-      sec.style.opacity = '0';
-      sec.style.clipPath = 'none';
-      sec.style.filter = 'none';
-      sec.style.transform = 'none';
-      sec.style.pointerEvents = 'none';
-    } else {
-      const scale = (1 - progress * 0.04).toFixed(4);
-      const liftY = (ty - progress * (wh * 0.25)).toFixed(1);
-      const fadeProgress = Math.min(1, progress / 0.45);
-      const opacity = Math.max(0, 1 - Math.pow(fadeProgress, 1.25)).toFixed(3);
+    let transform = 'none';
+    let opacity = '1';
+    let pointerEvents = '';
 
-      sec.style.clipPath = 'none';
-      sec.style.filter = 'none';
-      sec.style.transform = `translate3d(0, ${liftY}px, 0) scale(${scale})`;
+    if (progress <= 0) {
+      transform = ty !== 0 ? `translate3d(0, ${ty}px, 0)` : 'none';
+      opacity = '1';
+      pointerEvents = '';
+    } else if (progress >= 1) {
+      transform = 'none';
+      opacity = '0';
+      pointerEvents = 'none';
+    } else {
+      const liftProgress = Math.pow(progress, 1.35);
+      const liftY = (ty - liftProgress * (wh * 0.32)).toFixed(1);
+      const scale = (1 - progress * 0.05).toFixed(4);
+      opacity = Math.max(0, 1 - Math.pow(progress, 1.2)).toFixed(3);
+      transform = `translate3d(0, ${liftY}px, 0) scale(${scale})`;
+      pointerEvents = progress > 0.6 ? 'none' : '';
+    }
+
+    if (data.lastTransform !== transform) {
+      sec.style.transform = transform;
+      data.lastTransform = transform;
+    }
+    if (data.lastOpacity !== opacity) {
       sec.style.opacity = opacity;
-      sec.style.pointerEvents = progress > 0.4 ? 'none' : '';
+      data.lastOpacity = opacity;
+    }
+    if (data.lastPointerEvents !== pointerEvents) {
+      sec.style.pointerEvents = pointerEvents;
+      data.lastPointerEvents = pointerEvents;
     }
   });
 };
 
+let lenisBound = false;
+const attachLenis = () => {
+  if (window.lenis && typeof window.lenis.on === 'function' && !lenisBound) {
+    window.lenis.on('scroll', updateTearOff);
+    lenisBound = true;
+  }
+};
+
 const onScroll = () => {
   if (!hasSections || isMobile) return;
-  updateTearOff();
+  if (!lenisBound) {
+    attachLenis();
+    updateTearOff();
+  }
 };
 
 window.addEventListener('scroll', onScroll, { passive: true });
@@ -141,17 +167,16 @@ window.addEventListener('resize', () => {
 
 document.addEventListener('astro:page-load', () => {
   updateSectionData();
+  attachLenis();
   if (hasSections && !isMobile) {
     updateTearOff();
-  }
-  if (window.lenis && typeof window.lenis.on === 'function') {
-    window.lenis.on('scroll', onScroll);
   }
 });
 
 document.addEventListener('astro:before-swap', () => {
-  if (window.lenis && typeof window.lenis.off === 'function') {
-    window.lenis.off('scroll', onScroll);
+  if (window.lenis && typeof window.lenis.off === 'function' && lenisBound) {
+    window.lenis.off('scroll', updateTearOff);
+    lenisBound = false;
   }
 });
 if (document.fonts?.ready) {

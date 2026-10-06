@@ -347,3 +347,9 @@
 .animate-rocket-flicker {
   animation: flame-flicker 0.35s ease-in-out infinite alternate;
 }
+
+/* GPU layer promotion and texture pinning for smooth 120fps parallax stack */
+[data-section] {
+  backface-visibility: hidden;
+  transform-style: flat;
+}

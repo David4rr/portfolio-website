@@ -135,9 +135,6 @@ items.forEach((item, index) => {
     };
 
     window.addEventListener('scroll', updateMarker, { passive: true });
-    if (window.lenis && typeof window.lenis.on === 'function') {
-      window.lenis.on('scroll', updateMarker);
-    }
     updateMarker();
     const labels = document.querySelectorAll('.scroll-label');
     labels.forEach((label) => {
