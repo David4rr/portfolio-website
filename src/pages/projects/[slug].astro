@@ -2,6 +2,7 @@
 // ponytail: luxurious museum-print project detail page
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
+import ScrollUpButton from '../../components/ScrollUpButton.astro';
 import Footer from '../../components/Footer.astro';
 import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
 import { marked } from 'marked';
@@ -651,4 +652,6 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
       }
     });
   </script>
+
+  <ScrollUpButton />
 </BaseLayout>

@@ -1,0 +1,96 @@
+---
+// Reusable floating scroll-to-top button with circular progress indicator
+---
+
+<button
+  id="scroll-to-top-btn"
+  type="button"
+  aria-label="Scroll to top"
+  class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 w-11 h-11 md:w-12 md:h-12 rounded-full bg-bg-elevated/90 backdrop-blur-md border border-border-subtle/70 text-text-muted shadow-lg shadow-black/10 flex items-center justify-center cursor-pointer opacity-0 pointer-events-none translate-y-4 hover:border-accent hover:text-accent hover:scale-105 active:scale-95 transition-all duration-300 group"
+>
+  <!-- Circular scroll progress ring -->
+  <svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none p-0.5" viewBox="0 0 44 44">
+    <circle
+      cx="22"
+      cy="22"
+      r="19"
+      class="stroke-border-subtle/30"
+      stroke-width="2"
+      fill="none"
+    />
+    <circle
+      id="scroll-progress-ring"
+      cx="22"
+      cy="22"
+      r="19"
+      class="stroke-accent transition-all duration-100"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-dasharray="119.38"
+      stroke-dashoffset="119.38"
+      fill="none"
+    />
+  </svg>
+
+  <!-- Upward arrow icon -->
+  <svg 
+    class="w-4 h-4 md:w-4.5 md:h-4.5 transform transition-transform duration-300 group-hover:-translate-y-0.5" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    stroke-width="2.2" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+  >
+    <line x1="12" y1="19" x2="12" y2="5"></line>
+    <polyline points="5 12 12 5 19 12"></polyline>
+  </svg>
+</button>
+
+<script>
+  function initScrollToTop() {
+    const btn = document.getElementById('scroll-to-top-btn');
+    const ring = document.getElementById('scroll-progress-ring');
+    if (!btn || !ring) return;
+
+    const circumference = 2 * Math.PI * 19; // ~119.38
+    ring.style.strokeDasharray = `${circumference}`;
+    ring.style.strokeDashoffset = `${circumference}`;
+
+    const updateScrollProgress = () => {
+      const scrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      
+      // Toggle button visibility
+      if (scrollY > 300) {
+        btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        btn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      } else {
+        btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+        btn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      }
+
+      // Update circular progress offset
+      if (docHeight > 0) {
+        const progress = Math.min(1, Math.max(0, scrollY / docHeight));
+        const offset = circumference - (progress * circumference);
+        ring.style.strokeDashoffset = `${offset}`;
+      }
+    };
+
+    btn.addEventListener('click', () => {
+      if ((window as any).lenis) {
+        (window as any).lenis.scrollTo(0, { duration: 1.2 });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    window.addEventListener('scroll', updateScrollProgress, { passive: true });
+    updateScrollProgress();
+  }
+
+  document.addEventListener('astro:page-load', initScrollToTop);
+  if (document.readyState === 'complete') initScrollToTop();
+  else window.addEventListener('DOMContentLoaded', initScrollToTop);
+</script>

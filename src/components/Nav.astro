@@ -3,18 +3,28 @@ import ThemeToggle from './ThemeToggle.astro';
 import { getRuntimeEnv } from '../lib/notion';
 
 const currentPath = Astro.url.pathname;
+const isWritingDetail = /^\/writing\/[^\/]+/.test(currentPath);
+const isProjectDetail = /^\/projects\/[^\/]+/.test(currentPath);
+const initialWord = isWritingDetail ? 'Writing' : isProjectDetail ? 'Project' : 'Portfolio';
 const linkedinUrl = await getRuntimeEnv('LINKEDIN_URL') || await getRuntimeEnv('PUBLIC_LINKEDIN_URL') || "https://linkedin.com";
 const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv('PUBLIC_INSTAGRAM_URL') || "https://instagram.com";
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";
 ---
-<nav id="main-nav" class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-50 transition-colors duration-300">
+<nav id="main-nav" transition:persist class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-50 transition-colors duration-300">
   <!-- Progressive blur background -->
   <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
     <div class="absolute inset-0 hidden md:block md:backdrop-blur-xl md:[mask-image:linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)] md:[-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)]"></div>
     <div class="absolute inset-0 bg-gradient-to-b from-bg/95 via-bg/80 to-transparent"></div>
   </div>
   <div class="flex justify-start items-center gap-3">
-    <a href="/" class="font-bold text-xl tracking-tighter">Portfolio<span class="text-accent">.</span></a>
+    <a href="/" id="nav-brand-logo" class="font-bold text-xl tracking-tighter inline-flex items-center select-none group" aria-label="Home">
+      <span id="nav-brand-container" class="relative inline-flex items-baseline overflow-visible">
+        <span id="nav-brand-text" class="inline-block whitespace-nowrap" data-current-word={initialWord}>
+          {initialWord}
+        </span>
+      </span>
+      <span id="nav-brand-dot" class="text-accent inline-block transition-transform duration-300">.</span>
+    </a>
   </div>
   
   <div class="flex justify-center">
@@ -75,9 +85,16 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
 </nav>
 
 <script>
+  let clockInterval: ReturnType<typeof setInterval> | null = null;
+
   function initNavClock() {
     const display = document.getElementById('nav-mobile-clock');
     if (!display) return;
+    
+    if (clockInterval) {
+      clearInterval(clockInterval);
+      clockInterval = null;
+    }
     
     const updateTime = () => {
       try {
@@ -98,13 +115,182 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
     };
     
     updateTime();
-    const interval = setInterval(updateTime, 1000);
-    
-    // Cleanup on page transition
-    document.addEventListener('astro:before-swap', () => clearInterval(interval), { once: true });
+    clockInterval = setInterval(updateTime, 1000);
   }
 
-  document.addEventListener('astro:page-load', initNavClock);
-  if (document.readyState === 'complete') initNavClock();
-  else window.addEventListener('DOMContentLoaded', initNavClock);
+  // --- Brand Text Morphing Engine ---
+  let isMorphing = false;
+  let queuedWord: string | null = null;
+
+  function morphBrandText(targetWord: string) {
+    const container = document.getElementById('nav-brand-container');
+    const textEl = document.getElementById('nav-brand-text');
+    if (!container || !textEl) return;
+
+    const currentWord = textEl.getAttribute('data-current-word') || textEl.textContent?.trim() || 'Portfolio';
+    if (currentWord === targetWord) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      textEl.textContent = targetWord;
+      textEl.setAttribute('data-current-word', targetWord);
+      return;
+    }
+
+    if (isMorphing) {
+      queuedWord = targetWord;
+      return;
+    }
+
+    isMorphing = true;
+
+    // Measure exact rendered widths taking current typography into account
+    const fromWidth = textEl.getBoundingClientRect().width;
+
+    const dummy = document.createElement('span');
+    dummy.className = textEl.className;
+    dummy.style.cssText = 'position: absolute; visibility: hidden; pointer-events: none; white-space: nowrap; left: -9999px;';
+    dummy.textContent = targetWord;
+    container.appendChild(dummy);
+    const toWidth = dummy.getBoundingClientRect().width;
+    dummy.remove();
+
+    // Lock container width during transition
+    container.style.width = `${fromWidth}px`;
+    container.style.display = 'inline-flex';
+    container.style.alignItems = 'baseline';
+    container.style.overflow = 'visible';
+
+    const fromChars = Array.from(currentWord);
+    const toChars = Array.from(targetWord);
+
+    // Build outgoing layer
+    const fromLayer = document.createElement('span');
+    fromLayer.className = 'inline-flex items-baseline whitespace-nowrap select-none';
+    fromLayer.style.cssText = 'position: absolute; left: 0; top: 0; pointer-events: none;';
+    fromChars.forEach((ch) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      s.style.cssText = 'display: inline-block; will-change: transform, opacity, filter;';
+      fromLayer.appendChild(s);
+    });
+
+    // Build incoming layer
+    const toLayer = document.createElement('span');
+    toLayer.className = 'inline-flex items-baseline whitespace-nowrap select-none';
+    toLayer.style.cssText = 'position: absolute; left: 0; top: 0; pointer-events: none;';
+    toChars.forEach((ch) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      s.style.cssText = 'display: inline-block; opacity: 0; will-change: transform, opacity, filter;';
+      toLayer.appendChild(s);
+    });
+
+    // Swap source text element to avoid flash on settle
+    textEl.style.visibility = 'hidden';
+    textEl.textContent = targetWord;
+    textEl.setAttribute('data-current-word', targetWord);
+
+    container.appendChild(fromLayer);
+    container.appendChild(toLayer);
+
+    // Smoothly interpolate container width (dot glides naturally)
+    requestAnimationFrame(() => {
+      container.style.transition = 'width 420ms cubic-bezier(0.16, 1, 0.3, 1)';
+      container.style.width = `${toWidth}px`;
+    });
+
+    const duration = 380;
+    const glyphs = ['•', '·', 'x', 'z', 'k', 'i', 'r', 't', 'o'];
+
+    // Outgoing characters stagger & melt upwards
+    const fromSpans = Array.from(fromLayer.children) as HTMLElement[];
+    fromSpans.forEach((span, i) => {
+      const delay = i * 16;
+      span.animate([
+        { opacity: '1', transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' },
+        { opacity: '0.4', transform: 'translateY(-3px) scale(0.92)', filter: 'blur(3px)', offset: 0.5 },
+        { opacity: '0', transform: 'translateY(-7px) scale(0.85)', filter: 'blur(6px)' }
+      ], {
+        duration: duration * 0.8,
+        delay,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        fill: 'forwards'
+      });
+    });
+
+    // Incoming characters de-blur from bottom & resolve
+    const toSpans = Array.from(toLayer.children) as HTMLElement[];
+    toSpans.forEach((span, i) => {
+      const targetChar = toChars[i];
+      const delay = 50 + i * 20;
+
+      // Glyph flicker during peak blur
+      setTimeout(() => {
+        const randG = glyphs[Math.floor(Math.random() * glyphs.length)];
+        span.textContent = randG;
+        setTimeout(() => {
+          span.textContent = targetChar;
+        }, 65);
+      }, delay + 40);
+
+      span.animate([
+        { opacity: '0', transform: 'translateY(7px) scale(1.15)', filter: 'blur(6px)' },
+        { opacity: '0.75', transform: 'translateY(2px) scale(1.05)', filter: 'blur(2px)', offset: 0.6 },
+        { opacity: '1', transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }
+      ], {
+        duration,
+        delay,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        fill: 'forwards'
+      });
+    });
+
+    const totalTime = duration + Math.max(fromChars.length, toChars.length) * 20 + 80;
+
+    setTimeout(() => {
+      fromLayer.remove();
+      toLayer.remove();
+      textEl.style.visibility = '';
+      container.style.width = '';
+      container.style.transition = '';
+      isMorphing = false;
+
+      if (queuedWord && queuedWord !== targetWord) {
+        const next = queuedWord;
+        queuedWord = null;
+        morphBrandText(next);
+      } else {
+        queuedWord = null;
+      }
+    }, totalTime);
+  }
+
+  function handleRouteBrandUpdate() {
+    const path = window.location.pathname;
+    let targetWord = 'Portfolio';
+    if (/^\/writing\/[^\/]+/.test(path)) {
+      targetWord = 'Writing';
+    } else if (/^\/projects\/[^\/]+/.test(path)) {
+      targetWord = 'Project';
+    }
+    morphBrandText(targetWord);
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initNavClock();
+    handleRouteBrandUpdate();
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    if (clockInterval) {
+      clearInterval(clockInterval);
+      clockInterval = null;
+    }
+  });
+
+  if (document.readyState === 'complete') {
+    initNavClock();
+  } else {
+    window.addEventListener('DOMContentLoaded', initNavClock);
+  }
 </script>
