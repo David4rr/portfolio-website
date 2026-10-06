@@ -92,13 +92,12 @@
 }
 @layer utilities {
   html, body {
-    overscroll-behavior: none;
+    overscroll-behavior-y: auto;
   }
-  main {
-    perspective: 1200px;
-  }
-  [data-section] {
-    will-change: transform, opacity;
+  @media (min-width: 768px) {
+    [data-section] {
+      will-change: transform, opacity;
+    }
   }
 
   [data-reveal="ink-bloom"] [data-animate] {

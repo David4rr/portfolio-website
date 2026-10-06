@@ -35,7 +35,7 @@ for (let i = 0; i < 12; i++) {
   data-username={username}
   class={`w-full max-w-4xl mx-auto px-4 py-8 relative ${className}`}
 >
-  <div class="border border-border-subtle/60 bg-bg-subtle/30 rounded-2xl p-4 sm:p-6 backdrop-blur-[2px] transition-all duration-300 hover:border-border-subtle">
+  <div class="border border-border-subtle/60 bg-bg-subtle/80 md:bg-bg-subtle/30 md:backdrop-blur-[2px] rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-border-subtle">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border-subtle/40">
       <div>
         <div class="flex items-center gap-2 font-sans uppercase tracking-[0.2em] text-[10px] text-text-muted/70 mb-1">
@@ -52,7 +52,7 @@ for (let i = 0; i < 12; i++) {
 
     </div>
 
-    <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0 touch-pan-x overscroll-x-contain">
+    <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0 touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
       <div class="min-w-[720px] select-none">
         <div class="grid grid-cols-53 text-[10px] font-sans text-text-muted/60 mb-2 pl-7 pointer-events-none">
           {Array.from({ length: totalWeeks }).map((_, colIdx) => {
@@ -225,21 +225,32 @@ for (let i = 0; i < 12; i++) {
         const contribLen = contributions.length;
         const offset = totalCells - contribLen;
 
-        contributions.forEach((day, i) => {
-          const cellIdx = offset >= 0 ? offset + i : i;
-          if (cellIdx >= 0 && cellIdx < totalCells) {
-            const cell = cells[cellIdx];
-            cell.setAttribute("data-level", String(day.level));
-            cell.setAttribute("data-count", String(day.count));
-            cell.setAttribute("data-date", day.date);
-          }
+        requestAnimationFrame(() => {
+          contributions.forEach((day, i) => {
+            const cellIdx = offset >= 0 ? offset + i : i;
+            if (cellIdx >= 0 && cellIdx < totalCells) {
+              const cell = cells[cellIdx];
+              cell.setAttribute("data-level", String(day.level));
+              cell.setAttribute("data-count", String(day.count));
+              cell.setAttribute("data-date", day.date);
+            }
+          });
         });
       } catch (err) {
         console.warn("GitHub heatmap live fetch error, fallback active:", err);
       }
     }
 
-    loadContributions();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadContributions();
+          observer.disconnect();
+        }
+      });
+    }, { rootMargin: '250px' });
+
+    observer.observe(root);
   }
   document.addEventListener("astro:page-load", initHeatmap);
 </script>

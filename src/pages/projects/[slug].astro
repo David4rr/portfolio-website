@@ -501,6 +501,10 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
       const returnBtn = document.getElementById('back-button');
       const leftLine = document.querySelector('.return-line-left');
       const rightLine = document.querySelector('.return-line-right');
+      // Mobile / touch bypass: skip magnetic mouse physics & continuous layout reflow loop
+      if (window.matchMedia('(hover: none)').matches || window.innerWidth < 768) {
+        return;
+      }
       
       if (magneticArea && returnBtn && leftLine && rightLine) {
         // Idle breathing

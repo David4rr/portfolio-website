@@ -21,11 +21,39 @@ document.addEventListener('astro:page-load', () => {
 
 // GPU Parallax Card Stack
 let ticking = false;
-
-// Cache section metrics to avoid layout thrashing
 let sectionData = [];
+let hasSections = false;
+let isMobile = false;
+
+const resetSectionStyles = (sections) => {
+  sections.forEach(sec => {
+    sec.style.clipPath = '';
+    sec.style.filter = '';
+    sec.style.transform = '';
+    sec.style.opacity = '';
+    sec.style.pointerEvents = '';
+    sec.style.top = '';
+  });
+};
+
 const updateSectionData = () => {
+  isMobile = window.innerWidth < 768;
   const sections = document.querySelectorAll('[data-section]');
+  
+  if (sections.length === 0) {
+    hasSections = false;
+    sectionData = [];
+    return;
+  }
+
+  if (isMobile) {
+    hasSections = false;
+    sectionData = [];
+    resetSectionStyles(sections);
+    return;
+  }
+
+  hasSections = true;
   let currentTop = 0;
   sectionData = Array.from(sections).map(sec => {
     const height = sec.offsetHeight;
@@ -36,15 +64,7 @@ const updateSectionData = () => {
 };
 
 const updateTearOff = () => {
-  if (sectionData.length === 0) updateSectionData();
-  
-  // Mobile bypass: native touch momentum scrolling
-  if (window.innerWidth < 768) {
-    sectionData.forEach(({ el: sec }) => {
-      sec.style = '';
-    });
-    return;
-  }
+  if (!hasSections || isMobile || sectionData.length === 0) return;
 
   const wh = window.innerHeight;
   const scrollY = window.scrollY;
@@ -107,6 +127,7 @@ const updateTearOff = () => {
 };
 
 const onScroll = () => {
+  if (!hasSections || isMobile) return;
   if (!ticking) {
     requestAnimationFrame(() => {
       updateTearOff();
@@ -118,32 +139,30 @@ const onScroll = () => {
 
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', () => {
-  sectionData = [];
-  requestAnimationFrame(updateTearOff);
+  updateSectionData();
+  if (hasSections && !isMobile) {
+    requestAnimationFrame(updateTearOff);
+  }
 }, { passive: true });
 
-let layoutObserver = null;
-
 document.addEventListener('astro:page-load', () => {
-  sectionData = [];
-  
-  if (layoutObserver) {
-    layoutObserver.disconnect();
+  updateSectionData();
+  if (hasSections && !isMobile) {
+    updateTearOff();
   }
-  
-  layoutObserver = new ResizeObserver(() => {
-    sectionData = [];
-    requestAnimationFrame(updateTearOff);
-  });
-  
-  const mainEl = document.querySelector('main');
-  if (mainEl) {
-    layoutObserver.observe(mainEl);
-  }
-  
-  updateTearOff();
 });
 
+if (document.fonts?.ready) {
+  document.fonts.ready.then(() => {
+    updateSectionData();
+    if (hasSections && !isMobile) updateTearOff();
+  });
+}
+
+window.addEventListener('load', () => {
+  updateSectionData();
+  if (hasSections && !isMobile) updateTearOff();
+}, { once: true });
 // Dynamic theme toggle
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('#theme-toggle');

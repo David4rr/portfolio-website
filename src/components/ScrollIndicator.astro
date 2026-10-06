@@ -132,12 +132,22 @@ items.forEach((item, index) => {
           }
         }
       });
-      
-      window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
+      if (Math.abs(targetScroll - currentScroll) > 0.5) {
+        window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
+      } else {
+        currentScroll = targetScroll;
+        window._scrollIndicatorRAF = null;
+      }
     };
     
-    window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
-    
+    const triggerMarkerUpdate = () => {
+      if (!window._scrollIndicatorRAF) {
+        window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
+      }
+    };
+
+    window.addEventListener('scroll', triggerMarkerUpdate, { passive: true });
+    triggerMarkerUpdate();
     const labels = document.querySelectorAll('.scroll-label');
     labels.forEach((label) => {
       label.addEventListener('click', (e) => {

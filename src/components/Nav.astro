@@ -10,9 +10,8 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
 <nav id="main-nav" class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-50 transition-colors duration-300">
   <!-- Progressive blur background -->
   <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-    <div class="absolute inset-0 backdrop-blur-xl [mask-image:linear-gradient(to_bottom,black_0%,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_50%,transparent_100%)]"></div>
-    <div class="absolute inset-0 bg-gradient-to-b from-bg/95 via-bg/75 to-transparent"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-border-subtle/35 to-transparent"></div>
+    <div class="absolute inset-0 hidden md:block md:backdrop-blur-xl md:[mask-image:linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)] md:[-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)]"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-bg/95 via-bg/80 to-transparent"></div>
   </div>
   <div class="flex justify-start items-center gap-3">
     <a href="/" class="font-bold text-xl tracking-tighter">Portfolio<span class="text-accent">.</span></a>

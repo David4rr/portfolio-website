@@ -19,7 +19,10 @@ const returnLabel = fromExplore ? 'Return to Gallery' : 'Return';
 const optimizeImageUrl = (url?: string, width = 1200): string => {
   if (!url) return '';
   if (url.includes('googleusercontent.com') || url.includes('blogger.com')) {
-    return url;
+    if (/\/(s\d+|w\d+|s\d+-c)\//.test(url)) {
+      return url.replace(/\/(s\d+|w\d+|s\d+-c)\//, `/w${width}-rw/`);
+    }
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
   }
   if (url.startsWith('http')) {
     return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
@@ -229,6 +232,11 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
 
   const setupReturnAnimation = () => {
     initBackButton();
+
+    // Mobile / touch bypass: skip magnetic mouse physics & continuous layout reflow loop
+    if (window.matchMedia('(hover: none)').matches || window.innerWidth < 768) {
+      return;
+    }
 
     // Magnetic & breathing Return Button
     const magneticArea = document.getElementById('magnetic-area');

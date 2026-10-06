@@ -108,7 +108,8 @@ const ogImageUrl = image.startsWith('http://') || image.startsWith('https://')
 
       document.addEventListener('astro:page-load', () => {
         const isExplore = window.location.pathname.includes('/explore');
-        if (!isExplore) {
+        const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
+        if (!isExplore && !isTouchOrMobile) {
           window.lenis = new Lenis({
             autoRaf: true,
             smoothWheel: true,

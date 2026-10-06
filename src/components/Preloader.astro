@@ -15,32 +15,39 @@ import RocketLoader from "./RocketLoader.astro";
 </div>
 
 <script is:inline>
-  // Runs synchronously before paint.
-  // If hasSeenPreloader is NOT set in sessionStorage, this is a fresh session, so we show it!
-  if (!sessionStorage.getItem('hasSeenPreloader')) {
-    const el = document.getElementById('preloader-overlay');
-    if (el) {
-      el.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+  try {
+    if (!sessionStorage.getItem('hasSeenPreloader')) {
+      const el = document.getElementById('preloader-overlay');
+      if (el) {
+        el.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
     }
-  }
+  } catch (e) {}
 </script>
 
 <script>
-  // In Astro, module scripts are executed exactly once per page load.
   document.addEventListener('astro:page-load', () => {
     const preloader = document.getElementById('preloader-overlay');
     const percentEl = document.getElementById('preloader-percent');
     
+    let hasSeen = false;
+    try {
+      hasSeen = !!sessionStorage.getItem('hasSeenPreloader');
+    } catch (e) {
+      hasSeen = true;
+    }
+
+    if (hasSeen) {
+      if (preloader) preloader.style.display = 'none';
+      document.body.style.overflow = '';
+      return;
+    }
+    
     if (preloader && percentEl) {
-      if (sessionStorage.getItem('hasSeenPreloader')) {
-        // Already seen in this session. 
-        // Inline script kept it hidden. Do nothing.
-        return;
-      }
-      
-      // First load for this session
-      sessionStorage.setItem('hasSeenPreloader', 'true');
+      try {
+        sessionStorage.setItem('hasSeenPreloader', 'true');
+      } catch (e) {}
       document.body.style.overflow = 'hidden';
       let pct = 0;
       
@@ -61,6 +68,13 @@ import RocketLoader from "./RocketLoader.astro";
         }
         percentEl.textContent = `${pct}%`;
       }, 25);
+    } else {
+      document.body.style.overflow = '';
     }
   });
+
+  // Emergency failsafe: ensure scroll is always unlocked after 4s max
+  setTimeout(() => {
+    document.body.style.overflow = '';
+  }, 4000);
 </script>
