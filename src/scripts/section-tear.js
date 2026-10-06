@@ -128,20 +128,14 @@ const updateTearOff = () => {
 
 const onScroll = () => {
   if (!hasSections || isMobile) return;
-  if (!ticking) {
-    requestAnimationFrame(() => {
-      updateTearOff();
-      ticking = false;
-    });
-    ticking = true;
-  }
+  updateTearOff();
 };
 
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', () => {
   updateSectionData();
   if (hasSections && !isMobile) {
-    requestAnimationFrame(updateTearOff);
+    updateTearOff();
   }
 }, { passive: true });
 
@@ -150,8 +144,16 @@ document.addEventListener('astro:page-load', () => {
   if (hasSections && !isMobile) {
     updateTearOff();
   }
+  if (window.lenis && typeof window.lenis.on === 'function') {
+    window.lenis.on('scroll', onScroll);
+  }
 });
 
+document.addEventListener('astro:before-swap', () => {
+  if (window.lenis && typeof window.lenis.off === 'function') {
+    window.lenis.off('scroll', onScroll);
+  }
+});
 if (document.fonts?.ready) {
   document.fonts.ready.then(() => {
     updateSectionData();

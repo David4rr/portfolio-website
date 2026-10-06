@@ -685,9 +685,14 @@ const formatPoetryTitle = (title: string) => {
       duration: 500,
     });
   };
+  let telemetryScrollListener = null;
   const initHeroTelemetry = () => {
     const telemetry = document.getElementById("hero-telemetry");
     if (!telemetry) return;
+
+    if (telemetryScrollListener) {
+      window.removeEventListener("scroll", telemetryScrollListener);
+    }
 
     const onScroll = () => {
       const scrollY = window.scrollY;
@@ -701,6 +706,7 @@ const formatPoetryTitle = (title: string) => {
       }
     };
 
+    telemetryScrollListener = onScroll;
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
   };
@@ -714,6 +720,10 @@ const formatPoetryTitle = (title: string) => {
     initHeroTelemetry();
   });
   document.addEventListener("astro:before-swap", () => {
+    if (telemetryScrollListener) {
+      window.removeEventListener("scroll", telemetryScrollListener);
+      telemetryScrollListener = null;
+    }
     const cw = document.getElementById("project-cursor-wrapper");
     if (cw && cw.parentNode === document.body) {
       document.body.removeChild(cw);

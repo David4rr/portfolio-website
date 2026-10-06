@@ -70,15 +70,11 @@ items.forEach((item, index) => {
     window._scrollIndicatorRO.observe(document.body);
     calculateOffsets();
     
+    let lastActiveItemIndex = -1;
+    let lastActiveSectionIndex = -1;
+
     const updateMarker = () => {
-      const targetScroll = window.scrollY;
-      
-      // Snap instantly if navigating back or jumping far
-      if (Math.abs(targetScroll - currentScroll) > 800) {
-        currentScroll = targetScroll;
-      } else {
-        currentScroll += (targetScroll - currentScroll) * 0.15;
-      }
+      const currentScroll = window.scrollY;
       
       let progress = 0;
       let activeSectionIndex = 0;
@@ -104,14 +100,18 @@ items.forEach((item, index) => {
       }
       
       const activeItemIndex = Math.round(progress * (scrollItems.length - 1));
-      
+      if (activeItemIndex === lastActiveItemIndex && activeSectionIndex === lastActiveSectionIndex) {
+        return;
+      }
+      lastActiveItemIndex = activeItemIndex;
+      lastActiveSectionIndex = activeSectionIndex;
+
       scrollItems.forEach((item, i) => {
         if (i === activeItemIndex) {
           if (item.classList.contains('tick-line')) {
             item.classList.remove('w-1.5', 'bg-text-muted/30');
             item.classList.add('w-3', 'bg-accent');
           } else {
-            // It's a number
             item.classList.add('text-accent', 'font-bold');
             item.classList.remove('text-text-main/80', 'text-text-main');
           }
@@ -132,22 +132,13 @@ items.forEach((item, index) => {
           }
         }
       });
-      if (Math.abs(targetScroll - currentScroll) > 0.5) {
-        window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
-      } else {
-        currentScroll = targetScroll;
-        window._scrollIndicatorRAF = null;
-      }
-    };
-    
-    const triggerMarkerUpdate = () => {
-      if (!window._scrollIndicatorRAF) {
-        window._scrollIndicatorRAF = requestAnimationFrame(updateMarker);
-      }
     };
 
-    window.addEventListener('scroll', triggerMarkerUpdate, { passive: true });
-    triggerMarkerUpdate();
+    window.addEventListener('scroll', updateMarker, { passive: true });
+    if (window.lenis && typeof window.lenis.on === 'function') {
+      window.lenis.on('scroll', updateMarker);
+    }
+    updateMarker();
     const labels = document.querySelectorAll('.scroll-label');
     labels.forEach((label) => {
       label.addEventListener('click', (e) => {

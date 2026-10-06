@@ -105,23 +105,46 @@ const ogImageUrl = image.startsWith('http://') || image.startsWith('https://')
     <script src="../scripts/section-tear.js"></script>
     <script>
       import Lenis from 'lenis';
+      import 'lenis/dist/lenis.css';
 
-      document.addEventListener('astro:page-load', () => {
+      let lenisInstance: any = null;
+
+      function initLenis() {
         const isExplore = window.location.pathname.includes('/explore');
-        const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.innerWidth < 1024);
-        if (!isExplore && !isTouchOrMobile) {
-          window.lenis = new Lenis({
+        const isTouchOnly = window.matchMedia('(pointer: coarse) and (hover: none)').matches;
+        const isMobileScreen = window.innerWidth < 768;
+
+        if (isExplore || isTouchOnly || isMobileScreen) {
+          if (lenisInstance) {
+            lenisInstance.destroy();
+            lenisInstance = null;
+            (window as any).lenis = null;
+          }
+          return;
+        }
+
+        if (!lenisInstance) {
+          lenisInstance = new Lenis({
             autoRaf: true,
             smoothWheel: true,
             duration: 1.2,
+            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            wheelMultiplier: 1.0,
+            touchMultiplier: 1.0,
           });
+          (window as any).lenis = lenisInstance;
         }
-      });
+      }
+
+      document.addEventListener('astro:page-load', initLenis);
+      if (document.readyState === 'complete') initLenis();
+      else window.addEventListener('DOMContentLoaded', initLenis);
 
       document.addEventListener('astro:before-swap', () => {
-        if (window.lenis) {
-          window.lenis.destroy();
-          window.lenis = null;
+        if (lenisInstance) {
+          lenisInstance.destroy();
+          lenisInstance = null;
+          (window as any).lenis = null;
         }
       });
     </script>
