@@ -1,17 +1,17 @@
 ---
-// Editorial Pill Scroll-to-Top Button [ ↑ TOP · 42% ]
+// Frosted Glass Floating Action Button with Continuous Arrow Animation
 ---
 
 <button
   id="scroll-to-top-btn"
   type="button"
   aria-label="Scroll to top of page"
-  class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 inline-flex items-center gap-2 px-3.5 py-1.5 md:px-4 md:py-2 rounded-full bg-bg/75 backdrop-blur-xl border border-border-subtle/60 text-text-muted hover:text-text-main hover:border-accent/60 shadow-xl shadow-black/15 cursor-pointer opacity-0 pointer-events-none translate-y-4 active:scale-95 transition-colors duration-300 group select-none"
+  class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-bg/75 backdrop-blur-xl border border-border-subtle/60 text-accent hover:border-accent hover:shadow-accent/10 shadow-xl shadow-black/15 cursor-pointer opacity-0 pointer-events-none translate-y-4 active:scale-90 transition-all duration-300 group select-none"
 >
-  <!-- Micro Arrow with hover lift -->
-  <span id="scroll-btn-arrow" class="inline-flex items-center justify-center text-accent transition-transform duration-200 group-hover:-translate-y-0.5">
+  <!-- Micro Arrow with Continuous Loop Animation -->
+  <span id="scroll-btn-arrow" class="inline-flex items-center justify-center text-accent animate-arrow-float">
     <svg 
-      class="w-3.5 h-3.5" 
+      class="w-4 h-4 md:w-[18px] md:h-[18px] transition-transform duration-200 group-hover:scale-110" 
       viewBox="0 0 24 24" 
       fill="none" 
       stroke="currentColor" 
@@ -23,23 +23,23 @@
       <polyline points="5 12 12 5 19 12"></polyline>
     </svg>
   </span>
-
-  <!-- Label 'TOP' -->
-  <span class="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-medium text-text-main/90 group-hover:text-accent transition-colors duration-200">
-    TOP
-  </span>
-
-  <!-- Divider -->
-  <span class="text-border-subtle text-xs font-mono select-none">·</span>
-
-  <!-- Dynamic Scroll Progress Percentage -->
-  <span 
-    id="scroll-btn-pct" 
-    class="font-mono text-[10px] md:text-[11px] text-accent font-semibold tabular-nums tracking-wider"
-  >
-    0%
-  </span>
 </button>
+
+<style>
+  @keyframes scrollArrowFloat {
+    0%, 100% {
+      transform: translateY(2.5px);
+    }
+    50% {
+      transform: translateY(-3.5px);
+    }
+  }
+
+  .animate-arrow-float {
+    animation: scrollArrowFloat 1.6s ease-in-out infinite;
+    will-change: transform;
+  }
+</style>
 
 <script>
   import anime from 'animejs';
@@ -47,15 +47,12 @@
   let entranceAnim: any = null;
   let isBtnVisible = false;
 
-  function initScrollToTopPill() {
+  function initScrollToTopBtn() {
     const btn = document.getElementById('scroll-to-top-btn');
-    const pctLabel = document.getElementById('scroll-btn-pct');
-    const arrowEl = document.getElementById('scroll-btn-arrow');
-    if (!btn || !pctLabel) return;
+    if (!btn) return;
 
     const onScroll = () => {
       const scrollY = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
 
       // Toggle entrance/exit visibility with anime.js
       if (scrollY > 300) {
@@ -85,32 +82,14 @@
           });
         }
       }
-
-      // Update percentage text
-      if (docHeight > 0) {
-        const pct = Math.min(100, Math.max(0, Math.round((scrollY / docHeight) * 100)));
-        pctLabel.textContent = `${pct}%`;
-      }
     };
 
-    // Hover animation on arrow with anime.js
-    btn.addEventListener('mouseenter', () => {
-      if (arrowEl) {
-        anime({
-          targets: arrowEl,
-          translateY: [-2, 0],
-          duration: 300,
-          easing: 'easeOutBack'
-        });
-      }
-    });
-
-    // Click handler with tactile spring and smooth scroll
+    // Click handler with tactile spring and smooth scroll to top
     btn.addEventListener('click', () => {
       anime({
         targets: btn,
-        scale: [0.92, 1],
-        duration: 300,
+        scale: [0.85, 1],
+        duration: 350,
         easing: 'easeOutElastic(1, .5)'
       });
 
@@ -130,7 +109,7 @@
     }, { once: true });
   }
 
-  document.addEventListener('astro:page-load', initScrollToTopPill);
-  if (document.readyState === 'complete') initScrollToTopPill();
-  else window.addEventListener('DOMContentLoaded', initScrollToTopPill);
+  document.addEventListener('astro:page-load', initScrollToTopBtn);
+  if (document.readyState === 'complete') initScrollToTopBtn();
+  else window.addEventListener('DOMContentLoaded', initScrollToTopBtn);
 </script>
