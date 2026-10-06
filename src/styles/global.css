@@ -101,7 +101,6 @@
     will-change: transform, opacity;
   }
 
-  /* Anime.js Initial States */
   [data-reveal="ink-bloom"] [data-animate] {
     opacity: 0;
     transform: translateY(16px);

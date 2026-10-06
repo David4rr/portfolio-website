@@ -8,13 +8,10 @@ const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";
 ---
 <nav id="main-nav" class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-50 transition-colors duration-300">
-  <!-- iPhone-style Progressive Frosted Glass Blur -->
+  <!-- Progressive blur background -->
   <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-    <!-- Progressive backdrop-blur layer feathered smoothly towards bottom -->
     <div class="absolute inset-0 backdrop-blur-xl [mask-image:linear-gradient(to_bottom,black_0%,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_50%,transparent_100%)]"></div>
-    <!-- Progressive background parchment/theme tint -->
     <div class="absolute inset-0 bg-gradient-to-b from-bg/95 via-bg/75 to-transparent"></div>
-    <!-- Feathered bottom hairline border -->
     <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-border-subtle/35 to-transparent"></div>
   </div>
   <div class="flex justify-start">
@@ -22,7 +19,6 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
   </div>
   
   <div class="flex justify-center">
-    <!-- Wrap in a drop-shadow container because clip-path hides box-shadow -->
     <div class="absolute top-0 drop-shadow-md">
       <button id="theme-toggle" class="w-10 h-14 md:w-12 md:h-16 bg-bg-elevated hover:bg-bg-subtle text-text-muted hover:text-accent transition-colors flex items-end justify-center pb-2 md:pb-3 cursor-pointer" style="clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%);" aria-label="Toggle theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon w-[18px] h-[18px] md:w-[20px] md:h-[20px]">

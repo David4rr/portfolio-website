@@ -1,5 +1,4 @@
 ---
-// GithubHeatmap.astro - High-end Editorial GitHub Contribution Heatmap
 import { getRuntimeEnv } from "../lib/notion";
 import GithubActivity from "./GithubActivity.astro";
 
@@ -37,7 +36,6 @@ for (let i = 0; i < 12; i++) {
   class={`w-full max-w-4xl mx-auto px-4 py-8 relative ${className}`}
 >
   <div class="border border-border-subtle/60 bg-bg-subtle/30 rounded-2xl p-4 sm:p-6 backdrop-blur-[2px] transition-all duration-300 hover:border-border-subtle">
-    <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border-subtle/40">
       <div>
         <div class="flex items-center gap-2 font-sans uppercase tracking-[0.2em] text-[10px] text-text-muted/70 mb-1">
@@ -54,10 +52,8 @@ for (let i = 0; i < 12; i++) {
 
     </div>
 
-    <!-- Scrollable Graph Container -->
     <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0 touch-pan-x overscroll-x-contain">
       <div class="min-w-[720px] select-none">
-        <!-- Month labels -->
         <div class="grid grid-cols-53 text-[10px] font-sans text-text-muted/60 mb-2 pl-7 pointer-events-none">
           {Array.from({ length: totalWeeks }).map((_, colIdx) => {
             const header = monthHeaders.find(h => h.col === colIdx);
@@ -69,16 +65,13 @@ for (let i = 0; i < 12; i++) {
           })}
         </div>
 
-        <!-- Grid with Day labels -->
         <div class="flex gap-2 items-start">
-          <!-- Day of week indicators -->
           <div class="flex flex-col justify-between h-[95px] text-[9px] font-sans text-text-muted/50 py-[2px] select-none">
             <span class="leading-none">Mon</span>
             <span class="leading-none">Wed</span>
             <span class="leading-none">Fri</span>
           </div>
 
-          <!-- 53 columns x 7 rows -->
           <div id="gh-heatmap-grid" class="flex gap-[3px] flex-1">
             {Array.from({ length: totalWeeks }).map((_, colIdx) => (
               <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx}>
@@ -97,7 +90,6 @@ for (let i = 0; i < 12; i++) {
       </div>
     </div>
 
-    <!-- Footer: Legend -->
     <div class="flex items-center justify-end mt-4 pt-3 border-t border-border-subtle/30 text-[11px] font-sans text-text-muted/70">
       <div class="flex items-center gap-1.5">
         <span class="text-[10px] mr-1">Less</span>
@@ -110,13 +102,11 @@ for (let i = 0; i < 12; i++) {
       </div>
     </div>
 
-    <!-- Live Transmissions / Dispatches -->
     <div class="mt-4 pt-3 border-t border-border-subtle/30">
       <GithubActivity username={username} />
     </div>
   </div>
 
-  <!-- Dynamic Floating Tooltip -->
   <div
     id="gh-heatmap-tooltip"
     class="absolute pointer-events-none transition-opacity duration-150 z-[100] px-2.5 py-1 text-[11px] font-sans bg-bg-elevated text-text-main border border-border-subtle rounded-md shadow-xl -translate-x-1/2 -translate-y-full mb-2 whitespace-nowrap"
@@ -127,13 +117,11 @@ for (let i = 0; i < 12; i++) {
 </div>
 
 <style>
-  /* 53 columns CSS grid template for month labels */
   .grid-cols-53 {
     display: grid;
     grid-template-columns: repeat(53, minmax(0, 1fr));
   }
 
-  /* Heatmap cell levels */
   :global(.heatmap-cell[data-level="0"]) {
     background-color: var(--border-subtle);
     opacity: 0.25;
@@ -175,7 +163,7 @@ for (let i = 0; i < 12; i++) {
 
     const cells = Array.from(gridEl.querySelectorAll(".heatmap-cell")) as HTMLElement[];
 
-    // High-performance event delegation (2 listeners instead of 742)
+    // Delegated tooltip listeners
     gridEl.addEventListener("mouseover", (e) => {
       const target = e.target as HTMLElement | null;
       const cell = target?.closest(".heatmap-cell") as HTMLElement | null;
@@ -217,7 +205,6 @@ for (let i = 0; i < 12; i++) {
       }
     }
 
-    // Fetch live contribution data
     async function loadContributions() {
       try {
         const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
@@ -254,7 +241,5 @@ for (let i = 0; i < 12; i++) {
 
     loadContributions();
   }
-
-  // Support Astro View Transitions
   document.addEventListener("astro:page-load", initHeatmap);
 </script>

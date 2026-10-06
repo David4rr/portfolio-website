@@ -1,4 +1,4 @@
-// --- 1. IntersectionObserver for internal section reveals ---
+// Section reveal observer
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
@@ -19,10 +19,10 @@ document.addEventListener('astro:page-load', () => {
   document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
 });
 
-// --- 2. Pure GPU Parallax Card Stack (Ultra-Lightweight 120 FPS) ---
+// GPU Parallax Card Stack
 let ticking = false;
 
-// Cache section heights and offsets to avoid layout thrashing
+// Cache section metrics to avoid layout thrashing
 let sectionData = [];
 const updateSectionData = () => {
   const sections = document.querySelectorAll('[data-section]');
@@ -38,7 +38,7 @@ const updateSectionData = () => {
 const updateTearOff = () => {
   if (sectionData.length === 0) updateSectionData();
   
-  // Disable on mobile to maintain 100% native smooth touch scrolling
+  // Mobile bypass: native touch momentum scrolling
   if (window.innerWidth < 768) {
     sectionData.forEach(({ el: sec }) => {
       sec.style = '';
@@ -58,7 +58,6 @@ const updateTearOff = () => {
       sec.style.top = '0px';
     }
 
-    // Pinned stacking behind incoming section
     const myTop = topOffset - scrollY;
     let ty = 0;
     if (i > 0 && myTop > 0 && myTop <= wh) {
@@ -66,7 +65,6 @@ const updateTearOff = () => {
       ty = pinTarget - myTop;
     }
 
-    // Progress of NEXT section overlapping THIS section (0 to 1)
     let progress = 0;
     const nextData = sectionData[i + 1];
     if (nextData) {
@@ -94,7 +92,6 @@ const updateTearOff = () => {
       sec.style.transform = 'none';
       sec.style.pointerEvents = 'none';
     } else {
-      // Pure GPU Composite: subtle folio scale-down + upward parallax drift + smooth dissolve
       const scale = (1 - progress * 0.04).toFixed(4);
       const liftY = (ty - progress * (wh * 0.25)).toFixed(1);
       const opacity = Math.max(0, 1 - Math.pow(progress, 1.25)).toFixed(3);
@@ -120,16 +117,14 @@ const onScroll = () => {
 
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', () => {
-  sectionData = []; // clear cache to recalculate new layout heights
+  sectionData = [];
   requestAnimationFrame(updateTearOff);
 }, { passive: true });
 
-// Add ResizeObserver to catch height changes from lazy-loaded images or fonts
 let layoutObserver = null;
 
-// trigger on load and on Astro view transition navigation
 document.addEventListener('astro:page-load', () => {
-  sectionData = []; // clear old DOM nodes from previous page instance
+  sectionData = [];
   
   if (layoutObserver) {
     layoutObserver.disconnect();
@@ -148,7 +143,7 @@ document.addEventListener('astro:page-load', () => {
   updateTearOff();
 });
 
-// --- 3. Theme Toggle ---
+// Dynamic theme toggle
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('#theme-toggle');
   if (!btn) return;

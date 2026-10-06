@@ -116,7 +116,6 @@ const formatPoetryTitle = (title: string) => {
         <div data-animate class="h-full flex flex-col justify-center">
           <Timeline />
 
-          <!-- Activity Heatmap - Square activity boxes bridging timeline and techstack -->
           <GithubHeatmap />
 
           <TechStack />
@@ -162,25 +161,21 @@ const formatPoetryTitle = (title: string) => {
                       data-slug={project.slug}
                       data-has-image={!!project.image}
                     >
-                      <!-- Index -->
                       <div class="flex-shrink-0 w-full md:w-20 text-text-muted font-serif italic text-sm md:text-base">
                         {numeral}.
                       </div>
                       
-                      <!-- Title -->
                       <div class="flex-shrink-0 w-full md:w-[32%]">
                         <h3 class="font-serif text-[1.75rem] md:text-[2.25rem] leading-tight text-text-main group-hover:text-accent transition-colors duration-700 tracking-tight pr-4 line-clamp-2" set:html={formatPoetryTitle(project.title)}>
                         </h3>
                       </div>
                       
-                      <!-- Description -->
                       <div class="flex-1 w-full max-w-xl pr-4">
                         <p class="font-serif italic font-light text-sm md:text-[15px] leading-loose text-text-main/70 line-clamp-4">
                           "{project.description}"
                         </p>
                       </div>
                       
-                      <!-- Meta -->
                       <div class="flex-shrink-0 w-full md:w-[20%] flex flex-col gap-2 font-serif text-text-muted/80">
                         <div class="text-text-main/90 tracking-[0.2em] uppercase text-[10px]">
                           {project.type || "Digital Fragment"}
@@ -190,7 +185,6 @@ const formatPoetryTitle = (title: string) => {
                         </div>
                       </div>
                       
-                      <!-- CTA & Arrow Icon -->
                       <div class="flex w-full md:w-auto mt-4 md:mt-0 flex-shrink-0 items-center justify-end md:justify-center gap-4 md:ml-4">
                         <span class="font-serif italic text-text-main/70 md:opacity-0 md:-translate-x-4 md:group-hover:opacity-100 md:group-hover:translate-x-0 transition-all duration-500 text-sm md:text-base">
                           Explore
