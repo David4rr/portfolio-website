@@ -187,9 +187,6 @@ const hasItems = items && items.length >= 2;
   let isRailVisible = false;
   let isMobileVisible = false;
   let activeIndex = -1;
-  let isProgrammaticScroll = false;
-  let scrollUnlockTimeout: any = null;
-
   function initTocScrollIndicator() {
     // 1. Inline Toggle Button (Top Card)
     const toggleBtn = document.getElementById('toc-toggle-btn');
@@ -348,6 +345,26 @@ const hasItems = items && items.length >= 2;
         if (mobileActiveTitle) mobileActiveTitle.textContent = cleanText;
       }
     };
+    // Helper: Determine corresponding TOC heading index for ANY element
+    const findHeadingIndexForElement = (el: HTMLElement): number => {
+      const directIdx = headings.indexOf(el);
+      if (directIdx !== -1) return directIdx;
+
+      let candidateIdx = -1;
+      for (let i = 0; i < headings.length; i++) {
+        const pos = el.compareDocumentPosition(headings[i]);
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) {
+          candidateIdx = i;
+        }
+      }
+      if (candidateIdx !== -1) return candidateIdx;
+
+      const firstPos = el.compareDocumentPosition(headings[0]);
+      if (firstPos & Node.DOCUMENT_POSITION_FOLLOWING) {
+        return 0;
+      }
+      return headings.length - 1;
+    };
 
     // Smooth Scroll All Anchor Links (TOC headings, Citations [1], Footnotes) to CENTER of Viewport
     const allAnchorLinks = document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]');
@@ -362,32 +379,33 @@ const hasItems = items && items.length >= 2;
         e.preventDefault();
         closeDrawer();
 
-        // 1. If target is one of the TOC headings, instantly switch indicator
-        const targetIdx = headings.findIndex(h => h.id === targetId);
-        if (targetIdx !== -1) {
-          updateActiveIndicator(targetIdx);
-        }
+        // 1. Instantly calculate and update active indicator for this section
+        const targetIdx = findHeadingIndexForElement(target);
+        updateActiveIndicator(targetIdx);
 
-        // 2. Lock programmatic scroll so onScroll doesn't fight while animating
-        isProgrammaticScroll = true;
-        if (scrollUnlockTimeout) clearTimeout(scrollUnlockTimeout);
-        scrollUnlockTimeout = setTimeout(() => {
-          isProgrammaticScroll = false;
-        }, 1200);
-
-        // 3. Scroll element to EXACT CENTER of the screen
+        // 2. Scroll element to EXACT CENTER of the screen
         const targetRect = target.getBoundingClientRect();
         const currentScroll = window.scrollY;
         const targetCenterOffset = currentScroll + targetRect.top - (window.innerHeight / 2) + (targetRect.height / 2);
         const clampedOffset = Math.max(0, targetCenterOffset);
 
         if ((window as any).lenis) {
-          (window as any).lenis.scrollTo(clampedOffset, { duration: 1.2 });
+          (window as any).lenis.scrollTo(clampedOffset, {
+            duration: 1.2,
+            onComplete: () => {
+              onScroll();
+            }
+          });
         } else {
           window.scrollTo({ top: clampedOffset, behavior: 'smooth' });
         }
 
-        // 4. Trigger visual flash highlight on target element
+        // Safety sync after smooth scroll finishes
+        setTimeout(() => {
+          onScroll();
+        }, 1250);
+
+        // 3. Trigger visual flash highlight on target element
         target.classList.remove('anchor-highlight');
         void (target as HTMLElement).offsetWidth;
         target.classList.add('anchor-highlight');
@@ -398,7 +416,6 @@ const hasItems = items && items.length >= 2;
         history.pushState(null, '', href);
       });
     });
-
     // Scroll Handler
     const onScroll = () => {
       const scrollY = window.scrollY;
@@ -477,37 +494,40 @@ const hasItems = items && items.length >= 2;
       }
 
       // 4. Calculate Active Heading when heading reaches CENTER OF SCREEN
-      if (!isProgrammaticScroll) {
-        const centerY = window.innerHeight / 2;
-        let currentIdx = 0;
+      const centerY = window.innerHeight / 2;
+      let currentIdx = 0;
 
-        for (let i = 0; i < headings.length; i++) {
-          const rect = headings[i].getBoundingClientRect();
-          // Element has reached or passed the center of the viewport
-          if (rect.top <= centerY) {
-            currentIdx = i;
-          } else {
-            break;
-          }
+      for (let i = 0; i < headings.length; i++) {
+        const rect = headings[i].getBoundingClientRect();
+        // Element has reached or passed the center of the viewport
+        if (rect.top <= centerY) {
+          currentIdx = i;
+        } else {
+          break;
         }
-
-        // If reader scrolled to the end of the document, activate the last heading
-        if (scrollY + window.innerHeight >= docHeight - 60) {
-          currentIdx = headings.length - 1;
-        }
-
-        updateActiveIndicator(currentIdx);
       }
+
+      // If reader scrolled to the end of the document, activate the last heading
+      if (scrollY + window.innerHeight >= docHeight - 60) {
+        currentIdx = headings.length - 1;
+      }
+
+      updateActiveIndicator(currentIdx);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    if ((window as any).lenis) {
+      (window as any).lenis.on('scroll', onScroll);
+    }
     // Initial run
     onScroll();
 
     // Cleanup when navigating with Astro View Transitions
     document.addEventListener('astro:before-swap', () => {
       window.removeEventListener('scroll', onScroll);
-      if (scrollUnlockTimeout) clearTimeout(scrollUnlockTimeout);
+      if ((window as any).lenis) {
+        (window as any).lenis.off('scroll', onScroll);
+      }
       if (activeAnimInstance) activeAnimInstance.pause();
       if (railEntranceAnim) railEntranceAnim.pause();
       if (mobileEntranceAnim) mobileEntranceAnim.pause();
