@@ -43,7 +43,6 @@ const { isStandalone = false } = Astro.props;
       </div>
     </div>
     
-    <!-- Poetic Intermission 3 (Rome Architecture) - Placed in the right column -->
     <div class="w-full md:w-1/2 max-w-md mx-auto md:mx-0 pointer-events-none relative z-10 text-right md:-mr-12">
 
       <div class="w-full aspect-[4/3] relative overflow-hidden" style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);">
@@ -79,7 +78,6 @@ const { isStandalone = false } = Astro.props;
 
     let isHovered = false;
 
-    // Smooth magnetic tracking on mousemove
     newBtn.addEventListener("mousemove", async (e) => {
       isHovered = true;
       const { default: anime } = await import('animejs');
@@ -87,11 +85,9 @@ const { isStandalone = false } = Astro.props;
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       
-      // Calculate distance of cursor from the center
       const distX = e.clientX - centerX;
       const distY = e.clientY - centerY;
       
-      // Dense slime feels heavy, so it only pulls a fraction of the distance (30%)
       const pullX = distX * 0.3; 
       const pullY = distY * 0.3;
 
@@ -105,7 +101,6 @@ const { isStandalone = false } = Astro.props;
       });
     });
 
-    // Snap back elastically like dense slime releasing
     newBtn.addEventListener("mouseleave", async () => {
       isHovered = false;
       const { default: anime } = await import('animejs');
@@ -119,7 +114,6 @@ const { isStandalone = false } = Astro.props;
       });
     });
 
-    // Heavy squish on click
     newBtn.addEventListener("mousedown", async () => {
       const { default: anime } = await import('animejs');
       anime({
@@ -130,7 +124,6 @@ const { isStandalone = false } = Astro.props;
       });
     });
 
-    // Spring back up on release
     newBtn.addEventListener("mouseup", async () => {
       if (!isHovered) return;
       const { default: anime } = await import('animejs');

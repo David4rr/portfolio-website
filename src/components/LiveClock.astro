@@ -1,5 +1,4 @@
 ---
-// LiveClock.astro
 interface Props {
   location?: string;
   class?: string;
@@ -44,10 +43,7 @@ const { location = "LOCAL TIME", class: className = "" } = Astro.props;
     display._clockInterval = interval;
   }
   
-  // Initialize immediately
   initClock();
-  
-  // Also initialize on Astro view transitions if they are added later
   document.addEventListener('astro:page-load', () => {
     initClock();
   });

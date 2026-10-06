@@ -1,5 +1,4 @@
 ---
-// ponytail: minimalist base layout per PRD
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import { getRuntimeEnv } from '../lib/notion';
@@ -45,7 +44,6 @@ const ogImageUrl = image.startsWith('http://') || image.startsWith('https://')
     <meta name="description" content={description} />
     <meta name="author" content="David Arrozaqi" />
     
-    <!-- OpenGraph (Threads, WhatsApp, Facebook, LinkedIn, Discord, Telegram, Slack) -->
     <meta property="og:site_name" content="David Arrozaqi" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -58,13 +56,11 @@ const ogImageUrl = image.startsWith('http://') || image.startsWith('https://')
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={title} />
     <meta property="og:locale" content="en_US" />
-    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
     <meta name="twitter:image:alt" content={title} />
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;800&family=JetBrains+Mono&display=swap" />

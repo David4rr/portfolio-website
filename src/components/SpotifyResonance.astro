@@ -1,6 +1,4 @@
 ---
-// src/components/SpotifyResonance.astro
-// Editorial real-time Spotify telemetry widget (supports desktop & mobile alignment)
 interface Props {
   align?: "right" | "center";
   class?: string;
@@ -15,9 +13,7 @@ const isCenter = align === "center";
     isCenter ? "items-center text-center" : "items-end text-right"
   } ${className}`}
 >
-  <!-- Telemetry Header -->
   <div class={`flex items-center gap-1.5 mb-0.5 ${isCenter ? "justify-center" : "justify-end"}`}>
-    <!-- Mini Equalizer bars -->
     <div class="spotify-eq flex items-end gap-[2px] h-2.5 w-3 pb-[1px]" aria-hidden="true">
       <span class="eq-bar w-[1.5px] h-1 bg-text-muted/60 transition-all duration-300"></span>
       <span class="eq-bar w-[1.5px] h-2 bg-text-muted/60 transition-all duration-300"></span>
@@ -31,7 +27,6 @@ const isCenter = align === "center";
     </span>
   </div>
 
-  <!-- Track Info Link -->
   <a
     href="#"
     target="_blank"
@@ -54,7 +49,6 @@ const isCenter = align === "center";
       </span>
     </div>
 
-    <!-- Tiny Album Thumbnail -->
     <div
       class="spotify-art-wrap w-6 h-6 rounded border border-border-subtle overflow-hidden shrink-0 hidden bg-bg-elevated"
     >

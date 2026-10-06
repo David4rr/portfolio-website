@@ -1,4 +1,3 @@
-// src/lib/env.ts
 // Lightweight runtime environment resolver for Cloudflare Workers & Node.js
 let dotenvLoaded = false;
 

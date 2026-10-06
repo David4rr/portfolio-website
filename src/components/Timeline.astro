@@ -1,5 +1,4 @@
 ---
-// ponytail: Experience & Education Timeline
 const experiences = [
   {
     role: "Freelancer",
@@ -43,16 +42,12 @@ const education = {
       Journey & Education<span class="text-accent">.</span>
     </h2>
     
-    <!-- Education Block -->
     <div class="mb-20">
       <h3 class="font-serif text-[clamp(1.5rem,3vw,2.5rem)] text-text-main mb-8 italic border-b border-border-subtle/50 pb-4">Academic Backgrounds</h3>
       
-      <!-- Unified Styling -->
       <div class="relative pl-6 ml-2 md:pl-8 md:ml-4">
-        <!-- The Line -->
         <div class="absolute left-0 top-2 bottom-0 w-[2px] bg-border-subtle"></div>
         
-        <!-- Timeline dot -->
         <div class="absolute -left-[4px] md:-left-[4px] top-1.5 w-[10px] h-[10px] bg-bg border-2 border-accent rounded-full"></div>
         
         <div class="flex flex-col md:flex-row md:items-baseline justify-between mb-1 gap-2">
@@ -61,7 +56,6 @@ const education = {
         </div>
         <p class="font-serif text-text-muted mb-4 text-lg">{education.school} &mdash; <span class="text-text-main italic">GPA: {education.gpa}</span></p>
       
-      <!-- Elegant Achievement Design -->
       <div class="mt-6 flex items-start gap-4 opacity-90 relative">
         <div class="w-6 h-[1px] bg-accent/60 mt-[0.6rem]"></div>
         <div>
@@ -72,18 +66,15 @@ const education = {
       </div>
     </div>
 
-    <!-- Experience Timeline -->
     <div>
       <h3 class="font-serif text-[clamp(1.5rem,3vw,2.5rem)] text-text-main mb-8 italic border-b border-border-subtle/50 pb-4">Professional Experience</h3>
       
       <div class="relative pl-6 ml-2 md:pl-8 md:ml-4">
-        <!-- The Line -->
         <div class="absolute left-0 top-2 bottom-0 w-[2px] bg-border-subtle"></div>
         
         <div class="space-y-12">
           {experiences.map((exp, i) => (
             <div class="relative">
-              <!-- Timeline dot -->
               <div class="absolute -left-[28px] md:-left-[36px] top-1.5 w-[10px] h-[10px] bg-bg border-2 border-accent rounded-full transition-transform hover:scale-150"></div>
             
             <div class="flex flex-col md:flex-row md:items-baseline justify-between mb-1 gap-2">
@@ -102,20 +93,15 @@ const education = {
       </div>
     </div>
 
-    <!-- Resume Download Button -->
     <div class="mt-12 flex justify-center relative">
-      <!-- The poetic connector line bridging the timeline to the button -->
       <div class="absolute left-[8px] md:left-[16px] top-[-3rem] bottom-[50%] right-[50%] border-l-2 border-b-2 border-border-subtle rounded-bl-[48px] pointer-events-none"></div>
 
-      <!-- The Download Component -->
       <button id="resume-download-btn" class="group relative z-10 bg-bg flex items-center justify-center text-text-main font-sans uppercase tracking-[0.2em] text-[10px] h-[48px] w-[260px] rounded-full overflow-hidden hover:text-accent active:scale-95 transition-transform duration-300 cursor-pointer">
         
-        <!-- Base border (replaces CSS border to prevent clipping) -->
         <svg class="base-border absolute inset-0 w-full h-full pointer-events-none text-border-subtle group-hover:text-accent transition-colors duration-300">
           <path d="M 1 24 A 23 23 0 0 1 24 1 L 236 1 A 23 23 0 0 1 259 24 A 23 23 0 0 1 236 47 L 24 47 A 23 23 0 0 1 1 24 Z" fill="none" stroke="currentColor" stroke-width="2" />
         </svg>
 
-        <!-- Button Area (Initial State) -->
         <div class="btn-area absolute inset-0 flex items-center justify-center gap-3 transition-colors duration-300">
           <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
             <span class="absolute inset-0 bg-border-subtle rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0"></span>
@@ -128,7 +114,6 @@ const education = {
           <span>Download Full Résumé</span>
         </div>
 
-        <!-- Progress Area (Loading State) -->
         <div class="progress-area absolute inset-0 hidden items-center justify-center gap-4 pointer-events-none">
           <div class="area-left flex items-center gap-2 text-accent">
              <svg class="w-4 h-4 loading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -138,7 +123,6 @@ const education = {
           </div>
         </div>
 
-        <!-- Complete Area (Done State) -->
         <div class="complete-area absolute inset-0 hidden items-center justify-center gap-2 text-accent pointer-events-none">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <path class="tick-1" d="M20 6L9 17" stroke-dasharray="52" stroke-dashoffset="52"/>
@@ -147,7 +131,6 @@ const education = {
           <span class="done-text font-bold text-text-main">Downloaded</span>
         </div>
         
-        <!-- Frame path for stroke animation starting from left-center -->
         <svg class="absolute inset-0 w-full h-full pointer-events-none text-accent">
           <path class="frame-btn-rect" d="M 1 24 A 23 23 0 0 1 24 1 L 236 1 A 23 23 0 0 1 259 24 A 23 23 0 0 1 236 47 L 24 47 A 23 23 0 0 1 1 24 Z" fill="none" stroke="currentColor" stroke-width="2" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" />
         </svg>
@@ -174,7 +157,7 @@ const education = {
     let isLoading = false;
     let loadingTime = 2500;
     let progress = { value: '0%' };
-    let animeInstance: any = null; // Store it here!
+    let animeInstance: any = null;
     
     btn.addEventListener('click', async () => {
       if (isLoading) return;
@@ -304,7 +287,6 @@ const education = {
         }
       });
       
-      // Optional: reset after some time
       setTimeout(() => {
         isLoading = false;
         if (baseBorder) (baseBorder as HTMLElement).style.opacity = '1';

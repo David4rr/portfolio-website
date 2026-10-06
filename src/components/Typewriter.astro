@@ -1,5 +1,4 @@
 ---
-// Typewriter.astro
 ---
 
 <span id="typewriter-text">Software Engineer</span>
@@ -12,13 +11,11 @@
     "Creative Technologist"
   ];
   
-  // Astro view transitions setup
   document.addEventListener('astro:page-load', () => {
     const textEl = document.getElementById('typewriter-text');
     const cursorEl = document.getElementById('typewriter-cursor');
     if (!textEl || !cursorEl) return;
     
-    // reset state
     let roleIndex = 0;
     let charIndex = roles[0].length;
     let isDeleting = false;

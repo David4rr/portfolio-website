@@ -40,7 +40,6 @@ notionProjects.forEach((p) => {
   image="/og-image.png"
 >
   <main class="w-screen h-[100dvh] overflow-hidden bg-bg relative">
-    <!-- UI Overlay -->
     <div class="absolute top-8 left-8 z-50 pointer-events-auto">
       <a
         id="back-btn"
@@ -56,8 +55,6 @@ notionProjects.forEach((p) => {
         </span>
       </a>
     </div>
-
-    <!-- The Infinite Canvas Island -->
     <InfiniteCanvas projects={allProjects} client:only="preact" />
   </main>
 </BaseLayout>
