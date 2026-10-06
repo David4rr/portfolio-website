@@ -20,7 +20,7 @@ const hasItems = items && items.length >= 2;
     {/* 1. Inline Editorial Overview at top of article */}
     <nav 
       id="toc-inline-container" 
-      class="my-10 md:my-12 p-5 md:p-6 rounded-sm bg-bg-subtle/50 border border-border-subtle/50 transition-colors duration-300 select-none" 
+      class="my-10 md:my-12 p-5 md:p-6 rounded-md bg-bg/50 backdrop-blur-xl border border-border-subtle/50 transition-colors duration-300 select-none shadow-sm" 
       aria-label="Table of contents overview"
     >
       <div class="flex items-center justify-between gap-4 border-b border-border-subtle/40 pb-3 mb-4">
@@ -71,10 +71,10 @@ const hasItems = items && items.length >= 2;
       </ol>
     </nav>
 
-    {/* 2. Desktop Floating Anime.js Scroll Indicator Rail (Visible when scrolled) */}
+    {/* 2. Desktop Floating Anime.js Scroll Indicator Rail (Frosted Glass Console) */}
     <aside
       id="toc-floating-rail"
-      class="fixed left-4 xl:left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col select-none pointer-events-auto opacity-0 -translate-x-8 transition-opacity duration-300"
+      class="fixed left-4 xl:left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col select-none pointer-events-auto opacity-0 -translate-x-8 p-3.5 pr-4 rounded-2xl bg-bg/60 backdrop-blur-xl border border-border-subtle/50 shadow-2xl shadow-black/10 transition-opacity duration-300"
       aria-label="Reading section indicator"
     >
       <!-- Rail Header & Progress Counter -->
@@ -123,7 +123,7 @@ const hasItems = items && items.length >= 2;
       </div>
     </aside>
 
-    {/* 3. Mobile / Tablet Floating Pill Indicator */}
+    {/* 3. Mobile / Tablet Floating Pill Indicator (Frosted Glass) */}
     <div 
       id="toc-mobile-pill" 
       class="fixed bottom-6 left-6 z-40 lg:hidden opacity-0 translate-y-6 pointer-events-none transition-all duration-300"
@@ -131,7 +131,7 @@ const hasItems = items && items.length >= 2;
       <button
         id="toc-mobile-toggle-btn"
         type="button"
-        class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-bg-elevated/95 backdrop-blur-md border border-border-subtle/80 shadow-xl shadow-black/20 text-xs text-text-main hover:border-accent active:scale-95 transition-all duration-200"
+        class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-bg/75 backdrop-blur-xl border border-border-subtle/70 shadow-xl shadow-black/20 text-xs text-text-main hover:border-accent active:scale-95 transition-all duration-200"
         aria-label="Table of contents menu"
       >
         <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0"></span>
@@ -143,10 +143,10 @@ const hasItems = items && items.length >= 2;
       </button>
     </div>
 
-    {/* Mobile Popover Drawer */}
+    {/* Mobile Popover Drawer (Frosted Glass) */}
     <div 
       id="toc-mobile-drawer" 
-      class="fixed inset-x-4 bottom-20 z-40 lg:hidden hidden bg-bg-elevated/95 backdrop-blur-xl border border-border-subtle/80 rounded-lg p-5 shadow-2xl shadow-black/40 max-h-[60vh] overflow-y-auto"
+      class="fixed inset-x-4 bottom-20 z-40 lg:hidden hidden bg-bg/85 backdrop-blur-2xl border border-border-subtle/80 rounded-lg p-5 shadow-2xl shadow-black/40 max-h-[60vh] overflow-y-auto"
     >
       <div class="flex items-center justify-between pb-3 mb-3 border-b border-border-subtle/40">
         <div class="flex items-center gap-2">
@@ -187,6 +187,8 @@ const hasItems = items && items.length >= 2;
   let isRailVisible = false;
   let isMobileVisible = false;
   let activeIndex = -1;
+  let isProgrammaticScroll = false;
+  let scrollUnlockTimeout: any = null;
 
   function initTocScrollIndicator() {
     // 1. Inline Toggle Button (Top Card)
@@ -283,31 +285,9 @@ const hasItems = items && items.length >= 2;
       mobileCloseBtn.addEventListener('click', closeDrawer);
     }
 
-    // Smooth Scroll Links
-    const jumpLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-jump-link');
-    jumpLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        const href = link.getAttribute('href');
-        if (!href || !href.startsWith('#')) return;
-        const targetId = href.slice(1);
-        const target = document.getElementById(targetId);
-        if (target) {
-          e.preventDefault();
-          closeDrawer();
-
-          if ((window as any).lenis) {
-            (window as any).lenis.scrollTo(target, { offset: -90, duration: 1.2 });
-          } else {
-            target.scrollIntoView({ behavior: 'smooth' });
-          }
-          history.pushState(null, '', href);
-        }
-      });
-    });
-
     // Animate Indicator to Node Index using anime.js
     const updateActiveIndicator = (newIndex: number) => {
-      if (newIndex === activeIndex) return;
+      if (newIndex === activeIndex || newIndex < 0 || newIndex >= headings.length) return;
       activeIndex = newIndex;
 
       // Update Desktop Rail Nodes
@@ -368,6 +348,47 @@ const hasItems = items && items.length >= 2;
         if (mobileActiveTitle) mobileActiveTitle.textContent = cleanText;
       }
     };
+
+    // Smooth Scroll Links - Center Heading in Viewport & Instant Indicator Switch
+    const jumpLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-jump-link');
+    jumpLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (!href || !href.startsWith('#')) return;
+        const targetId = href.slice(1);
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        e.preventDefault();
+        closeDrawer();
+
+        // 1. Instantly switch indicator to target heading index
+        const targetIdx = headings.findIndex(h => h.id === targetId);
+        if (targetIdx !== -1) {
+          updateActiveIndicator(targetIdx);
+        }
+
+        // 2. Lock programmatic scroll so onScroll doesn't fight while animating
+        isProgrammaticScroll = true;
+        if (scrollUnlockTimeout) clearTimeout(scrollUnlockTimeout);
+        scrollUnlockTimeout = setTimeout(() => {
+          isProgrammaticScroll = false;
+        }, 1200);
+
+        // 3. Scroll heading to EXACT CENTER of the screen
+        const targetRect = target.getBoundingClientRect();
+        const currentScroll = window.scrollY;
+        const targetCenterOffset = currentScroll + targetRect.top - (window.innerHeight / 2) + (targetRect.height / 2);
+        const clampedOffset = Math.max(0, targetCenterOffset);
+
+        if ((window as any).lenis) {
+          (window as any).lenis.scrollTo(clampedOffset, { duration: 1.2 });
+        } else {
+          window.scrollTo({ top: clampedOffset, behavior: 'smooth' });
+        }
+        history.pushState(null, '', href);
+      });
+    });
 
     // Scroll Handler
     const onScroll = () => {
@@ -446,17 +467,28 @@ const hasItems = items && items.length >= 2;
         progressText.textContent = `${pct}%`;
       }
 
-      // 4. Calculate Active Heading
-      const scrollPosition = scrollY + 160;
-      let currentIdx = 0;
-      for (let i = 0; i < headings.length; i++) {
-        if (headings[i].offsetTop <= scrollPosition) {
-          currentIdx = i;
-        } else {
-          break;
+      // 4. Calculate Active Heading when heading reaches CENTER OF SCREEN
+      if (!isProgrammaticScroll) {
+        const centerY = window.innerHeight / 2;
+        let currentIdx = 0;
+
+        for (let i = 0; i < headings.length; i++) {
+          const rect = headings[i].getBoundingClientRect();
+          // Element has reached or passed the center of the viewport
+          if (rect.top <= centerY) {
+            currentIdx = i;
+          } else {
+            break;
+          }
         }
+
+        // If reader scrolled to the end of the document, activate the last heading
+        if (scrollY + window.innerHeight >= docHeight - 60) {
+          currentIdx = headings.length - 1;
+        }
+
+        updateActiveIndicator(currentIdx);
       }
-      updateActiveIndicator(currentIdx);
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -466,6 +498,7 @@ const hasItems = items && items.length >= 2;
     // Cleanup when navigating with Astro View Transitions
     document.addEventListener('astro:before-swap', () => {
       window.removeEventListener('scroll', onScroll);
+      if (scrollUnlockTimeout) clearTimeout(scrollUnlockTimeout);
       if (activeAnimInstance) activeAnimInstance.pause();
       if (railEntranceAnim) railEntranceAnim.pause();
       if (mobileEntranceAnim) mobileEntranceAnim.pause();
