@@ -1,55 +1,119 @@
 ---
-// Frosted Glass Floating Action Button with Continuous Arrow Animation
+// Frosted Glass Floating Action Button with Studio-Grade Anime.js Kinetic Arrow Animation
 ---
 
 <button
   id="scroll-to-top-btn"
   type="button"
   aria-label="Scroll to top of page"
-  class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-bg/75 backdrop-blur-xl border border-border-subtle/60 text-accent hover:border-accent hover:shadow-accent/10 shadow-xl shadow-black/15 cursor-pointer opacity-0 pointer-events-none translate-y-4 active:scale-90 transition-all duration-300 group select-none"
+  class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-bg/75 backdrop-blur-xl border border-border-subtle/60 text-accent hover:border-accent hover:shadow-lg hover:shadow-accent/15 cursor-pointer opacity-0 pointer-events-none translate-y-4 active:scale-90 transition-colors duration-300 group select-none"
 >
-  <!-- Micro Arrow with Continuous Loop Animation -->
-  <span id="scroll-btn-arrow" class="inline-flex items-center justify-center text-accent animate-arrow-float">
-    <svg 
-      class="w-4 h-4 md:w-[18px] md:h-[18px] transition-transform duration-200 group-hover:scale-110" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      stroke-width="2.5" 
-      stroke-linecap="round" 
-      stroke-linejoin="round"
+  <!-- Overflow Mask for Kinetic Teleporting Arrow -->
+  <div class="relative w-5 h-5 md:w-6 md:h-6 flex items-center justify-center overflow-hidden pointer-events-none">
+    <span 
+      id="scroll-btn-arrow" 
+      class="inline-flex items-center justify-center text-accent origin-center will-change-transform"
     >
-      <line x1="12" y1="19" x2="12" y2="5"></line>
-      <polyline points="5 12 12 5 19 12"></polyline>
-    </svg>
-  </span>
+      <svg 
+        class="w-4 h-4 md:w-5 md:h-5" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+      >
+        <line x1="12" y1="19" x2="12" y2="5"></line>
+        <polyline points="5 12 12 5 19 12"></polyline>
+      </svg>
+    </span>
+  </div>
 </button>
-
-<style>
-  @keyframes scrollArrowFloat {
-    0%, 100% {
-      transform: translateY(2.5px);
-    }
-    50% {
-      transform: translateY(-3.5px);
-    }
-  }
-
-  .animate-arrow-float {
-    animation: scrollArrowFloat 1.6s ease-in-out infinite;
-    will-change: transform;
-  }
-</style>
 
 <script>
   import anime from 'animejs';
 
   let entranceAnim: any = null;
+  let arrowLoopTimeline: any = null;
   let isBtnVisible = false;
 
   function initScrollToTopBtn() {
     const btn = document.getElementById('scroll-to-top-btn');
-    if (!btn) return;
+    const arrow = document.getElementById('scroll-btn-arrow');
+    if (!btn || !arrow) return;
+
+    // High-End Kinetic Arrow Sequence with anime.js
+    const createArrowTimeline = () => {
+      if (arrowLoopTimeline) arrowLoopTimeline.pause();
+
+      arrowLoopTimeline = anime.timeline({
+        loop: true,
+        autoplay: false,
+      });
+
+      arrowLoopTimeline
+        // 1. Organic Breathing Float (Up and Down)
+        .add({
+          targets: arrow,
+          translateY: [0, -3],
+          duration: 900,
+          easing: 'easeInOutQuad',
+        })
+        .add({
+          targets: arrow,
+          translateY: [-3, 2],
+          duration: 800,
+          easing: 'easeInOutQuad',
+        })
+        // 2. Anticipation: Micro compression before the leap
+        .add({
+          targets: arrow,
+          translateY: 4,
+          scaleY: 0.82,
+          scaleX: 1.18,
+          duration: 220,
+          easing: 'easeInCubic',
+        })
+        // 3. Rocket Launch: Shoots straight up out of the button
+        .add({
+          targets: arrow,
+          translateY: -26,
+          scaleY: 1.35,
+          scaleX: 0.85,
+          opacity: [1, 0],
+          duration: 260,
+          easing: 'easeInExpo',
+        })
+        // 4. Instant teleport to bottom of mask
+        .add({
+          targets: arrow,
+          translateY: 26,
+          scaleY: 1.25,
+          scaleX: 0.85,
+          opacity: 0,
+          duration: 10,
+          easing: 'linear',
+        })
+        // 5. Elastic Re-entry: Snaps in from bottom with juicy bounce
+        .add({
+          targets: arrow,
+          translateY: [26, 0],
+          scaleY: [1.25, 1],
+          scaleX: [0.85, 1],
+          opacity: [0, 1],
+          duration: 750,
+          easing: 'easeOutElastic(1, .45)',
+        })
+        // 6. Rest hold before next cycle
+        .add({
+          targets: arrow,
+          translateY: 0,
+          duration: 700,
+          easing: 'linear',
+        });
+    };
+
+    createArrowTimeline();
 
     const onScroll = () => {
       const scrollY = window.scrollY;
@@ -59,6 +123,7 @@
         if (!isBtnVisible) {
           isBtnVisible = true;
           btn.classList.remove('pointer-events-none');
+          if (arrowLoopTimeline) arrowLoopTimeline.play();
           if (entranceAnim) entranceAnim.pause();
           entranceAnim = anime({
             targets: btn,
@@ -72,6 +137,7 @@
         if (isBtnVisible) {
           isBtnVisible = false;
           btn.classList.add('pointer-events-none');
+          if (arrowLoopTimeline) arrowLoopTimeline.pause();
           if (entranceAnim) entranceAnim.pause();
           entranceAnim = anime({
             targets: btn,
@@ -84,13 +150,45 @@
       }
     };
 
-    // Click handler with tactile spring and smooth scroll to top
+    // Hover: accelerate into energetic cycle
+    btn.addEventListener('mouseenter', () => {
+      if (arrowLoopTimeline) {
+        arrowLoopTimeline.restart();
+      }
+    });
+
+    // Click handler with blast-off rocket launch & smooth scroll
     btn.addEventListener('click', () => {
+      // Tactile button bounce
       anime({
         targets: btn,
         scale: [0.85, 1],
         duration: 350,
         easing: 'easeOutElastic(1, .5)'
+      });
+
+      // Arrow rocket blast-off
+      if (arrowLoopTimeline) arrowLoopTimeline.pause();
+      anime({
+        targets: arrow,
+        translateY: [0, -32],
+        scaleY: [1, 1.5],
+        opacity: [1, 0],
+        duration: 250,
+        easing: 'easeInExpo',
+        complete: () => {
+          anime({
+            targets: arrow,
+            translateY: [32, 0],
+            scaleY: [1.3, 1],
+            opacity: [0, 1],
+            duration: 600,
+            easing: 'easeOutElastic(1, .45)',
+            complete: () => {
+              if (arrowLoopTimeline) arrowLoopTimeline.play();
+            }
+          });
+        }
       });
 
       if ((window as any).lenis) {
@@ -106,6 +204,10 @@
     document.addEventListener('astro:before-swap', () => {
       window.removeEventListener('scroll', onScroll);
       if (entranceAnim) entranceAnim.pause();
+      if (arrowLoopTimeline) {
+        arrowLoopTimeline.pause();
+        arrowLoopTimeline = null;
+      }
     }, { once: true });
   }
 
