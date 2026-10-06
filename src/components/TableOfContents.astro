@@ -20,7 +20,7 @@ const hasItems = items && items.length >= 2;
     {/* 1. Inline Editorial Overview at top of article */}
     <nav 
       id="toc-inline-container" 
-      class="my-10 md:my-12 p-5 md:p-6 rounded-md bg-bg/50 backdrop-blur-xl border border-border-subtle/50 transition-colors duration-300 select-none shadow-sm" 
+      class="my-10 md:my-12 p-5 md:p-6 rounded-sm bg-bg-subtle/50 border border-border-subtle/50 transition-colors duration-300 select-none" 
       aria-label="Table of contents overview"
     >
       <div class="flex items-center justify-between gap-4 border-b border-border-subtle/40 pb-3 mb-4">
@@ -71,10 +71,10 @@ const hasItems = items && items.length >= 2;
       </ol>
     </nav>
 
-    {/* 2. Desktop Floating Anime.js Scroll Indicator Rail (Frosted Glass Console) */}
+    {/* 2. Desktop Floating Anime.js Scroll Indicator Rail (Clean Frameless Floating Rail) */}
     <aside
       id="toc-floating-rail"
-      class="fixed left-4 xl:left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col select-none pointer-events-auto opacity-0 -translate-x-8 p-3.5 pr-4 rounded-2xl bg-bg/60 backdrop-blur-xl border border-border-subtle/50 shadow-2xl shadow-black/10 transition-opacity duration-300"
+      class="fixed left-4 xl:left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col select-none pointer-events-auto opacity-0 -translate-x-8 transition-opacity duration-300"
       aria-label="Reading section indicator"
     >
       <!-- Rail Header & Progress Counter -->
