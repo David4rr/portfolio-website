@@ -1,4 +1,5 @@
 ---
+import TextLuminance from "./TextLuminance.astro";
 const experiences = [
   {
     role: "Freelancer",
@@ -38,10 +39,15 @@ const education = {
 <section id="timeline" class="pt-[clamp(4rem,8vw,8rem)] pb-8 relative border-t border-border-subtle/50 mt-12">
   <div class="max-w-4xl mx-auto w-full">
     
-    <h2 class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight">
-      Journey & Education<span class="text-accent">.</span>
-    </h2>
-    
+    <div class="overflow-hidden mb-12 text-center">
+      <h2
+        data-word
+        class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main font-normal tracking-tight"
+      >
+        Journey & Education<span class="text-accent">.</span>
+      </h2>
+    </div>
+
     <div class="mb-20">
       <h3 class="font-serif text-[clamp(1.5rem,3vw,2.5rem)] text-text-main mb-8 italic border-b border-border-subtle/50 pb-4">Academic Backgrounds</h3>
       
@@ -60,7 +66,13 @@ const education = {
         <div class="w-6 h-[1px] bg-accent/60 mt-[0.6rem]"></div>
         <div>
           <p class="font-sans text-[9px] uppercase tracking-[0.25em] text-accent/80 mb-1">Notable Achievement</p>
-          <p class="font-serif text-[1rem] text-text-main italic leading-relaxed max-w-xl">{education.achievement}</p>
+          <TextLuminance
+            text={education.achievement}
+            class="font-serif text-[1rem] text-text-main italic leading-relaxed max-w-xl"
+            start={0.88}
+            end={0.55}
+            initialOpacity={0.25}
+          />
         </div>
       </div>
       </div>
@@ -86,7 +98,13 @@ const education = {
             </div>
             
             {exp.company && <p class="font-serif text-accent italic mb-4 text-[0.95rem]">{exp.company}</p>}
-            <p class="font-serif text-text-muted text-[0.95rem] leading-[1.7] max-w-2xl">{exp.description}</p>
+            <TextLuminance
+              text={exp.description}
+              class="font-serif text-text-muted text-[0.95rem] leading-[1.7] max-w-2xl"
+              start={0.88}
+              end={0.55}
+              initialOpacity={0.25}
+            />
           </div>
         ))}
         </div>

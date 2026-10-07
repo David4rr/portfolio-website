@@ -1,0 +1,206 @@
+---
+interface Props {
+  text: string;
+  accentWords?: string[];
+  italicWords?: string[];
+  class?: string;
+  tag?: 'p' | 'h2' | 'h3' | 'blockquote' | 'div';
+  start?: string | number; // e.g. "top 85%", "85%", or 0.85
+  end?: string | number;   // e.g. "bottom 45%", "45%", or 0.45
+  initialOpacity?: number;
+  id?: string;
+}
+
+const {
+  text,
+  accentWords = [],
+  italicWords = [],
+  class: className = "font-serif text-[clamp(1.5rem,3.2vw,2.75rem)] leading-[1.5] text-text-main tracking-tight",
+  tag: Tag = 'p',
+  start = 0.85,
+  end = 0.45,
+  initialOpacity = 0.15,
+  id,
+} = Astro.props;
+
+const cleanWord = (w: string) => w.replace(/[.,/#!$%^&*;:{}=\-_`~()?"'’“”—]/g, "").toLowerCase();
+const accentSet = new Set(accentWords.map(cleanWord));
+const italicSet = new Set(italicWords.map(cleanWord));
+
+const rawWords = text.trim().split(/\s+/);
+const uniqueId = id || `luminance-${Math.random().toString(36).substring(2, 9)}`;
+---
+
+<div
+  id={uniqueId}
+  data-luminance-container
+  data-start={String(start)}
+  data-end={String(end)}
+  data-initial-opacity={initialOpacity}
+  class={`relative ${className}`}
+  aria-label={text}
+>
+  <!-- Screen-reader accessible full text for SEO & WCAG -->
+  <span class="sr-only">{text}</span>
+
+  <!-- Visual fragmented words for GPU opacity scrub -->
+  <Tag aria-hidden="true" class="inline">
+    {rawWords.map((word) => {
+      const cleaned = cleanWord(word);
+      const isAccent = accentSet.has(cleaned);
+      const isItalic = italicSet.has(cleaned);
+
+      return (
+        <span
+          data-luminance-word
+          data-accent={isAccent ? "true" : undefined}
+          class:list={[
+            "luminance-word inline-block mr-[0.28em] will-change-[opacity]",
+            isAccent ? "text-accent font-medium" : "",
+            isItalic ? "italic font-light" : "",
+          ]}
+          style={`opacity: ${initialOpacity};`}
+        >
+          {word}
+        </span>
+      );
+    })}
+  </Tag>
+</div>
+
+<script>
+  const parseRatio = (val: string | undefined, fallback: number): number => {
+    if (!val) return fallback;
+    const match = val.match(/(\d+(?:\.\d+)?)/);
+    if (!match) return fallback;
+    const num = parseFloat(match[1]);
+    if (isNaN(num)) return fallback;
+    return num > 1 ? num / 100 : num;
+  };
+
+  const setupLuminance = () => {
+    const containerEls = document.querySelectorAll<HTMLElement>('[data-luminance-container]');
+    if (!containerEls.length) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const items = Array.from(containerEls).map((container) => {
+      const words = Array.from(container.querySelectorAll<HTMLElement>('[data-luminance-word]'));
+      if (prefersReducedMotion) {
+        words.forEach((w) => {
+          w.style.opacity = '1';
+        });
+      }
+      const startRatio = parseRatio(container.dataset.start, 0.85);
+      const endRatio = parseRatio(container.dataset.end, 0.45);
+      const initialOpacity = parseFloat(container.dataset.initialOpacity || '0.15');
+      const totalWords = words.length;
+      const fadeSpan = 1 / Math.max(1, totalWords * 0.7);
+
+      return {
+        container,
+        words,
+        startRatio,
+        endRatio,
+        initialOpacity,
+        totalWords,
+        fadeSpan,
+        lastProgress: -1,
+      };
+    });
+
+    if (prefersReducedMotion) return;
+
+    const updateAll = () => {
+      const vh = window.innerHeight;
+
+      for (let j = 0; j < items.length; j++) {
+        const item = items[j];
+        const rect = item.container.getBoundingClientRect();
+
+        // Viewport culling: skip off-screen text
+        if (rect.bottom < -100 || rect.top > vh + 100) continue;
+
+        const startY = vh * item.startRatio;
+        const endY = vh * item.endRatio;
+        const rawProgress = (startY - rect.top) / Math.max(1, startY - endY);
+        const progress = Math.max(0, Math.min(1, rawProgress));
+
+        if (Math.abs(progress - item.lastProgress) < 0.002) continue;
+        item.lastProgress = progress;
+
+        const { words, totalWords, fadeSpan, initialOpacity } = item;
+        for (let i = 0; i < totalWords; i++) {
+          const wordThreshold = (i / totalWords) * (1 - fadeSpan);
+          let wordProgress = 0;
+
+          if (progress <= wordThreshold) {
+            wordProgress = 0;
+          } else if (progress >= wordThreshold + fadeSpan) {
+            wordProgress = 1;
+          } else {
+            wordProgress = (progress - wordThreshold) / fadeSpan;
+          }
+
+          const targetOpacity = (initialOpacity + (1 - initialOpacity) * wordProgress).toFixed(3);
+          const currentWord = words[i];
+          if (currentWord.style.opacity !== targetOpacity) {
+            currentWord.style.opacity = targetOpacity;
+          }
+        }
+      }
+    };
+
+    let lenisBound = false;
+    const tryAttachLenis = () => {
+      const lenis = (window as any).lenis;
+      if (lenis && typeof lenis.on === 'function' && !lenisBound) {
+        lenis.on('scroll', updateAll);
+        lenisBound = true;
+      }
+    };
+
+    tryAttachLenis();
+
+    const onScrollTick = () => {
+      if (!lenisBound) tryAttachLenis();
+      updateAll();
+    };
+
+    window.addEventListener('scroll', onScrollTick, { passive: true });
+    window.addEventListener('resize', onScrollTick, { passive: true });
+    updateAll();
+
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        window.removeEventListener('scroll', onScrollTick);
+        window.removeEventListener('resize', onScrollTick);
+        const lenis = (window as any).lenis;
+        if (lenis && typeof lenis.off === 'function' && lenisBound) {
+          lenis.off('scroll', updateAll);
+          lenisBound = false;
+        }
+      },
+      { once: true }
+    );
+  };
+
+  document.addEventListener('astro:page-load', setupLuminance);
+
+  if (document.readyState === 'complete') {
+    setupLuminance();
+  } else {
+    window.addEventListener('DOMContentLoaded', setupLuminance);
+  }
+</script>
+
+<style>
+  [data-luminance-container] {
+    contain: layout style;
+  }
+  .luminance-word {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+</style>

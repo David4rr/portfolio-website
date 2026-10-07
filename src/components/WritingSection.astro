@@ -20,11 +20,14 @@ const formatPoetryTitle = (title: string) => {
 
 <div class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100svh-3rem)]">
   <div>
-    <h2
-      class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main mb-16 text-center font-normal tracking-tight"
-    >
-      Selected Writings<span class="text-accent">.</span>
-    </h2>
+    <div class="overflow-hidden mb-16 text-center">
+      <h2
+        data-word
+        class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main font-normal tracking-tight"
+      >
+        Selected Writings<span class="text-accent">.</span>
+      </h2>
+    </div>
 
     <div class="flex flex-col border-t border-border-subtle/50" id="writing-list-container">
       {displayPosts.map((post, i) => {
@@ -44,6 +47,7 @@ const formatPoetryTitle = (title: string) => {
 
         return (
           <a
+            data-card
             href={`/writing/${post.slug}`}
             class="project-bento-card cursor-pointer group relative flex flex-col md:flex-row md:items-center gap-6 md:gap-8 py-6 md:py-10 px-2 md:px-6 border-b border-border-subtle/50 hover:bg-border-subtle/5 transition-all duration-700"
             data-slug={post.slug}

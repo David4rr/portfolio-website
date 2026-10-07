@@ -13,187 +13,21 @@ const observer = new IntersectionObserver((entries) => {
     
     observer.unobserve(el);
   });
-}, { threshold: 0.1 });
+}, { threshold: 0.02, rootMargin: '0px 0px -40px 0px' });
 
-document.addEventListener('astro:page-load', () => {
+const initRevealObserver = () => {
   document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
-});
-
-// GPU Parallax Card Stack
-let sectionData = [];
-let hasSections = false;
-let isMobile = false;
-
-const resetSectionStyles = (sections) => {
-  sections.forEach(sec => {
-    sec.style.clipPath = '';
-    sec.style.filter = '';
-    sec.style.transform = '';
-    sec.style.opacity = '';
-    sec.style.pointerEvents = '';
-    sec.style.top = '';
-  });
 };
 
-const updateSectionData = () => {
-  isMobile = window.innerWidth < 768;
-  const sections = document.querySelectorAll('[data-section]');
-  
-  if (sections.length === 0) {
-    hasSections = false;
-    sectionData = [];
-    return;
-  }
-
-  if (isMobile) {
-    hasSections = false;
-    sectionData = [];
-    resetSectionStyles(sections);
-    return;
-  }
-
-  hasSections = true;
-  let currentTop = 0;
-  const wh = window.innerHeight;
-  sectionData = Array.from(sections).map(sec => {
-    const height = sec.offsetHeight;
-    if (height > wh) {
-      sec.style.top = `${wh - height}px`;
-    } else {
-      sec.style.top = '0px';
-    }
-    const data = {
-      el: sec,
-      height,
-      topOffset: currentTop,
-      lastTransform: '',
-      lastOpacity: '',
-      lastPointerEvents: '',
-    };
-    currentTop += height;
-    return data;
-  });
-};
-
-const updateTearOff = (e) => {
-  if (!hasSections || isMobile || sectionData.length === 0) return;
-
-  const wh = window.innerHeight;
-  const scrollY = (e && typeof e.scroll === 'number')
-    ? e.scroll
-    : (window.lenis && typeof window.lenis.scroll === 'number'
-      ? window.lenis.scroll
-      : window.scrollY);
-  sectionData.forEach((data, i) => {
-    const { el: sec, height: h, topOffset } = data;
-
-    const myTop = topOffset - scrollY;
-    let ty = 0;
-    if (i > 0 && myTop > 0 && myTop <= wh) {
-      const pinTarget = h < wh ? wh - h : 0;
-      ty = pinTarget - myTop;
-    }
-
-    let progress = 0;
-    const nextData = sectionData[i + 1];
-    if (nextData) {
-      const nextTop = nextData.topOffset - scrollY;
-      const hNext = nextData.height;
-      const maxScroll = Math.max(0, wh - hNext);
-      
-      if (nextTop <= maxScroll) {
-        progress = 1;
-      } else if (nextTop < wh) {
-        progress = 1 - ((nextTop - maxScroll) / (wh - maxScroll));
-      }
-    }
-
-    let transform = 'none';
-    let opacity = '1';
-    let pointerEvents = '';
-
-    if (progress <= 0) {
-      transform = ty !== 0 ? `translate3d(0, ${ty.toFixed(2)}px, 0)` : 'none';
-      opacity = '1';
-      pointerEvents = '';
-    } else if (progress >= 1) {
-      transform = 'none';
-      opacity = '0';
-      pointerEvents = 'none';
-    } else {
-      const liftProgress = Math.pow(progress, 1.35);
-      const liftY = (ty - liftProgress * (wh * 0.32)).toFixed(2);
-      const scale = (1 - progress * 0.05).toFixed(4);
-      opacity = Math.max(0, 1 - Math.pow(Math.min(1, progress * 1.04), 1.25)).toFixed(3);
-      transform = `translate3d(0, ${liftY}px, 0) scale(${scale})`;
-      pointerEvents = progress > 0.6 ? 'none' : '';
-    }
-
-    if (data.lastTransform !== transform) {
-      sec.style.transform = transform;
-      data.lastTransform = transform;
-    }
-    if (data.lastOpacity !== opacity) {
-      sec.style.opacity = opacity;
-      data.lastOpacity = opacity;
-    }
-    if (data.lastPointerEvents !== pointerEvents) {
-      sec.style.pointerEvents = pointerEvents;
-      data.lastPointerEvents = pointerEvents;
-    }
-  });
-};
-
-let lenisBound = false;
-const attachLenis = () => {
-  if (window.lenis && typeof window.lenis.on === 'function' && !lenisBound) {
-    window.lenis.on('scroll', updateTearOff);
-    lenisBound = true;
-  }
-};
-
-const onScroll = () => {
-  if (!hasSections || isMobile) return;
-  if (!lenisBound) {
-    attachLenis();
-    updateTearOff();
-  }
-};
-
-window.addEventListener('scroll', onScroll, { passive: true });
-window.addEventListener('resize', () => {
-  updateSectionData();
-  if (hasSections && !isMobile) {
-    updateTearOff();
-  }
-}, { passive: true });
-
-document.addEventListener('astro:page-load', () => {
-  updateSectionData();
-  attachLenis();
-  if (hasSections && !isMobile) {
-    updateTearOff();
-  }
-});
+document.addEventListener('astro:page-load', initRevealObserver);
+if (document.readyState === 'complete') initRevealObserver();
+else window.addEventListener('DOMContentLoaded', initRevealObserver);
 
 document.addEventListener('astro:before-swap', () => {
-  if (window.lenis && typeof window.lenis.off === 'function' && lenisBound) {
-    window.lenis.off('scroll', updateTearOff);
-    lenisBound = false;
-  }
+  observer.disconnect();
 });
-if (document.fonts?.ready) {
-  document.fonts.ready.then(() => {
-    updateSectionData();
-    if (hasSections && !isMobile) updateTearOff();
-  });
-}
 
-window.addEventListener('load', () => {
-  updateSectionData();
-  if (hasSections && !isMobile) updateTearOff();
-}, { once: true });
-// Dynamic theme toggle
+// Dynamic theme toggle (Paper Tear Transition)
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('#theme-toggle');
   if (!btn) return;
@@ -268,7 +102,6 @@ document.addEventListener('click', (e) => {
   `;
 
   document.documentElement.classList.add('theme-transitioning');
-
 
   // @ts-ignore
   const transition = document.startViewTransition(switchTheme);
