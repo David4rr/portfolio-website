@@ -126,12 +126,12 @@ const hasItems = items && items.length >= 2;
     {/* 3. Mobile / Tablet Floating Pill Indicator (Frosted Glass) */}
     <div 
       id="toc-mobile-pill" 
-      class="fixed bottom-6 left-6 z-40 lg:hidden opacity-0 translate-y-6 pointer-events-none transition-all duration-300"
+      class="fixed bottom-6 left-6 md:bottom-8 md:left-8 z-40 lg:hidden opacity-0 translate-y-4 pointer-events-none transition-all duration-300"
     >
       <button
         id="toc-mobile-toggle-btn"
         type="button"
-        class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-bg/75 backdrop-blur-xl border border-border-subtle/70 shadow-xl shadow-black/20 text-xs text-text-main hover:border-accent active:scale-95 transition-all duration-200"
+        class="h-11 md:h-12 flex items-center gap-2.5 px-4 rounded-full bg-bg/75 backdrop-blur-xl border border-border-subtle/60 shadow-lg shadow-black/20 text-xs text-text-main hover:border-accent active:scale-95 transition-all duration-200 select-none"
         aria-label="Table of contents menu"
       >
         <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0"></span>
@@ -146,7 +146,7 @@ const hasItems = items && items.length >= 2;
     {/* Mobile Popover Drawer (Frosted Glass) */}
     <div 
       id="toc-mobile-drawer" 
-      class="fixed inset-x-4 bottom-20 z-40 lg:hidden hidden bg-bg/85 backdrop-blur-2xl border border-border-subtle/80 rounded-lg p-5 shadow-2xl shadow-black/40 max-h-[60vh] overflow-y-auto"
+      class="fixed inset-x-4 bottom-20 md:bottom-24 z-40 lg:hidden hidden bg-bg/65 backdrop-blur-xl backdrop-saturate-150 border border-border-subtle/50 rounded-2xl p-5 shadow-2xl shadow-black/40 max-h-[60vh] overflow-y-auto"
     >
       <div class="flex items-center justify-between pb-3 mb-3 border-b border-border-subtle/40">
         <div class="flex items-center gap-2">
@@ -154,16 +154,16 @@ const hasItems = items && items.length >= 2;
           <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted font-medium">TABLE OF CONTENTS</span>
           <span class="font-mono text-[9px] text-accent">[{items.length}]</span>
         </div>
-        <button id="toc-mobile-close-btn" type="button" class="text-text-muted hover:text-accent text-xs font-mono p-1">✕</button>
+        <button id="toc-mobile-close-btn" type="button" class="w-6 h-6 flex items-center justify-center rounded-full bg-border-subtle/20 hover:bg-border-subtle/40 text-text-muted hover:text-accent text-xs font-mono transition-colors cursor-pointer" aria-label="Close table of contents">✕</button>
       </div>
-      <ol class="space-y-3">
+      <ol class="space-y-1">
         {items.map((item, idx) => {
           const num = String(idx + 1).padStart(2, '0');
           return (
             <li>
               <a
                 href={`#${item.id}`}
-                class="toc-jump-link toc-mobile-link flex items-baseline gap-2.5 text-text-muted hover:text-text-main py-1"
+                class="toc-jump-link toc-mobile-link flex items-baseline gap-2.5 text-text-muted hover:text-text-main px-3 py-2 rounded-lg hover:bg-accent/10 active:bg-accent/15 transition-all"
                 data-id={item.id}
                 data-num={num}
               >
@@ -465,7 +465,7 @@ const hasItems = items && items.length >= 2;
             mobileEntranceAnim = anime({
               targets: mobilePill,
               opacity: [0, 1],
-              translateY: [20, 0],
+              translateY: [16, 0],
               duration: 450,
               easing: 'easeOutCubic'
             });
@@ -479,7 +479,7 @@ const hasItems = items && items.length >= 2;
             mobileEntranceAnim = anime({
               targets: mobilePill,
               opacity: [1, 0],
-              translateY: [0, 20],
+              translateY: [0, 16],
               duration: 300,
               easing: 'easeInQuad'
             });
