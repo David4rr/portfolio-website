@@ -262,6 +262,18 @@
     margin-bottom: 0.25rem;
   }
 
+  /* Inline code inside prose (warm theme-matched, never stark white) */
+  .prose code:not(pre code),
+  article code:not(pre code) {
+    background-color: var(--color-bg-subtle) !important;
+    color: var(--color-accent) !important;
+    border: 1px solid var(--color-border-subtle) !important;
+    padding: 0.15rem 0.35rem !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.85em !important;
+    font-family: var(--font-mono) !important;
+    font-weight: 500 !important;
+  }
   /* Target Anchor Flash Highlight (Scoped to Article Citations via JS) */
   article .anchor-highlight {
     animation: anchor-flash 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
