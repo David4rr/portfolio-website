@@ -262,12 +262,12 @@
     margin-bottom: 0.25rem;
   }
 
-  /* Inline code inside prose (warm theme-matched, never stark white) */
+  /* Inline code inside prose (TOC token spec) */
   .prose code:not(pre code),
   article code:not(pre code) {
-    background-color: var(--color-bg-subtle) !important;
+    background-color: color-mix(in srgb, var(--color-bg-subtle) 60%, transparent) !important;
     color: var(--color-accent) !important;
-    border: 1px solid var(--color-border-subtle) !important;
+    border: 1px solid color-mix(in srgb, var(--color-border-subtle) 70%, transparent) !important;
     padding: 0.15rem 0.35rem !important;
     border-radius: 0.25rem !important;
     font-size: 0.85em !important;
