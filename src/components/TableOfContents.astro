@@ -445,6 +445,16 @@ const hasItems = items && items.length >= 2;
     };
 
     // Smooth Scroll All Anchor Links (TOC headings, Citations [1], Footnotes) to CENTER of Viewport
+    let isClickScrolling = false;
+    let clickScrollTimer: any = null;
+
+    const stopClickLock = () => {
+      isClickScrolling = false;
+      if (clickScrollTimer) clearTimeout(clickScrollTimer);
+    };
+    window.addEventListener('wheel', stopClickLock, { passive: true });
+    window.addEventListener('touchmove', stopClickLock, { passive: true });
+
     const allAnchorLinks = document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]');
     allAnchorLinks.forEach(link => {
       link.addEventListener('click', (e) => {
@@ -461,27 +471,37 @@ const hasItems = items && items.length >= 2;
         const targetIdx = findHeadingIndexForElement(target);
         updateActiveIndicator(targetIdx);
 
-        // 2. Scroll element to EXACT CENTER of the screen
+        // Lock scroll spy so intermediate scroll updates don't overwrite user selection
+        isClickScrolling = true;
+        if (clickScrollTimer) clearTimeout(clickScrollTimer);
+
+        // 2. Scroll element to CENTER of the screen
         const targetRect = target.getBoundingClientRect();
         const currentScroll = window.scrollY;
         const targetCenterOffset = currentScroll + targetRect.top - (window.innerHeight / 2) + (targetRect.height / 2);
         const clampedOffset = Math.max(0, targetCenterOffset);
 
+        const onScrollEnd = () => {
+          updateActiveIndicator(targetIdx);
+          clickScrollTimer = setTimeout(() => {
+            isClickScrolling = false;
+          }, 150);
+        };
+
         if ((window as any).lenis) {
           (window as any).lenis.scrollTo(clampedOffset, {
             duration: 1.2,
-            onComplete: () => {
-              onScroll();
-            }
+            onComplete: onScrollEnd
           });
         } else {
           window.scrollTo({ top: clampedOffset, behavior: 'smooth' });
+          onScrollEnd();
         }
 
-        // Safety sync after smooth scroll finishes
-        setTimeout(() => {
-          onScroll();
-        }, 1250);
+        // Safety timer to unlock scroll-spy if onComplete doesn't fire
+        clickScrollTimer = setTimeout(() => {
+          isClickScrolling = false;
+        }, 1350);
 
         // 3. Trigger visual flash highlight on target element
         target.classList.remove('anchor-highlight');
@@ -570,29 +590,36 @@ const hasItems = items && items.length >= 2;
         const pct = Math.min(100, Math.max(0, Math.round((scrollY / docHeight) * 100)));
         progressText.textContent = `${pct}%`;
       }
+      // If user recently clicked a TOC link, preserve the target heading until smooth scroll finishes
+      if (isClickScrolling) return;
 
-      // 4. Calculate Active Heading when heading reaches CENTER OF SCREEN
-      const centerY = window.innerHeight / 2;
+      // 4. Calculate Active Heading when heading crosses activation zone (upper-middle viewport)
+      const activationLine = window.innerHeight * 0.55;
       let currentIdx = 0;
 
       for (let i = 0; i < headings.length; i++) {
         const rect = headings[i].getBoundingClientRect();
-        // Element has reached or passed the center of the viewport
-        if (rect.top <= centerY) {
+        if (rect.top <= activationLine) {
           currentIdx = i;
         } else {
           break;
         }
       }
 
-      // If reader scrolled to the end of the document, activate the last heading
-      if (scrollY + window.innerHeight >= docHeight - 60) {
-        currentIdx = headings.length - 1;
+      // If reader scrolled to the very end of the document (within 40px of maximum scroll)
+      // and the last heading is visibly inside the viewport, activate the last heading
+      if (docHeight > 0 && scrollY >= docHeight - 40) {
+        const lastHeading = headings[headings.length - 1];
+        if (lastHeading) {
+          const lastRect = lastHeading.getBoundingClientRect();
+          if (lastRect.top <= window.innerHeight * 0.85) {
+            currentIdx = headings.length - 1;
+          }
+        }
       }
 
       updateActiveIndicator(currentIdx);
     };
-
     window.addEventListener('scroll', onScroll, { passive: true });
     if ((window as any).lenis) {
       (window as any).lenis.on('scroll', onScroll);
@@ -603,6 +630,8 @@ const hasItems = items && items.length >= 2;
     // Cleanup when navigating with Astro View Transitions
     document.addEventListener('astro:before-swap', () => {
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('wheel', stopClickLock);
+      window.removeEventListener('touchmove', stopClickLock);
       if ((window as any).lenis) {
         (window as any).lenis.off('scroll', onScroll);
       }
