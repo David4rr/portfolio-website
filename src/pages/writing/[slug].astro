@@ -319,13 +319,23 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     const params = new URLSearchParams(window.location.search);
     const fromParam = params.get('from');
     let originParam = params.get('origin');
+    
+    if (fromParam === 'explore') {
+      try {
+        sessionStorage.setItem('nav_from', 'explore');
+        if (originParam) sessionStorage.setItem('explore_origin', originParam);
+      } catch {}
+    }
+
+    const navFrom = fromParam || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('nav_from') : null);
     if (!originParam) {
       try { originParam = sessionStorage.getItem('explore_origin'); } catch {}
     }
+
     const btn = document.getElementById('magnetic-area') as HTMLAnchorElement | null;
     const text = document.getElementById('back-text');
     if (btn && text) {
-      if (fromParam === 'explore') {
+      if (navFrom === 'explore') {
         btn.href = originParam === 'writing' ? '/explore?from=writing' : '/explore';
         btn.setAttribute('data-astro-reload', '');
         text.innerText = 'Return to Gallery';
@@ -334,6 +344,13 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         btn.removeAttribute('data-astro-reload');
         text.innerText = 'Return';
       }
+    }
+
+    // Clean URL query params so copying the link yields the clean canonical URL with full OG support
+    if (fromParam || params.has('origin')) {
+      try {
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch {}
     }
   };
 
