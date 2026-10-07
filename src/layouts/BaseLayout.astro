@@ -127,9 +127,9 @@ const ogImageUrl = image.startsWith('http://') || image.startsWith('https://')
           lenisInstance = new Lenis({
             autoRaf: true,
             smoothWheel: true,
-            duration: 0.9,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            wheelMultiplier: 1.15,
+            duration: 0.85,
+            easing: (t: number) => 1 - Math.pow(1 - t, 3),
+            wheelMultiplier: 1.1,
             touchMultiplier: 1.0,
           });
           (window as any).lenis = lenisInstance;

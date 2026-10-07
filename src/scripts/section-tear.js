@@ -75,12 +75,15 @@ const updateSectionData = () => {
   });
 };
 
-const updateTearOff = () => {
+const updateTearOff = (e) => {
   if (!hasSections || isMobile || sectionData.length === 0) return;
 
   const wh = window.innerHeight;
-  const scrollY = window.scrollY;
-
+  const scrollY = (e && typeof e.scroll === 'number')
+    ? e.scroll
+    : (window.lenis && typeof window.lenis.scroll === 'number'
+      ? window.lenis.scroll
+      : window.scrollY);
   sectionData.forEach((data, i) => {
     const { el: sec, height: h, topOffset } = data;
 
@@ -110,7 +113,7 @@ const updateTearOff = () => {
     let pointerEvents = '';
 
     if (progress <= 0) {
-      transform = ty !== 0 ? `translate3d(0, ${ty}px, 0)` : 'none';
+      transform = ty !== 0 ? `translate3d(0, ${ty.toFixed(2)}px, 0)` : 'none';
       opacity = '1';
       pointerEvents = '';
     } else if (progress >= 1) {
@@ -119,9 +122,9 @@ const updateTearOff = () => {
       pointerEvents = 'none';
     } else {
       const liftProgress = Math.pow(progress, 1.35);
-      const liftY = (ty - liftProgress * (wh * 0.32)).toFixed(1);
+      const liftY = (ty - liftProgress * (wh * 0.32)).toFixed(2);
       const scale = (1 - progress * 0.05).toFixed(4);
-      opacity = Math.max(0, 1 - Math.pow(progress, 1.2)).toFixed(3);
+      opacity = Math.max(0, 1 - Math.pow(Math.min(1, progress * 1.04), 1.25)).toFixed(3);
       transform = `translate3d(0, ${liftY}px, 0) scale(${scale})`;
       pointerEvents = progress > 0.6 ? 'none' : '';
     }

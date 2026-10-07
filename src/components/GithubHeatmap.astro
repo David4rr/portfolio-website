@@ -52,8 +52,8 @@ for (let i = 0; i < 12; i++) {
 
     </div>
 
-    <div class="overflow-x-auto scrollbar-none pb-2 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0 touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-      <div class="min-w-[720px] select-none">
+    <div class="overflow-x-auto scrollbar-none pb-2.5 pt-1.5 -mx-2 px-2 sm:mx-0 sm:px-1 touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+      <div class="min-w-[720px] select-none pr-3.5 pl-0.5">
         <div class="grid grid-cols-53 text-[10px] font-sans text-text-muted/60 mb-2 pl-7 pointer-events-none">
           {Array.from({ length: totalWeeks }).map((_, colIdx) => {
             const header = monthHeaders.find(h => h.col === colIdx);
@@ -179,8 +179,15 @@ for (let i = 0; i < 12; i++) {
 
       const rootRect = root.getBoundingClientRect();
       const rect = cell.getBoundingClientRect();
-      tooltip.style.left = `${rect.left - rootRect.left + rect.width / 2}px`;
-      tooltip.style.top = `${rect.top - rootRect.top - 6}px`;
+      const tooltipWidth = tooltip.offsetWidth || 180;
+
+      const targetLeft = rect.left - rootRect.left + rect.width / 2;
+      const minLeft = tooltipWidth / 2 + 24;
+      const maxLeft = rootRect.width - tooltipWidth / 2 - 24;
+      const clampedLeft = Math.max(minLeft, Math.min(targetLeft, maxLeft));
+
+      tooltip.style.left = `${clampedLeft}px`;
+      tooltip.style.top = `${rect.top - rootRect.top - 8}px`;
       tooltip.style.opacity = "1";
     });
 
