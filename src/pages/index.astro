@@ -737,11 +737,20 @@ const formatPoetryTitle = (title: string) => {
     }
     onScroll();
   };
+  const clearExploreSession = () => {
+    try {
+      sessionStorage.removeItem('explore_item');
+      sessionStorage.removeItem('explore_origin');
+      sessionStorage.removeItem('nav_from');
+    } catch {}
+  };
 
+  clearExploreSession();
   initRocketBtn();
   initInkDrop();
   initHeroTelemetry();
   document.addEventListener("astro:page-load", () => {
+    clearExploreSession();
     initRocketBtn();
     initInkDrop();
     initHeroTelemetry();

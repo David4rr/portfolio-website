@@ -248,32 +248,61 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
       const fromParam = params.get('from');
       let originParam = params.get('origin');
       
+      const historyState = window.history.state || {};
+      let isFromExplore = false;
+
       if (fromParam === 'explore') {
+        isFromExplore = true;
         try {
-          sessionStorage.setItem('nav_from', 'explore');
-          if (originParam) sessionStorage.setItem('explore_origin', originParam);
+          sessionStorage.setItem('explore_item', window.location.pathname);
+          if (originParam) {
+            sessionStorage.setItem('explore_origin', originParam);
+          } else {
+            sessionStorage.removeItem('explore_origin');
+          }
+        } catch {}
+      } else if (
+        historyState.fromExplore === true ||
+        (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('explore_item') === window.location.pathname)
+      ) {
+        // Restored on exact same item reload after address bar sanitization
+        isFromExplore = true;
+        if (!originParam && historyState.exploreOrigin) {
+          originParam = historyState.exploreOrigin;
+        } else if (!originParam) {
+          try { originParam = sessionStorage.getItem('explore_origin'); } catch {}
+        }
+      } else {
+        // Navigation from Selected Projects, direct link, or homepage
+        try {
+          sessionStorage.removeItem('explore_item');
+          sessionStorage.removeItem('explore_origin');
+          sessionStorage.removeItem('nav_from');
         } catch {}
       }
 
-      const navFrom = fromParam || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('nav_from') : null);
-      if (!originParam) {
-        try { originParam = sessionStorage.getItem('explore_origin'); } catch {}
-      }
-
-      if (navFrom === 'explore') {
-        const btn = document.getElementById('magnetic-area') as HTMLAnchorElement;
-        const text = document.getElementById('back-text');
-        if (btn && text) {
+      const btn = document.getElementById('magnetic-area') as HTMLAnchorElement | null;
+      const text = document.getElementById('back-text');
+      if (btn && text) {
+        if (isFromExplore) {
           btn.href = originParam === 'writing' ? '/explore?from=writing' : '/explore';
           btn.setAttribute('data-astro-reload', '');
           text.innerText = 'Return to Gallery';
+        } else {
+          btn.href = '/#projects';
+          btn.removeAttribute('data-astro-reload');
+          text.innerText = 'Return';
         }
       }
 
       // Clean URL query params so copying the link yields the clean canonical URL with full OG support
       if (fromParam || params.has('origin')) {
         try {
-          window.history.replaceState({}, '', window.location.pathname);
+          window.history.replaceState(
+            { ...historyState, fromExplore: isFromExplore, exploreOrigin: originParam },
+            '',
+            window.location.pathname
+          );
         } catch {}
       }
       // Helper function to safely split text nodes into animatable letters

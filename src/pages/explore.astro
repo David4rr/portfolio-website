@@ -110,7 +110,11 @@ const backHref = fromWriting ? '/#writing' : '/#projects';
     }
 
     newBtn.addEventListener('click', () => {
-      try { sessionStorage.removeItem('explore_origin'); } catch {}
+      try {
+        sessionStorage.removeItem('explore_origin');
+        sessionStorage.removeItem('explore_item');
+        sessionStorage.removeItem('nav_from');
+      } catch {}
     });
 
     // Entrance animation

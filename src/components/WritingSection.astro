@@ -177,7 +177,23 @@ const formatPoetryTitle = (title: string) => {
     } catch {}
   };
 
-  document.addEventListener('astro:page-load', initLastReadTimes);
+  const setupSelectedCards = () => {
+    document.querySelectorAll('.project-bento-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        try {
+          sessionStorage.removeItem('explore_item');
+          sessionStorage.removeItem('explore_origin');
+          sessionStorage.removeItem('nav_from');
+        } catch {}
+      });
+    });
+  };
+
+  document.addEventListener('astro:page-load', () => {
+    initLastReadTimes();
+    setupSelectedCards();
+  });
   initLastReadTimes();
+  setupSelectedCards();
 </script>
 
