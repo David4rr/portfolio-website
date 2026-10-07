@@ -159,9 +159,8 @@ sanitizedContent = sanitizedContent.replace(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi,
   else if (rawText.startsWith('---')) title = 'frontmatter.md';
   else if (rawText.startsWith('mkdir') || rawText.startsWith('cat') || rawText.startsWith('npm') || rawText.startsWith('git') || rawText.startsWith('ln -s') || rawText.startsWith('curl')) title = 'bash';
 
-  return `<div class="terminal-card relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg">
-    <div class="terminal-backdrop absolute inset-0 -z-10 bg-bg/75 backdrop-blur-md pointer-events-none" aria-hidden="true"></div>
-    <div class="terminal-header flex items-center justify-between px-4 py-2.5 bg-bg-subtle/50 border-b border-border-subtle/40 select-none">
+  return `<div class="terminal-card relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg bg-bg-elevated/90">
+    <div class="terminal-header flex items-center justify-between px-4 py-2.5 bg-bg-subtle/60 border-b border-border-subtle/40 select-none">
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-[#FF5F56]/80 border border-[#E0443E]/50"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]/80 border border-[#DEA123]/50"></span>
@@ -176,16 +175,15 @@ sanitizedContent = sanitizedContent.replace(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi,
         <span class="copy-label">Copy</span>
       </button>
     </div>
-    <pre class="terminal-body font-mono text-[13px] md:text-sm text-text-main/90 p-4 md:p-5 overflow-x-auto leading-relaxed selection:bg-accent/20"><code>${code}</code></pre>
+    <pre class="terminal-body font-mono text-[13px] md:text-sm text-text-main/90 p-4 md:p-5 overflow-x-auto leading-relaxed selection:bg-accent/20" data-lenis-prevent-horizontal="true"><code>${code}</code></pre>
   </div>`;
 });
 
 // Step 7: Transform non-caption tables into responsive theme-styled tables
 sanitizedContent = sanitizedContent.replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/gi, (match, attrs, inner) => {
   if (attrs.includes('tr-caption-container')) return match;
-  return `<div class="table-container relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg">
-    <div class="table-backdrop absolute inset-0 -z-10 bg-bg/75 backdrop-blur-md pointer-events-none" aria-hidden="true"></div>
-    <div class="table-wrapper overflow-x-auto">
+  return `<div class="table-container relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg bg-bg-elevated/90">
+    <div class="table-wrapper overflow-x-auto" data-lenis-prevent-horizontal="true">
       <table class="theme-table w-full border-collapse text-left text-sm md:text-base">${inner}</table>
     </div>
   </div>`;
@@ -507,7 +505,20 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     recordReadingHistory();
   });
   setupReturnAnimation();
+  const setupSmoothCardScroll = () => {
+    document.querySelectorAll('.terminal-body, .table-wrapper').forEach((el) => {
+      el.addEventListener('wheel', (e: Event) => {
+        const we = e as WheelEvent;
+        // Allow vertical mouse-wheel and trackpad gestures to scroll the page with zero resistance
+        if (Math.abs(we.deltaY) > Math.abs(we.deltaX)) {
+          return;
+        }
+      }, { passive: true });
+    });
+  };
+
   setupCopyButtons();
+  setupSmoothCardScroll();
   recordReadingHistory();
 </script>
 
@@ -516,10 +527,6 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
   .terminal-card,
   .table-container {
     contain: layout style;
-    isolation: isolate;
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
   }
 
   .terminal-body,
@@ -527,10 +534,9 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x pan-y;
-    will-change: scroll-position;
-    transform: translateZ(0);
+    overscroll-behavior-y: auto;
+    overscroll-behavior-x: auto;
+    touch-action: pan-y pan-x;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--text-muted) 35%, transparent) transparent;
   }
@@ -560,9 +566,7 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     font-family: var(--font-sans);
   }
   .theme-table th {
-    background-color: color-mix(in srgb, var(--bg-subtle) 50%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: var(--bg-subtle);
     color: var(--text-main);
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -610,16 +614,12 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     border: 1px solid var(--border-subtle);
     border-radius: 0.75rem;
     padding: 1.25rem 1.5rem;
-    background-color: color-mix(in srgb, var(--bg) 60%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background-color: var(--bg-elevated);
     color: var(--text-main);
   }
   .sb .note {
     border-left: 3px solid var(--accent);
-    background-color: color-mix(in srgb, var(--bg-subtle) 40%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background-color: color-mix(in srgb, var(--bg-subtle) 80%, transparent);
     padding: 1rem 1.25rem;
     margin: 1.5rem 0;
     border-radius: 0 0.5rem 0.5rem 0;
@@ -634,9 +634,7 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
   }
   .sb .bx {
     border: 1px solid var(--border-subtle);
-    background-color: color-mix(in srgb, var(--bg-subtle) 50%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: var(--bg-subtle);
     border-radius: 0.5rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
