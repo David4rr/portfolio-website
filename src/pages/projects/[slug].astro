@@ -26,6 +26,13 @@ if (!project) {
 const mdContent = await getProjectContent(project.id);
 const rawHtml = await marked.parse(mdContent);
 
+const fromExplore = Astro.url.searchParams.get('from') === 'explore';
+const origin = Astro.url.searchParams.get('origin');
+const returnHref = fromExplore 
+  ? (origin === 'writing' ? '/explore?from=writing' : '/explore')
+  : '/#projects';
+const returnLabel = fromExplore ? 'Return to Gallery' : 'Return';
+
 const optimizeImageUrl = (url?: string, width = 1200) => {
   if (!url) return '';
   if (url.startsWith('http')) {
@@ -70,10 +77,10 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
       
       {/* Return link - minimalist top center */}
       <div class="flex justify-center mb-16 md:mb-20">
-        <a id="magnetic-area" href="/#projects" class="p-6 cursor-pointer group">
+        <a id="magnetic-area" href={returnHref} class="p-6 cursor-pointer group">
           <div id="back-button" class="flex items-center text-text-muted group-hover:text-accent transition-colors duration-300 uppercase font-sans text-[10px] tracking-[0.3em]">
             <span class="w-12 flex justify-end items-center"><span class="return-line-left w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
-            <span id="back-text" class="w-24 text-center">Return</span>
+            <span id="back-text" class="w-24 text-center">{returnLabel}</span>
             <span class="w-12 flex justify-start items-center"><span class="return-line-right w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
           </div>
         </a>
@@ -237,11 +244,17 @@ const optimizedCover = optimizeImageUrl(project.image || "https://images.unsplas
     
     document.addEventListener('astro:page-load', () => {
       // 1. Back button dynamic URL
-      if (new URLSearchParams(window.location.search).get('from') === 'explore') {
+      const params = new URLSearchParams(window.location.search);
+      const fromParam = params.get('from');
+      let originParam = params.get('origin');
+      if (!originParam) {
+        try { originParam = sessionStorage.getItem('explore_origin'); } catch {}
+      }
+      if (fromParam === 'explore') {
         const btn = document.getElementById('magnetic-area') as HTMLAnchorElement;
         const text = document.getElementById('back-text');
         if (btn && text) {
-          btn.href = '/explore';
+          btn.href = originParam === 'writing' ? '/explore?from=writing' : '/explore';
           btn.setAttribute('data-astro-reload', '');
           text.innerText = 'Return to Gallery';
         }

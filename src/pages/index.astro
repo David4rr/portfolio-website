@@ -26,10 +26,9 @@ const [allProjects, blogPosts] = await Promise.all([
   getBlogPosts(),
 ]);
 
-// Select featured projects if any are explicitly chosen in Notion; otherwise fallback to all projects (up to 5)
+// Select featured projects if any are explicitly chosen in Notion; otherwise fallback to all projects (up to 4)
 const featuredProjects = allProjects.filter((p) => p.featured === true);
-const selectedProjects = featuredProjects.length > 0 ? featuredProjects : allProjects.slice(0, 5);
-
+const selectedProjects = (featuredProjects.length > 0 ? featuredProjects : allProjects).slice(0, 4);
 // Sort selected projects by explicit order (ascending) when provided, preserving Notion order as secondary sort
 const projects = [...selectedProjects].sort((a, b) => {
   const orderA = typeof a.order === 'number' && !isNaN(a.order) ? a.order : null;
@@ -372,7 +371,7 @@ const formatPoetryTitle = (title: string) => {
           </div>
 
           <div class="mt-16 flex justify-center w-full relative">
-            <a href="/explore" id="rocket-btn" aria-label="View more projects" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 active:scale-95 transition-colors duration-300 cursor-pointer select-none">
+            <a href="/explore?from=projects" id="rocket-btn" aria-label="View more projects" class="relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 active:scale-95 transition-colors duration-300 cursor-pointer select-none">
               
               <span class="relative z-10 btn-text pointer-events-none">View More Projects</span>
 

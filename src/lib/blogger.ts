@@ -10,6 +10,7 @@ export interface BlogPost {
   url: string;
   labels: string[];
   image?: string;
+  popularRank?: number;
 }
 
 interface BloggerV3Item {
@@ -55,11 +56,20 @@ export function slugify(text: string): string {
 function cleanExcerpt(content: string, length = 180): string {
   if (!content) return '';
   let text = content
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, ' ')
     .replace(/<figcaption[\s\S]*?<\/figcaption>/gi, ' ')
     .replace(/<table[\s\S]*?<\/table>/gi, ' ')
     .replace(/Photo\s+by\s+[^.]+?on\s+Unsplash/gi, ' ')
     .replace(/Foto\s+oleh\s+[^.]+?di\s+Unsplash/gi, ' ')
     .replace(/<[^>]*>?/gm, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ')
     .trim();
   return text.length > length ? `${text.slice(0, length)}...` : text;
@@ -81,21 +91,40 @@ function extractFirstImage(content: string): string | undefined {
 
 const DEFAULT_BLOGGER_URL = 'https://david4rr-catatan-kesehatan-kita.blogspot.com';
 
+async function getPopularPostIds(bloggerUrl: string): Promise<string[]> {
+  try {
+    const res = await fetch(bloggerUrl);
+    if (!res.ok) return [];
+    const html = await res.text();
+    const match = html.match(/'type':\s*'PopularPosts'[\s\S]*?'posts':\s*(\[\s*\{[\s\S]*?\}\s*\])/);
+    if (match) {
+      const idMatches = [...match[1].matchAll(/'id':\s*(\d+)/g)];
+      return idMatches.map((m) => m[1]);
+    }
+  } catch (e) {
+    // Graceful fallback on network error
+  }
+  return [];
+}
+
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const blogId = await getRuntimeEnv('BLOGGER_BLOG_ID') || '8125961202841336272';
   const apiKey = await getRuntimeEnv('BLOGGER_API_KEY');
   const bloggerUrl = await getRuntimeEnv('BLOGGER_URL') || DEFAULT_BLOGGER_URL;
 
+  const popularIdsPromise = getPopularPostIds(bloggerUrl);
+  let posts: BlogPost[] = [];
+
   // Option 1: Official Google Blogger API v3 (if API key is present)
   if (blogId && apiKey) {
     try {
-      const endpoint = `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts?key=${apiKey}&maxResults=50`;
+      const endpoint = `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts?key=${apiKey}&orderBy=published&maxResults=50`;
       const res = await fetch(endpoint);
       if (res.ok) {
         const data = (await res.json()) as BloggerV3Response;
         const items = data.items || [];
         if (items.length > 0) {
-          return items.map((item) => {
+          posts = items.map((item) => {
             const rawTitle = item.title || 'Untitled';
             const rawContent = item.content || '';
             const pathSlug = item.url
@@ -123,48 +152,68 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   }
 
   // Option 2: Public Feed JSON (no API key required, reads live blog feed directly)
-  try {
-    const targetUrl = (bloggerUrl || DEFAULT_BLOGGER_URL).replace(/\/+$/, '');
-    const feedEndpoint = `${targetUrl}/feeds/posts/default?alt=json&max-results=50`;
-    const res = await fetch(feedEndpoint);
-    if (res.ok) {
-      const data = (await res.json()) as BloggerFeedResponse;
-      const entries = data.feed?.entry || [];
-      if (entries.length > 0) {
-        return entries.map((entry) => {
-          const title = entry.title?.$t || 'Untitled';
-          const rawContent = entry.content?.$t || entry.summary?.$t || '';
-          const altLink = entry.link?.find((l) => l.rel === 'alternate')?.href || '';
-          const pathSlug = altLink
-            ? altLink.split('/').pop()?.replace('.html', '') || slugify(title)
-            : slugify(title);
-          
-          const rawThumb = entry.media$thumbnail?.url;
-          const coverImage = extractFirstImage(rawContent) || optimizeBloggerImageUrl(rawThumb);
+  if (posts.length === 0) {
+    try {
+      const targetUrl = (bloggerUrl || DEFAULT_BLOGGER_URL).replace(/\/+$/, '');
+      const feedEndpoint = `${targetUrl}/feeds/posts/default?alt=json&orderby=published&max-results=50`;
+      const res = await fetch(feedEndpoint);
+      if (res.ok) {
+        const data = (await res.json()) as BloggerFeedResponse;
+        const entries = data.feed?.entry || [];
+        if (entries.length > 0) {
+          posts = entries.map((entry) => {
+            const title = entry.title?.$t || 'Untitled';
+            const rawContent = entry.content?.$t || entry.summary?.$t || '';
+            const altLink = entry.link?.find((l) => l.rel === 'alternate')?.href || '';
+            const pathSlug = altLink
+              ? altLink.split('/').pop()?.replace('.html', '') || slugify(title)
+              : slugify(title);
+            
+            const rawThumb = entry.media$thumbnail?.url;
+            const coverImage = extractFirstImage(rawContent) || optimizeBloggerImageUrl(rawThumb);
 
-          const labels = (entry.category || [])
-            .map((cat) => cat.term)
-            .filter((term): term is string => typeof term === 'string' && term.length > 0);
+            const labels = (entry.category || [])
+              .map((cat) => cat.term)
+              .filter((term): term is string => typeof term === 'string' && term.length > 0);
 
-          return {
-            id: entry.id?.$t || pathSlug,
-            slug: pathSlug,
-            title,
-            content: rawContent,
-            excerpt: cleanExcerpt(rawContent),
-            published: entry.published?.$t || new Date().toISOString(),
-            url: altLink || `/blog/${pathSlug}`,
-            labels,
-            image: coverImage,
-          };
-        });
+            const rawId = entry.id?.$t || pathSlug;
+            const numericId = rawId.includes('post-') ? rawId.split('post-').pop()! : rawId;
+
+            return {
+              id: numericId,
+              slug: pathSlug,
+              title,
+              content: rawContent,
+              excerpt: cleanExcerpt(rawContent),
+              published: entry.published?.$t || new Date().toISOString(),
+              url: altLink || `/blog/${pathSlug}`,
+              labels,
+              image: coverImage,
+            };
+          });
+        }
       }
+    } catch (err) {
+      console.error('Failed to fetch from Blogger Public Feed:', err);
     }
-  } catch (err) {
-    console.error('Failed to fetch from Blogger Public Feed:', err);
   }
 
-  return [];
+  // Assign popularity rank
+  const popularIds = await popularIdsPromise;
+  if (popularIds.length > 0) {
+    posts = posts.map((post) => {
+      const rankIndex = popularIds.findIndex((pid) => pid === post.id);
+      return {
+        ...post,
+        popularRank: rankIndex !== -1 ? rankIndex + 1 : 999,
+      };
+    });
+  }
+
+  // Always sort by published date descending (latest first) by default
+  posts.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
+
+  return posts;
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {

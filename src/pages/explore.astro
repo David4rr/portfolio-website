@@ -34,6 +34,7 @@ notionProjects.forEach((p) => {
     image: p.image, 
     type: p.type.toLowerCase().includes("mobile") ? "mobile" : "web",
     isReal: true,
+    date: p.timeline,
   });
 });
 
@@ -46,6 +47,7 @@ blogPosts.forEach((post) => {
     image: post.image || "",
     type: "blog",
     isReal: true,
+    date: post.published,
   });
 });
 
@@ -88,12 +90,28 @@ const backHref = fromWriting ? '/#writing' : '/#projects';
     const newBtn = btn.cloneNode(true) as HTMLAnchorElement;
     btn.parentNode?.replaceChild(newBtn, btn);
 
-    const fromParam = new URLSearchParams(window.location.search).get('from');
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
     if (fromParam === 'writing') {
+      try { sessionStorage.setItem('explore_origin', 'writing'); } catch {}
+    } else if (fromParam === 'projects') {
+      try { sessionStorage.setItem('explore_origin', 'projects'); } catch {}
+    }
+
+    let origin = fromParam;
+    if (!origin) {
+      try { origin = sessionStorage.getItem('explore_origin'); } catch {}
+    }
+
+    if (origin === 'writing') {
       newBtn.href = '/#writing';
     } else {
       newBtn.href = '/#projects';
     }
+
+    newBtn.addEventListener('click', () => {
+      try { sessionStorage.removeItem('explore_origin'); } catch {}
+    });
 
     // Entrance animation
     anime({

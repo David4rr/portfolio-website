@@ -7,6 +7,7 @@ export interface Project {
   image: string;
   type: 'mobile' | 'web' | 'center' | 'blog';
   isReal: boolean;
+  date?: string;
 }
 
 interface PlacedProject extends Project {
@@ -52,6 +53,59 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
   const [isLoading, setIsLoading] = useState(true);
   const [aspectRatios, setAspectRatios] = useState<Record<string, number>>({});
   const [sizesLoaded, setSizesLoaded] = useState(false);
+
+  const [exploreOrigin, setExploreOrigin] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const from = urlParams.get('from');
+      if (from === 'writing' || from === 'projects') {
+        sessionStorage.setItem('explore_origin', from);
+        setExploreOrigin(from);
+      } else {
+        const stored = sessionStorage.getItem('explore_origin');
+        if (stored) setExploreOrigin(stored);
+      }
+    } catch {}
+  }, []);
+
+  const [readingHistory, setReadingHistory] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('omp_reading_history');
+      if (raw) {
+        setReadingHistory(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
+
+  const getRelativeLastRead = (slug: string): string | null => {
+    const time = readingHistory[slug];
+    if (!time) return null;
+    const diffSec = Math.floor((Date.now() - time) / 1000);
+    if (diffSec < 60) return 'just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 172800) return 'yesterday';
+    return `${Math.floor(diffSec / 86400)}d ago`;
+  };
+
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Load image aspect ratios to make cards perfectly fit the uploaded images
   useEffect(() => {
@@ -466,12 +520,15 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
 
           const isBlog = p.type === 'blog';
           const firstReal = projects.find(r => r.isReal)?.id || 'hello-world';
+          const originQuery = exploreOrigin === 'writing' ? '&origin=writing' : exploreOrigin === 'projects' ? '&origin=projects' : '';
           const targetHref = isBlog
-            ? `/writing/${p.id}?from=explore`
+            ? `/writing/${p.id}?from=explore${originQuery}`
             : p.isReal
-              ? `/projects/${p.id}?from=explore`
-              : `/projects/${firstReal}?from=explore`;
+              ? `/projects/${p.id}?from=explore${originQuery}`
+              : `/projects/${firstReal}?from=explore${originQuery}`;
           const actionLabel = isBlog ? 'Read Article' : 'View Details';
+          const postDate = isBlog && p.date ? formatDate(p.date) : '';
+          const lastRead = isBlog ? getRelativeLastRead(p.id) : null;
           return (
           <div
             key={p.id}
@@ -500,7 +557,9 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                     <ImageWithLoader src={p.image} alt={p.title} />
                   ) : (
                     <div class="w-full h-full flex flex-col justify-between p-6 bg-bg-elevated border border-border-subtle select-none">
-                      <div class="font-serif italic text-accent/60 text-xs tracking-widest uppercase">Writing // Note</div>
+                      <div class="font-serif italic text-accent/60 text-xs tracking-widest uppercase">
+                        {isBlog ? 'Writing // Article' : 'Writing // Note'}
+                      </div>
                       <h3 class="font-serif text-lg text-text-main line-clamp-3">{p.title}</h3>
                       <div class="font-sans text-[10px] text-text-muted tracking-widest uppercase">Click to flip</div>
                     </div>
@@ -516,8 +575,14 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                   {/* Inner Manuscript Border */}
                   <div class="absolute inset-3 border border-border-subtle/50 pointer-events-none"></div>
 
-                  {/* Top: Title & Divider */}
+                  {/* Top: Metadata & Title & Divider */}
                   <div class="flex flex-col items-center w-full mt-auto mb-2 flex-shrink-0 z-10">
+                    {isBlog && (postDate || lastRead) && (
+                      <div class="flex items-center justify-center gap-2 font-mono text-[9px] md:text-[10px] uppercase tracking-wider text-text-muted/80 mb-2 px-2">
+                        <span>{postDate}</span>
+                        {lastRead && <span class="text-accent font-medium">• Read {lastRead}</span>}
+                      </div>
+                    )}
                     <h3 class="font-serif text-[clamp(1rem,1.3vw,1.5rem)] leading-snug font-normal text-text-main mb-2.5 px-3">
                       {p.title}
                     </h3>

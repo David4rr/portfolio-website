@@ -6,8 +6,11 @@ interface Props {
 }
 
 const { posts } = Astro.props;
-const displayPosts = posts.slice(0, 3);
 
+// Selected Writings: Cap at maximal 4 items based on most visited (popular rank)
+const popularPosts = [...posts]
+  .sort((a, b) => (a.popularRank ?? 999) - (b.popularRank ?? 999))
+  .slice(0, 4);
 const formatPoetryTitle = (title: string) => {
   const words = title.split(' ');
   if (words.length > 1) {
@@ -20,7 +23,7 @@ const formatPoetryTitle = (title: string) => {
 
 <div class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100svh-3rem)]">
   <div>
-    <div class="overflow-hidden mb-16 text-center">
+    <div class="overflow-hidden mb-12 text-center">
       <h2
         data-word
         class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main font-normal tracking-tight"
@@ -29,8 +32,9 @@ const formatPoetryTitle = (title: string) => {
       </h2>
     </div>
 
-    <div class="flex flex-col border-t border-border-subtle/50" id="writing-list-container">
-      {displayPosts.map((post, i) => {
+    {/* Most Visited Posts List */}
+    <div class="flex flex-col border-t border-border-subtle/50">
+      {popularPosts.map((post, i) => {
         const romanNumerals = ['I', 'II', 'III', 'IV', 'V'];
         const numeral = romanNumerals[i] || (i + 1);
         const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
@@ -40,7 +44,6 @@ const formatPoetryTitle = (title: string) => {
           year: 'numeric',
         });
         
-        // Dynamic labels from Blogger: max 2 labels on top, date only on bottom
         const labelText = post.labels && post.labels.length > 0
           ? post.labels.slice(0, 2).map((l) => l.toUpperCase()).join(' \u2022 ')
           : 'WRITING';
@@ -74,8 +77,9 @@ const formatPoetryTitle = (title: string) => {
               <div class="text-text-main/90 tracking-[0.2em] uppercase text-[10px]">
                 {labelText}
               </div>
-              <div class="font-light italic opacity-70 leading-relaxed text-xs">
-                {formattedDate}
+              <div class="font-light italic opacity-70 leading-relaxed text-xs flex flex-wrap items-center gap-1.5">
+                <span>{formattedDate}</span>
+                <span class="last-read-tag hidden text-accent/90 font-sans not-italic text-[11px]" data-slug={post.slug}></span>
               </div>
             </div>
             <div class="flex w-full md:w-auto mt-4 md:mt-0 flex-shrink-0 items-center justify-end md:justify-center gap-4 md:ml-4">
@@ -151,3 +155,29 @@ const formatPoetryTitle = (title: string) => {
     </a>
   </div>
 </div>
+
+<script>
+  const initLastReadTimes = () => {
+    try {
+      const history = JSON.parse(localStorage.getItem('omp_reading_history') || '{}');
+      document.querySelectorAll<HTMLElement>('.last-read-tag[data-slug]').forEach((el) => {
+        const slug = el.dataset.slug;
+        if (!slug || !history[slug]) return;
+        const time = history[slug];
+        const diffSec = Math.floor((Date.now() - time) / 1000);
+        let rel = 'just now';
+        if (diffSec >= 60 && diffSec < 3600) rel = `${Math.floor(diffSec / 60)}m ago`;
+        else if (diffSec >= 3600 && diffSec < 86400) rel = `${Math.floor(diffSec / 3600)}h ago`;
+        else if (diffSec >= 86400 && diffSec < 172800) rel = 'yesterday';
+        else if (diffSec >= 172800) rel = `${Math.floor(diffSec / 86400)}d ago`;
+
+        el.textContent = `• Read ${rel}`;
+        el.classList.remove('hidden');
+      });
+    } catch {}
+  };
+
+  document.addEventListener('astro:page-load', initLastReadTimes);
+  initLastReadTimes();
+</script>
+

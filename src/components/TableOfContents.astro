@@ -17,58 +17,71 @@ const hasItems = items && items.length >= 2;
 
 {hasItems && (
   <>
-    {/* 1. Inline Editorial Overview at top of article */}
+    {/* 1. Inline Editorial Overview at top of article (Under Title) */}
     <nav 
       id="toc-inline-container" 
-      class="my-10 md:my-12 p-5 md:p-6 rounded-sm bg-bg-subtle/50 border border-border-subtle/50 transition-colors duration-300 select-none" 
+      class="toc-card relative my-10 md:my-12 overflow-hidden rounded-xl border border-border-subtle/60 shadow-lg shadow-black/5 select-none transition-all duration-300" 
       aria-label="Table of contents overview"
     >
-      <div class="flex items-center justify-between gap-4 border-b border-border-subtle/40 pb-3 mb-4">
+      <!-- Stationary Decoupled Frosted Glass Backdrop (Matches Terminal Card Spec) -->
+      <div class="toc-backdrop absolute inset-0 -z-10 bg-bg/65 backdrop-blur-xl backdrop-saturate-150"></div>
+
+      <!-- Header Bar -->
+      <div id="toc-inline-header" class="flex items-center justify-between border-b border-border-subtle/50 px-4 md:px-5 py-3 bg-bg-subtle/30 transition-colors duration-200">
         <div class="flex items-center gap-2.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(255,107,53,0.6)]"></span>
           <span class="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-text-muted font-medium">
-            Table of Contents
+            TABLE OF CONTENTS
           </span>
-          <span class="font-mono text-[9px] text-text-muted/60 tracking-wider">
-            [{items.length} sections]
+          <span class="font-mono text-[9px] text-accent/90 tabular-nums font-semibold tracking-wider">
+            [{items.length}]
           </span>
         </div>
         <button 
           id="toc-toggle-btn"
           type="button"
-          class="text-text-muted hover:text-accent font-mono text-[10px] uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors"
+          class="group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-text-muted hover:text-accent transition-colors duration-200 cursor-pointer"
           aria-expanded="true"
-          aria-controls="toc-inline-list"
+          aria-controls="toc-inline-content"
         >
           <span id="toc-toggle-text">Collapse</span>
-          <svg id="toc-toggle-icon" class="w-3 h-3 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg id="toc-toggle-icon" class="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="18 15 12 9 6 15"></polyline>
           </svg>
         </button>
       </div>
 
-      <ol id="toc-inline-list" class="space-y-2.5 overflow-hidden transition-all duration-300">
-        {items.map((item, index) => {
-          const num = String(index + 1).padStart(2, '0');
-          const isSub = item.level > 2;
-          return (
-            <li class={isSub ? "ml-4 md:ml-6 border-l border-border-subtle/50 pl-3 my-1.5" : "my-1"}>
-              <a 
-                href={`#${item.id}`}
-                data-toc-id={item.id}
-                class="toc-jump-link group flex items-baseline gap-2.5 text-text-muted hover:text-text-main transition-colors text-xs md:text-sm leading-relaxed"
-              >
-                <span class="font-mono text-[10px] md:text-[11px] text-accent/80 group-hover:text-accent tabular-nums select-none shrink-0 font-medium">
-                  {num}
-                </span>
-                <span class="group-hover:translate-x-0.5 transition-transform duration-200">
-                  {item.text}
-                </span>
-              </a>
-            </li>
-          );
-        })}
-      </ol>
+      <!-- Expandable / Collapsible Content Wrapper -->
+      <div id="toc-inline-content" class="overflow-hidden">
+        <div id="toc-inline-body" class="p-3 md:p-4 relative">
+          <ol id="toc-inline-list" class="space-y-1">
+            {items.map((item, index) => {
+              const num = String(index + 1).padStart(2, '0');
+              const isSub = item.level > 2;
+              return (
+                <li 
+                  class={`toc-inline-row relative group rounded-lg transition-colors duration-200 ${isSub ? "ml-4 md:ml-6 pl-3 border-l border-border-subtle/50 my-0.5" : "my-0.5"}`}
+                  data-index={index}
+                  data-id={item.id}
+                >
+                  <a 
+                    href={`#${item.id}`}
+                    data-toc-id={item.id}
+                    class="toc-jump-link flex items-baseline gap-3 px-3 py-1.5 text-text-muted hover:text-text-main transition-colors text-xs md:text-sm leading-relaxed rounded-md select-none"
+                  >
+                    <span class="toc-inline-num font-mono text-[10px] md:text-[11px] text-accent/80 group-hover:text-accent tabular-nums select-none shrink-0 font-medium transition-all duration-200">
+                      {num}
+                    </span>
+                    <span class="toc-inline-title font-sans transition-colors duration-200 group-hover:text-text-main">
+                      {item.text}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </div>
     </nav>
 
     {/* 2. Desktop Floating Anime.js Scroll Indicator Rail (Clean Frameless Floating Rail) */}
@@ -188,25 +201,65 @@ const hasItems = items && items.length >= 2;
   let isMobileVisible = false;
   let activeIndex = -1;
   function initTocScrollIndicator() {
-    // 1. Inline Toggle Button (Top Card)
+    // 1. Elements for Inline TOC (Under Title)
+    const inlineContainer = document.getElementById('toc-inline-container');
+    const inlineHeader = document.getElementById('toc-inline-header');
+    const inlineContent = document.getElementById('toc-inline-content');
+    const inlineRows = document.querySelectorAll<HTMLElement>('.toc-inline-row');
     const toggleBtn = document.getElementById('toc-toggle-btn');
-    const inlineList = document.getElementById('toc-inline-list');
     const toggleText = document.getElementById('toc-toggle-text');
     const toggleIcon = document.getElementById('toc-toggle-icon');
 
-    if (toggleBtn && inlineList && toggleText && toggleIcon) {
+    // Morphing Collapse / Expand Accordion
+    if (toggleBtn && inlineContent && inlineHeader && toggleText && toggleIcon) {
       let isExpanded = true;
+      inlineContent.style.height = 'auto';
+
       toggleBtn.addEventListener('click', () => {
         isExpanded = !isExpanded;
         toggleBtn.setAttribute('aria-expanded', String(isExpanded));
         if (isExpanded) {
-          inlineList.style.display = 'block';
           toggleText.textContent = 'Collapse';
           toggleIcon.style.transform = 'rotate(0deg)';
+          inlineHeader.style.borderBottomColor = '';
+          inlineContent.style.display = 'block';
+          const fullHeight = inlineContent.scrollHeight;
+
+          anime({
+            targets: inlineContent,
+            height: [0, fullHeight],
+            opacity: [0, 1],
+            duration: 380,
+            easing: 'easeOutCubic',
+            complete: () => {
+              inlineContent.style.height = 'auto';
+            }
+          });
+
+          anime({
+            targets: '.toc-inline-row',
+            translateY: [8, 0],
+            opacity: [0, 1],
+            delay: anime.stagger(20),
+            duration: 300,
+            easing: 'easeOutQuad'
+          });
         } else {
-          inlineList.style.display = 'none';
           toggleText.textContent = 'Expand';
           toggleIcon.style.transform = 'rotate(180deg)';
+          const startHeight = inlineContent.offsetHeight;
+
+          anime({
+            targets: inlineContent,
+            height: [startHeight, 0],
+            opacity: [1, 0],
+            duration: 300,
+            easing: 'easeInOutCubic',
+            complete: () => {
+              inlineContent.style.display = 'none';
+              inlineHeader.style.borderBottomColor = 'transparent';
+            }
+          });
         }
       });
     }
@@ -216,7 +269,6 @@ const hasItems = items && items.length >= 2;
     const indicator = document.getElementById('toc-rail-indicator');
     const progressText = document.getElementById('toc-rail-progress');
     const railNodes = document.querySelectorAll<HTMLElement>('.toc-rail-node');
-    const inlineContainer = document.getElementById('toc-inline-container');
     const mobilePill = document.getElementById('toc-mobile-pill');
     const mobileToggleBtn = document.getElementById('toc-mobile-toggle-btn');
     const mobileDrawer = document.getElementById('toc-mobile-drawer');
@@ -285,6 +337,32 @@ const hasItems = items && items.length >= 2;
     // Animate Indicator to Node Index using anime.js
     const updateActiveIndicator = (newIndex: number) => {
       if (newIndex === activeIndex || newIndex < 0 || newIndex >= headings.length) return;
+      // Update Inline Rows
+      inlineRows.forEach((row, idx) => {
+        const numSpan = row.querySelector('.toc-inline-num');
+        const titleSpan = row.querySelector('.toc-inline-title');
+        if (idx === newIndex) {
+          row.classList.add('is-active');
+          if (numSpan) {
+            numSpan.classList.add('text-accent', 'font-bold');
+            numSpan.classList.remove('text-accent/80');
+          }
+          if (titleSpan) {
+            titleSpan.classList.add('text-text-main', 'font-medium');
+          }
+        } else {
+          row.classList.remove('is-active');
+          if (numSpan) {
+            numSpan.classList.remove('text-accent', 'font-bold');
+            numSpan.classList.add('text-accent/80');
+          }
+          if (titleSpan) {
+            titleSpan.classList.remove('text-text-main', 'font-medium');
+          }
+        }
+      });
+
+
       activeIndex = newIndex;
 
       // Update Desktop Rail Nodes
