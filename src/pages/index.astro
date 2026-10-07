@@ -101,7 +101,7 @@ const formatPoetryTitle = (title: string) => {
         <LiveClock />
       </div>
       <!-- Poetry Scroll Indicator (Screen Edge) -->
-      <div class="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 flex flex-col items-center gap-3 opacity-60 hover:opacity-100 transition-opacity duration-700 pointer-events-none z-20 w-8">
+      <div id="hero-scroll-indicator" class="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 flex flex-col items-center gap-3 opacity-60 pointer-events-none z-20 w-8 will-change-[opacity]">
         <span class="font-serif italic text-text-muted text-[10px] tracking-[0.2em] uppercase origin-center md:origin-left whitespace-nowrap">Unfold</span>
         <div class="w-full flex justify-center">
           <svg width="12" height="40" viewBox="0 0 12 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="overflow-hidden">
@@ -690,30 +690,52 @@ const formatPoetryTitle = (title: string) => {
   let telemetryScrollListener = null;
   const initHeroTelemetry = () => {
     const telemetry = document.getElementById("hero-telemetry");
-    if (!telemetry) return;
+    const unfold = document.getElementById("hero-scroll-indicator");
+    if (!telemetry && !unfold) return;
 
     if (telemetryScrollListener) {
       window.removeEventListener("scroll", telemetryScrollListener);
+      const lenis = (window as any).lenis;
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", telemetryScrollListener);
+      }
     }
-    let lastTelemetryHidden = false;
+    let lastHidden = false;
     const onScroll = () => {
       const scrollY = window.scrollY;
       const threshold = window.innerHeight * 0.25;
       if (scrollY > threshold) {
-        if (!lastTelemetryHidden) {
-          telemetry.style.opacity = "0";
-          telemetry.style.pointerEvents = "none";
-          lastTelemetryHidden = true;
+        if (!lastHidden) {
+          if (telemetry) {
+            telemetry.style.opacity = "0";
+            telemetry.style.pointerEvents = "none";
+          }
+          if (unfold) {
+            unfold.style.opacity = "0";
+            unfold.style.pointerEvents = "none";
+          }
+          lastHidden = true;
         }
       } else {
-        lastTelemetryHidden = false;
-        telemetry.style.opacity = (1 - scrollY / threshold).toString();
-        telemetry.style.pointerEvents = "auto";
+        lastHidden = false;
+        const progress = Math.max(0, 1 - scrollY / threshold);
+        if (telemetry) {
+          telemetry.style.opacity = progress.toString();
+          telemetry.style.pointerEvents = progress > 0.05 ? "auto" : "none";
+        }
+        if (unfold) {
+          unfold.style.opacity = (progress * 0.6).toString();
+          unfold.style.pointerEvents = "none";
+        }
       }
     };
 
     telemetryScrollListener = onScroll;
     window.addEventListener("scroll", onScroll, { passive: true });
+    const lenis = (window as any).lenis;
+    if (lenis && typeof lenis.on === "function") {
+      lenis.on("scroll", onScroll);
+    }
     onScroll();
   };
 
@@ -728,6 +750,10 @@ const formatPoetryTitle = (title: string) => {
   document.addEventListener("astro:before-swap", () => {
     if (telemetryScrollListener) {
       window.removeEventListener("scroll", telemetryScrollListener);
+      const lenis = (window as any).lenis;
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", telemetryScrollListener);
+      }
       telemetryScrollListener = null;
     }
     const cw = document.getElementById("project-cursor-wrapper");
