@@ -248,9 +248,13 @@ const formatPoetryTitle = (title: string) => {
                   />
                 ) : null})}
                 {blogPosts.map(post => {
+                  const optimizedSrc = post.image && post.image.startsWith('http') 
+                    ? `https://wsrv.nl/?url=${encodeURIComponent(post.image)}&w=600&output=webp` 
+                    : post.image;
+                    
                   return post.image ? (
                   <img 
-                    src={post.image} 
+                    src={optimizedSrc} 
                     alt={`Preview of ${post.title}`} 
                     class="w-full h-auto max-h-[48vh] object-contain absolute inset-0 hidden cursor-project-img" 
                     data-slug={post.slug} 

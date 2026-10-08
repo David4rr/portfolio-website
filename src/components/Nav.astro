@@ -10,7 +10,7 @@ const linkedinUrl = await getRuntimeEnv('LINKEDIN_URL') || await getRuntimeEnv('
 const instagramUrl = await getRuntimeEnv('INSTAGRAM_URL') || await getRuntimeEnv('PUBLIC_INSTAGRAM_URL') || "https://instagram.com";
 const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBLIC_GITHUB_URL') || "https://github.com";
 ---
-<nav id="main-nav" transition:persist class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-50 transition-colors duration-300">
+<nav id="main-nav" transition:persist class="fixed top-0 left-0 right-0 pt-4 pb-7 md:pt-5 md:pb-7 px-6 grid grid-cols-3 items-center z-[60] transition-colors duration-300">
   <!-- Progressive blur background -->
   <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
     <div class="absolute inset-0 hidden md:block md:backdrop-blur-xl md:[mask-image:linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)] md:[-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_40%,transparent_100%)]"></div>
