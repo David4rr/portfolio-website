@@ -160,31 +160,35 @@ sanitizedContent = sanitizedContent.replace(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi,
   else if (rawText.startsWith('mkdir') || rawText.startsWith('cat') || rawText.startsWith('npm') || rawText.startsWith('git') || rawText.startsWith('ln -s') || rawText.startsWith('curl')) title = 'bash';
 
   return `<div class="terminal-card relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40 transition-colors duration-200">
-    <div class="terminal-header flex items-center justify-between px-4 py-2.5 bg-bg-subtle/60 border-b border-border-subtle/50 select-none">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-[#FF5F56]/80 border border-[#E0443E]/40"></span>
-        <span class="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]/80 border border-[#DEA123]/40"></span>
-        <span class="w-2.5 h-2.5 rounded-full bg-[#27C93F]/80 border border-[#1AAB29]/40"></span>
-        <span class="ml-2 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-text-muted font-medium flex items-center gap-1.5">
-          <svg class="w-3 h-3 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-          <span>${title}</span>
+    <div class="terminal-header flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-bg-subtle/60 border-b border-border-subtle/50 select-none gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+        <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F56]/80 border border-[#E0443E]/40 shrink-0"></span>
+        <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FFBD2E]/80 border border-[#DEA123]/40 shrink-0"></span>
+        <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#27C93F]/80 border border-[#1AAB29]/40 shrink-0"></span>
+        <span class="ml-1 sm:ml-2 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.2em] text-text-muted font-medium flex items-center gap-1.5 truncate">
+          <svg class="w-3 h-3 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          <span class="truncate">${title}</span>
         </span>
       </div>
-      <button type="button" class="copy-terminal-btn group flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] md:text-[11px] font-mono uppercase tracking-wider text-text-muted hover:text-accent hover:bg-bg-subtle border border-transparent hover:border-border-subtle/50 transition-colors cursor-pointer" aria-label="Copy code">
+      <button type="button" class="copy-terminal-btn shrink-0 group flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded text-[10px] md:text-[11px] font-mono uppercase tracking-wider text-text-muted hover:text-accent hover:bg-bg-subtle border border-transparent hover:border-border-subtle/50 transition-colors cursor-pointer" aria-label="Copy code">
         <svg class="w-3.5 h-3.5 copy-icon transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         <span class="copy-label">Copy</span>
       </button>
     </div>
-    <pre class="terminal-body font-mono text-[13px] md:text-sm text-text-main bg-bg-subtle/20 p-4 md:p-5 overflow-x-auto leading-relaxed selection:bg-accent/20" data-lenis-prevent-horizontal="true"><code>${code}</code></pre>
+    <pre class="terminal-body font-mono text-xs sm:text-[13px] md:text-sm text-text-main bg-bg-subtle/20 p-3.5 sm:p-4 md:p-5 overflow-x-auto leading-relaxed selection:bg-accent/20" data-lenis-prevent-horizontal="true"><code>${code}</code></pre>
   </div>`;
 });
 
 // Step 7: Transform non-caption tables into responsive theme-styled tables
 sanitizedContent = sanitizedContent.replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/gi, (match, attrs, inner) => {
   if (attrs.includes('tr-caption-container')) return match;
+  // Clean hardcoded percentage / fixed widths from table cells to prevent mobile column squishing
+  const cleanInner = inner.replace(/\bstyle=["'][^"']*?\bwidth\s*:\s*[^;"']+;?[^"']*?["']/gi, (styleAttr) => {
+    return styleAttr.replace(/\bwidth\s*:\s*[^;"']+;?/gi, '');
+  });
   return `<div class="table-container relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40">
     <div class="table-wrapper overflow-x-auto" data-lenis-prevent-horizontal="true">
-      <table class="theme-table w-full border-collapse text-left text-sm md:text-base">${inner}</table>
+      <table class="theme-table w-full border-collapse text-left text-sm md:text-base">${cleanInner}</table>
     </div>
   </div>`;
 });
@@ -208,28 +212,28 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
 >
   <Nav />
   
-  <main class="min-h-screen pt-32 pb-56 md:pb-72 bg-bg overflow-x-clip w-full">
-    <div class="max-w-2xl mx-auto px-6 md:px-8">
+  <main class="min-h-screen pt-24 sm:pt-28 md:pt-32 pb-36 sm:pb-48 md:pb-64 bg-bg overflow-x-clip w-full">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 md:px-8">
       
       {/* Return link - identical to project detail page */}
-      <div class="flex justify-center mb-16 md:mb-20">
-        <a id="magnetic-area" href={returnHref} class="p-6 cursor-pointer group">
-          <div id="back-button" class="flex items-center text-text-muted group-hover:text-accent transition-colors duration-300 uppercase font-sans text-[10px] tracking-[0.3em]">
-            <span class="w-12 flex justify-end items-center"><span class="return-line-left w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
-            <span id="back-text" class="w-24 text-center">{returnLabel}</span>
-            <span class="w-12 flex justify-start items-center"><span class="return-line-right w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
+      <div class="flex justify-center mb-12 sm:mb-16 md:mb-20">
+        <a id="magnetic-area" href={returnHref} class="p-4 sm:p-6 cursor-pointer group">
+          <div id="back-button" class="flex items-center text-text-muted group-hover:text-accent transition-colors duration-300 uppercase font-sans text-[10px] tracking-[0.25em] sm:tracking-[0.3em]">
+            <span class="w-8 sm:w-12 flex justify-end items-center"><span class="return-line-left w-[8px] sm:w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
+            <span id="back-text" class="min-w-[6rem] px-2 text-center whitespace-nowrap">{returnLabel}</span>
+            <span class="w-8 sm:w-12 flex justify-start items-center"><span class="return-line-right w-[8px] sm:w-[12px] h-[1px] bg-accent/70 transition-colors duration-300"></span></span>
           </div>
         </a>
       </div>
 
       {/* Header */}
-      <header class="text-center mb-16">
-        <div class="font-mono text-xs uppercase tracking-[0.2em] text-text-muted mb-4 flex items-center justify-center gap-2">
+      <header class="text-center mb-10 sm:mb-14 md:mb-16">
+        <div class="font-mono text-[11px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] text-text-muted mb-3 sm:mb-4 flex items-center justify-center gap-2 flex-wrap">
           <span>{formattedDate}</span>
           <span id="detail-last-read" class="hidden text-accent lowercase tracking-normal font-sans italic opacity-90"></span>
         </div>
 
-        <h1 class="font-serif text-3xl md:text-5xl leading-[1.25] text-text-main font-normal tracking-tight italic mb-6">
+        <h1 class="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-[1.25] text-text-main font-normal tracking-tight italic mb-6 break-words">
           {post.title}
         </h1>
 
@@ -254,7 +258,7 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
 
       {/* Article Body */}
       <article 
-        class="prose prose-invert max-w-none text-text-main/90 font-serif text-base md:text-lg leading-relaxed space-y-6 [&>p]:leading-relaxed [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:mt-10 [&>h2]:mb-4 [&>h3]:font-serif [&>h3]:text-xl [&>h3]:mt-8 [&>h3]:mb-3 [&>a]:text-accent [&>a]:underline [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-4 [&>blockquote]:italic [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_li]:my-2 [&_li]:pl-1 [&_li::marker]:text-accent"
+        class="prose prose-invert max-w-none text-text-main/90 font-serif text-base md:text-lg leading-relaxed space-y-6 [&>p]:leading-relaxed [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:break-words [&>h3]:font-serif [&>h3]:text-xl [&>h3]:mt-8 [&>h3]:mb-3 [&>h3]:break-words [&>h4]:break-words [&>a]:text-accent [&>a]:underline [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-4 [&>blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 sm:[&_ul]:pl-6 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-5 sm:[&_ol]:pl-6 [&_ol]:my-4 [&_li]:my-2 [&_li]:pl-1 [&_li::marker]:text-accent"
         set:html={sanitizedContent}
       />
 
@@ -591,6 +595,7 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
   }
   .theme-table {
     width: 100%;
+    min-width: 480px;
     border-collapse: collapse;
     font-family: var(--font-sans);
   }
@@ -651,6 +656,14 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     color: var(--text-main);
     margin: 1.5rem 0;
   }
+  .sb .panel h4,
+  .panel h4 {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
   .sb .note,
   .note {
     border-left: 3px solid var(--accent);
@@ -663,13 +676,18 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
   .sb .flow,
   .flow {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: 0.625rem;
     margin: 1.25rem 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    max-width: 100%;
   }
   .sb .bx,
   .bx {
+    flex-shrink: 0;
     border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
     background-color: color-mix(in srgb, var(--bg-subtle) 40%, transparent);
     border-radius: 0.5rem;
@@ -677,6 +695,7 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     font-size: 0.8125rem;
     font-family: var(--font-mono);
     color: var(--text-main);
+    line-height: 1.4;
   }
   .sb .bx.hot,
   .bx.hot {
@@ -692,8 +711,43 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
   }
   .sb .ar,
   .ar {
+    flex-shrink: 0;
     color: var(--text-muted);
     font-size: 1.125rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Support for Blogger Bar Charts & Editorial Captions */
+  .sb .bar,
+  .bar {
+    height: 28px;
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 28px;
+    padding: 0 10px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sb .cap,
+  .cap {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.85;
   }
 
   /* Inline code & blockquote styling inside article prose (TOC token spec) */
