@@ -116,6 +116,7 @@
     createArrowTimeline();
 
     const onScroll = () => {
+      if (btn.dataset.suppressed === 'true') return;
       const scrollY = window.scrollY;
 
       // Toggle entrance/exit visibility with anime.js

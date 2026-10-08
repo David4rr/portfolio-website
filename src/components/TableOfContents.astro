@@ -139,58 +139,91 @@ const hasItems = items && items.length >= 2;
       </div>
     </aside>
 
-    {/* 3. Mobile / Tablet Floating Pill Indicator (Frosted Glass) */}
+    {/* 3. Mobile Scrim / Click-Catcher */}
     <div 
-      id="toc-mobile-pill" 
-      class="fixed bottom-6 left-6 md:bottom-8 md:left-8 z-40 lg:hidden opacity-0 pointer-events-none transition-all duration-300"
-    >
-      <button
-        id="toc-mobile-toggle-btn"
-        type="button"
-        class="h-11 md:h-12 flex items-center gap-2.5 px-4 rounded-full bg-bg/75 backdrop-blur-xl border border-border-subtle/60 shadow-lg shadow-black/20 text-xs text-text-main hover:border-accent active:scale-95 transition-all duration-200 select-none"
-        aria-label="Table of contents menu"
-      >
-        <span class="font-serif italic text-accent text-xs font-normal select-none leading-none shrink-0">§</span>
-        <span id="toc-mobile-active-num" class="font-mono text-[10px] text-accent font-semibold tabular-nums shrink-0">01</span>
-        <span id="toc-mobile-active-title" class="font-serif italic text-xs max-w-[130px] sm:max-w-[180px] truncate text-text-main/90">Contents</span>
-        <svg id="toc-mobile-chevron" class="w-3 h-3 text-text-muted/70 transition-transform duration-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
-      </button>
-    </div>
+      id="toc-mobile-scrim" 
+      class="fixed inset-0 z-45 bg-black/25 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"
+      aria-hidden="true"
+    ></div>
 
-    {/* Mobile Popover Drawer (Frosted Glass) */}
-    <div 
-      id="toc-mobile-drawer" 
-      class="fixed left-4 right-4 sm:left-6 sm:right-auto sm:w-[380px] md:left-8 bottom-20 md:bottom-24 z-40 lg:hidden hidden bg-bg/65 backdrop-blur-xl backdrop-saturate-150 border border-border-subtle/50 rounded-2xl p-5 shadow-2xl shadow-black/40 max-h-[60vh] overflow-y-auto"
+    {/* Mobile / Tablet Morphing TOC Container (Frosted Glass) */}
+    <nav 
+      id="toc-mobile-container" 
+      class="fixed bottom-6 left-4 sm:left-6 md:bottom-8 md:left-8 z-50 lg:hidden opacity-0 pointer-events-none overflow-hidden bg-bg/85 backdrop-blur-xl border border-border-subtle/70 shadow-2xl shadow-black/25 transition-[width,height,border-radius,box-shadow,opacity,transform] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] select-none translate-y-3"
+      style="width: 210px; height: 44px; border-radius: 9999px; transform: translateZ(0); will-change: width, height, border-radius;"
+      aria-label="Mobile table of contents"
     >
-      <div class="flex items-center justify-between pb-3 mb-3 border-b border-border-subtle/40">
-        <div class="flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
-          <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-text-muted font-medium">TABLE OF CONTENTS</span>
-          <span class="font-mono text-[9px] text-accent">[{items.length}]</span>
+      <!-- Top Header Bar (Fixed 44px) -->
+      <div id="toc-mobile-header" class="relative h-11 w-full shrink-0 border-b border-transparent transition-colors duration-200">
+        
+        <!-- Layer A: Collapsed Pill View -->
+        <button
+          id="toc-mobile-pill-btn"
+          type="button"
+          class="absolute inset-0 w-full h-full flex items-center justify-between px-4 cursor-pointer text-left transition-opacity duration-200"
+          aria-expanded="false"
+          aria-controls="toc-mobile-body"
+          aria-label="Expand table of contents"
+        >
+          <div class="flex items-center gap-2 overflow-hidden pr-1">
+            <span class="font-serif italic text-accent text-xs font-normal leading-none shrink-0 select-none">§</span>
+            <span id="toc-mobile-active-num" class="font-mono text-[10px] text-accent font-semibold tabular-nums shrink-0">01</span>
+            <span id="toc-mobile-active-title" class="font-serif italic text-xs max-w-[130px] sm:max-w-[170px] truncate text-text-main/90">Contents</span>
+          </div>
+          <svg id="toc-mobile-chevron" class="w-3 h-3 text-text-muted/70 shrink-0 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </button>
+
+        <!-- Layer B: Expanded Header View -->
+        <div 
+          id="toc-mobile-expanded-header" 
+          class="absolute inset-0 w-full h-full flex items-center justify-between px-4 opacity-0 pointer-events-none transition-opacity duration-200"
+        >
+          <div class="flex items-center gap-2">
+            <span class="font-serif italic text-accent text-xs leading-none shrink-0 select-none">§</span>
+            <span class="font-mono text-[9.5px] uppercase tracking-[0.2em] text-text-muted font-medium">TABLE OF CONTENTS</span>
+            <span class="font-mono text-[9px] text-accent font-semibold">[{items.length}]</span>
+          </div>
+          <button 
+            id="toc-mobile-close-btn" 
+            type="button" 
+            class="w-6 h-6 flex items-center justify-center rounded-full bg-border-subtle/20 hover:bg-border-subtle/40 text-text-muted hover:text-accent text-xs font-mono transition-colors cursor-pointer" 
+            aria-label="Close table of contents"
+          >
+            ✕
+          </button>
         </div>
-        <button id="toc-mobile-close-btn" type="button" class="w-6 h-6 flex items-center justify-center rounded-full bg-border-subtle/20 hover:bg-border-subtle/40 text-text-muted hover:text-accent text-xs font-mono transition-colors cursor-pointer" aria-label="Close table of contents">✕</button>
       </div>
-      <ol class="space-y-1">
-        {items.map((item, idx) => {
-          const num = String(idx + 1).padStart(2, '0');
-          return (
-            <li>
-              <a
-                href={`#${item.id}`}
-                class="toc-jump-link toc-mobile-link flex items-baseline gap-2.5 text-text-muted hover:text-text-main px-3 py-2 rounded-lg hover:bg-accent/10 active:bg-accent/15 transition-all"
-                data-id={item.id}
-                data-num={num}
-              >
-                <span class="font-mono text-xs text-accent font-semibold tabular-nums shrink-0">{num}</span>
-                <span class="font-sans text-xs leading-relaxed">{item.text}</span>
-              </a>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+
+      <!-- Scrollable List of Items (Revealed in Expanded State) -->
+      <div 
+        id="toc-mobile-body" 
+        class="opacity-0 pointer-events-none h-[calc(100%-44px)] flex flex-col transition-opacity duration-200"
+      >
+        <div class="flex-1 overflow-y-auto px-2 py-2 scrollbar-none overscroll-contain">
+          <ol class="space-y-0.5" id="toc-mobile-list">
+            {items.map((item, idx) => {
+              const num = String(idx + 1).padStart(2, '0');
+              const isSub = item.level > 2;
+              return (
+                <li class="my-0.5">
+                  <a
+                    href={`#${item.id}`}
+                    class={`toc-jump-link toc-mobile-link flex items-baseline gap-2.5 text-text-muted hover:text-text-main px-3 py-1.5 rounded-lg hover:bg-accent/10 active:bg-accent/15 transition-all text-xs leading-relaxed ${isSub ? "ml-3 pl-2.5 border-l border-border-subtle/50 text-[11px]" : ""}`}
+                    data-id={item.id}
+                    data-index={idx}
+                  >
+                    <span class="toc-mobile-item-num font-mono text-[11px] text-accent/80 font-semibold tabular-nums shrink-0">{num}</span>
+                    <span class="toc-mobile-item-text font-sans truncate">{item.text}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </div>
+    </nav>
   </>
 )}
 
@@ -273,81 +306,149 @@ const hasItems = items && items.length >= 2;
     const indicator = document.getElementById('toc-rail-indicator');
     const progressText = document.getElementById('toc-rail-progress');
     const railNodes = document.querySelectorAll<HTMLElement>('.toc-rail-node');
-    const mobilePill = document.getElementById('toc-mobile-pill');
-    const mobileToggleBtn = document.getElementById('toc-mobile-toggle-btn');
-    const mobileDrawer = document.getElementById('toc-mobile-drawer');
+    const mobileContainer = document.getElementById('toc-mobile-container');
+    const mobileScrim = document.getElementById('toc-mobile-scrim');
+    const mobileHeader = document.getElementById('toc-mobile-header');
+    const mobilePillBtn = document.getElementById('toc-mobile-pill-btn');
+    const mobileExpandedHeader = document.getElementById('toc-mobile-expanded-header');
     const mobileCloseBtn = document.getElementById('toc-mobile-close-btn');
+    const mobileBody = document.getElementById('toc-mobile-body');
     const mobileActiveNum = document.getElementById('toc-mobile-active-num');
     const mobileActiveTitle = document.getElementById('toc-mobile-active-title');
     const mobileChevron = document.getElementById('toc-mobile-chevron');
+    const mobileLinks = document.querySelectorAll<HTMLElement>('.toc-mobile-link');
 
     const headings = Array.from(document.querySelectorAll<HTMLElement>('article h2, article h3, article h4'))
       .filter(h => h.id);
 
     if (!headings.length) return;
 
-    // Mobile Drawer Toggle
-    let isDrawerOpen = false;
-    const closeDrawer = () => {
-      if (!isDrawerOpen || !mobileDrawer) return;
-      isDrawerOpen = false;
-      if (mobileChevron) mobileChevron.style.transform = 'rotate(0deg)';
-      anime({
-        targets: mobileDrawer,
-        opacity: [1, 0],
-        translateY: [0, 15],
-        duration: 200,
-        easing: 'easeInQuad',
-        complete: () => {
-          mobileDrawer.classList.add('hidden');
+    // Mobile Morphing TOC Toggle
+    let isMobileOpen = false;
+
+    const openMobileToc = () => {
+      if (isMobileOpen || !mobileContainer) return;
+      isMobileOpen = true;
+
+      const isTablet = window.innerWidth >= 640;
+      const targetWidth = isTablet ? '380px' : 'calc(100vw - 2rem)';
+      const targetHeight = Math.min(window.innerHeight * 0.58, 420) + 'px';
+
+      if (mobileScrim) {
+        mobileScrim.classList.remove('pointer-events-none');
+        mobileScrim.classList.add('opacity-100');
+      }
+
+      // Suppress floating scroll-to-top button while TOC is expanded
+      const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
+      if (scrollToTopBtn) {
+        scrollToTopBtn.dataset.suppressed = 'true';
+        scrollToTopBtn.style.transition = 'opacity 200ms ease, transform 200ms ease';
+        scrollToTopBtn.style.opacity = '0';
+        scrollToTopBtn.style.pointerEvents = 'none';
+        scrollToTopBtn.style.transform = 'translateY(16px) scale(0.85)';
+      }
+
+      mobileContainer.style.width = targetWidth;
+      mobileContainer.style.maxWidth = '380px';
+      mobileContainer.style.height = targetHeight;
+      mobileContainer.style.borderRadius = '16px';
+      if (mobileHeader) mobileHeader.style.borderBottomColor = 'rgba(255, 255, 255, 0.08)';
+
+      if (mobilePillBtn) {
+        mobilePillBtn.classList.add('opacity-0', 'pointer-events-none');
+        mobilePillBtn.setAttribute('aria-expanded', 'true');
+      }
+      if (mobileExpandedHeader) {
+        mobileExpandedHeader.classList.remove('opacity-0', 'pointer-events-none');
+        mobileExpandedHeader.classList.add('opacity-100', 'pointer-events-auto');
+      }
+
+      setTimeout(() => {
+        if (mobileBody) {
+          mobileBody.classList.remove('opacity-0', 'pointer-events-none');
+          mobileBody.classList.add('opacity-100', 'pointer-events-auto');
         }
-      });
+      }, 80);
     };
 
-    const openDrawer = () => {
-      if (isDrawerOpen || !mobileDrawer) return;
-      isDrawerOpen = true;
-      if (mobileChevron) mobileChevron.style.transform = 'rotate(180deg)';
-      mobileDrawer.classList.remove('hidden');
-      anime({
-        targets: mobileDrawer,
-        opacity: [0, 1],
-        translateY: [15, 0],
-        duration: 300,
-        easing: 'easeOutCubic'
-      });
+    const closeMobileToc = () => {
+      if (!isMobileOpen || !mobileContainer) return;
+      isMobileOpen = false;
 
-      anime({
-        targets: '.toc-mobile-link',
-        opacity: [0, 1],
-        translateY: [10, 0],
-        delay: anime.stagger(30),
-        duration: 350,
-        easing: 'easeOutQuad'
-      });
+      if (mobileScrim) {
+        mobileScrim.classList.add('pointer-events-none');
+        mobileScrim.classList.remove('opacity-100');
+      }
+
+      // Restore floating scroll-to-top button if reader is scrolled down
+      const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
+      if (scrollToTopBtn) {
+        delete scrollToTopBtn.dataset.suppressed;
+        if (window.scrollY > 300) {
+          scrollToTopBtn.style.opacity = '1';
+          scrollToTopBtn.style.pointerEvents = 'auto';
+          scrollToTopBtn.style.transform = 'translateY(0px) scale(1)';
+        } else {
+          scrollToTopBtn.style.opacity = '0';
+          scrollToTopBtn.style.pointerEvents = 'none';
+          scrollToTopBtn.style.transform = 'translateY(16px) scale(1)';
+        }
+        setTimeout(() => {
+          if (scrollToTopBtn) {
+            scrollToTopBtn.style.transition = '';
+          }
+        }, 250);
+      }
+
+      if (mobileBody) {
+        mobileBody.classList.add('opacity-0', 'pointer-events-none');
+        mobileBody.classList.remove('opacity-100', 'pointer-events-auto');
+      }
+
+      if (mobileExpandedHeader) {
+        mobileExpandedHeader.classList.add('opacity-0', 'pointer-events-none');
+        mobileExpandedHeader.classList.remove('opacity-100', 'pointer-events-auto');
+      }
+      if (mobilePillBtn) {
+        mobilePillBtn.classList.remove('opacity-0', 'pointer-events-none');
+        mobilePillBtn.setAttribute('aria-expanded', 'false');
+      }
+      if (mobileHeader) mobileHeader.style.borderBottomColor = 'transparent';
+
+      mobileContainer.style.width = '210px';
+      mobileContainer.style.height = '44px';
+      mobileContainer.style.borderRadius = '9999px';
     };
 
-    if (mobileToggleBtn) {
-      mobileToggleBtn.addEventListener('click', () => {
-        if (isDrawerOpen) closeDrawer();
-        else openDrawer();
-      });
+    if (mobilePillBtn) {
+      mobilePillBtn.addEventListener('click', openMobileToc);
     }
-
     if (mobileCloseBtn) {
-      mobileCloseBtn.addEventListener('click', closeDrawer);
+      mobileCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMobileToc();
+      });
+    }
+    if (mobileScrim) {
+      mobileScrim.addEventListener('click', closeMobileToc);
     }
 
-    // Outside click closes mobile drawer
     const onOutsideClick = (e: MouseEvent) => {
-      if (!isDrawerOpen || !mobileDrawer) return;
+      if (!isMobileOpen || !mobileContainer) return;
       const target = e.target as Node;
-      if (!mobileDrawer.contains(target) && !mobileToggleBtn?.contains(target)) {
-        closeDrawer();
+      if (!mobileContainer.contains(target) && !mobileScrim?.contains(target)) {
+        closeMobileToc();
       }
     };
     document.addEventListener('click', onOutsideClick);
-    // Animate Indicator to Node Index using anime.js
+
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileOpen) {
+        closeMobileToc();
+      }
+    };
+    window.addEventListener('keydown', onKeydown);
     const updateActiveIndicator = (newIndex: number) => {
       if (newIndex === activeIndex || newIndex < 0 || newIndex >= headings.length) return;
       // Update Inline Rows
@@ -423,6 +524,21 @@ const hasItems = items && items.length >= 2;
         if (mobileActiveNum) mobileActiveNum.textContent = numStr;
         if (mobileActiveTitle) mobileActiveTitle.textContent = cleanText;
       }
+
+      // Update Mobile Expanded Links
+      mobileLinks.forEach((link, idx) => {
+        const itemNum = link.querySelector('.toc-mobile-item-num');
+        const itemText = link.querySelector('.toc-mobile-item-text');
+        if (idx === newIndex) {
+          link.classList.add('bg-accent/10', 'text-text-main', 'font-medium');
+          if (itemNum) itemNum.classList.add('text-accent', 'font-bold');
+          if (itemText) itemText.classList.add('text-text-main', 'font-serif', 'italic');
+        } else {
+          link.classList.remove('bg-accent/10', 'text-text-main', 'font-medium');
+          if (itemNum) itemNum.classList.remove('text-accent', 'font-bold');
+          if (itemText) itemText.classList.remove('text-text-main', 'font-serif', 'italic');
+        }
+      });
     };
     // Helper: Determine corresponding TOC heading index for ANY element
     const findHeadingIndexForElement = (el: HTMLElement): number => {
@@ -466,7 +582,7 @@ const hasItems = items && items.length >= 2;
         if (!target) return;
 
         e.preventDefault();
-        closeDrawer();
+        closeMobileToc();
 
         // 1. Instantly calculate and update active indicator for this section
         const targetIdx = findHeadingIndexForElement(target);
@@ -553,14 +669,15 @@ const hasItems = items && items.length >= 2;
       }
 
       // 2. Entrance / Exit of Mobile Pill via anime.js
-      if (mobilePill) {
+      // 2. Entrance / Exit of Mobile Morphing Container via anime.js
+      if (mobileContainer) {
         if (scrollY > triggerThreshold) {
           if (!isMobileVisible) {
             isMobileVisible = true;
-            mobilePill.classList.remove('pointer-events-none');
+            mobileContainer.classList.remove('pointer-events-none');
             if (mobileEntranceAnim) mobileEntranceAnim.pause();
             mobileEntranceAnim = anime({
-              targets: mobilePill,
+              targets: mobileContainer,
               opacity: [0, 1],
               translateY: [12, 0],
               duration: 400,
@@ -570,11 +687,11 @@ const hasItems = items && items.length >= 2;
         } else {
           if (isMobileVisible) {
             isMobileVisible = false;
-            mobilePill.classList.add('pointer-events-none');
-            closeDrawer();
+            mobileContainer.classList.add('pointer-events-none');
+            closeMobileToc();
             if (mobileEntranceAnim) mobileEntranceAnim.pause();
             mobileEntranceAnim = anime({
-              targets: mobilePill,
+              targets: mobileContainer,
               opacity: [1, 0],
               translateY: [0, 12],
               duration: 300,
@@ -634,6 +751,7 @@ const hasItems = items && items.length >= 2;
       window.removeEventListener('wheel', stopClickLock);
       window.removeEventListener('touchmove', stopClickLock);
       document.removeEventListener('click', onOutsideClick);
+      window.removeEventListener('keydown', onKeydown);
       if ((window as any).lenis) {
         (window as any).lenis.off('scroll', onScroll);
       }
