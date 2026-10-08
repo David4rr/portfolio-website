@@ -13,10 +13,10 @@ interface Props {
 }
 const { isStandalone = false } = Astro.props;
 ---
-<section class="w-full flex-1 h-full flex flex-col justify-center py-[clamp(4rem,8vw,8rem)] text-center md:text-left max-w-5xl mx-auto relative border-t border-border-subtle/50 px-4 md:px-0">
-  <div class="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-24 w-full my-auto">
+<section class="w-full flex-1 h-full flex flex-col justify-center py-[clamp(4rem,8vw,8rem)] text-center lg:text-left max-w-5xl mx-auto relative border-t border-border-subtle/50 px-4 md:px-0">
+  <div class="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24 w-full my-auto">
     
-    <div class="relative z-20 flex-1 w-full md:pr-8">
+    <div class="relative z-20 flex-1 w-full lg:pr-8">
       <div class="overflow-hidden mb-8">
         <h2 data-word class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main font-normal tracking-tight">
           Get In Touch<span class="text-accent">.</span>
@@ -24,15 +24,14 @@ const { isStandalone = false } = Astro.props;
       </div>
       <TextLuminance
         text="Whether you have a question or just want to say hi, I'll try my best to get back to you!"
-        class="text-text-muted mb-8 max-w-md mx-auto md:mx-0 text-[1.05rem] leading-relaxed"
+        class="text-text-muted mb-8 max-w-md mx-auto lg:mx-0 text-[1.05rem] leading-relaxed"
         start={0.88}
         end={0.55}
         initialOpacity={0.25}
       />
       
-      <div class="flex flex-col sm:flex-row items-center gap-6 justify-center md:justify-start">
+      <div class="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
         <a href={`mailto:${contactEmail}`} id="slime-btn" class="inline-block border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] px-8 py-4 rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-colors duration-300 origin-center">Say Hello</a>
-        
         <div class="flex md:hidden items-center gap-4">
           <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-text-muted hover:text-accent transition-colors p-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
@@ -52,7 +51,7 @@ const { isStandalone = false } = Astro.props;
       </div>
     </div>
     
-    <div class="w-full md:w-1/2 max-w-md mx-auto md:mx-0 pointer-events-none relative z-10 text-right md:-mr-12">
+    <div class="w-full lg:w-1/2 max-w-md mx-auto lg:mx-0 pointer-events-none relative z-10 text-right lg:-mr-12">
 
       <div class="w-full aspect-[4/3] relative overflow-hidden" style="mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);">
         <Image 

@@ -52,28 +52,28 @@ const formatPoetryTitle = (title: string) => {
           <a
             data-card
             href={`/writing/${post.slug}`}
-            class="project-bento-card cursor-pointer group relative flex flex-col md:flex-row md:items-center gap-6 md:gap-8 py-6 md:py-10 px-2 md:px-6 border-b border-border-subtle/50 hover:bg-border-subtle/5 transition-all duration-700"
+            class="project-bento-card cursor-pointer group relative flex flex-col xl:flex-row xl:items-center gap-6 xl:gap-8 py-6 xl:py-10 px-2 xl:px-6 border-b border-border-subtle/50 hover:bg-border-subtle/5 transition-all duration-700"
             data-slug={post.slug}
             data-has-image={post.image ? "true" : "false"}
           >
-            <div class="flex-shrink-0 w-full md:w-20 text-text-muted font-serif italic text-sm md:text-base">
+            <div class="flex-shrink-0 w-full xl:w-20 text-text-muted font-serif italic text-sm xl:text-base">
               {numeral}.
             </div>
 
-            <div class="flex-shrink-0 w-full md:w-[32%]">
+            <div class="flex-shrink-0 w-full xl:w-[32%]">
               <h3 
-                class="font-serif text-[1.75rem] md:text-[2.25rem] leading-tight text-text-main group-hover:text-accent transition-colors duration-700 tracking-tight pr-4 line-clamp-3" 
+                class="font-serif text-[1.75rem] xl:text-[2.25rem] leading-tight text-text-main group-hover:text-accent transition-colors duration-700 tracking-tight pr-0 xl:pr-4 line-clamp-3" 
                 set:html={formatPoetryTitle(post.title)}
               />
             </div>
 
-            <div class="flex-1 w-full max-w-xl pr-4">
-              <p class="font-serif italic font-light text-sm md:text-[15px] leading-loose text-text-main/70 line-clamp-4">
+            <div class="flex-1 w-full max-w-xl pr-0 xl:pr-4">
+              <p class="font-serif italic font-light text-sm xl:text-[15px] leading-loose text-text-main/70 line-clamp-4">
                 "{post.excerpt}"
               </p>
             </div>
 
-            <div class="flex-shrink-0 w-full md:w-[20%] flex flex-col gap-2 font-serif text-text-muted/80">
+            <div class="flex-shrink-0 w-full xl:w-[20%] flex flex-col gap-2 font-serif text-text-muted/80">
               <div class="text-text-main/90 tracking-[0.2em] uppercase text-[10px]">
                 {labelText}
               </div>
@@ -82,12 +82,12 @@ const formatPoetryTitle = (title: string) => {
                 <span class="last-read-tag hidden text-accent/90 font-sans not-italic text-[11px]" data-slug={post.slug}></span>
               </div>
             </div>
-            <div class="flex w-full md:w-auto mt-4 md:mt-0 flex-shrink-0 items-center justify-between md:justify-center gap-4 md:ml-4">
-              {/* Mobile Peek Pip: Orthogonal Unix preview trigger (hidden on desktop) */}
+            <div class="flex w-full xl:w-auto mt-4 xl:mt-0 flex-shrink-0 items-center justify-between xl:justify-center gap-4 xl:ml-4">
+              {/* Mobile & Tablet Peek Pip: Orthogonal Unix preview trigger (hidden on desktop) */}
               {post.image && (
                 <button
                   type="button"
-                  class="project-peek-btn md:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-subtle/70 bg-bg-subtle/40 text-[10px] font-mono tracking-widest uppercase text-text-muted hover:text-accent hover:border-accent active:scale-95 transition-all duration-200 cursor-pointer select-none"
+                  class="project-peek-btn xl:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-subtle/70 bg-bg-subtle/40 text-[10px] font-mono tracking-widest uppercase text-text-muted hover:text-accent hover:border-accent active:scale-95 transition-all duration-200 cursor-pointer select-none"
                   aria-label={`Preview ${post.title}`}
                   data-slug={post.slug}
                 >
@@ -99,8 +99,8 @@ const formatPoetryTitle = (title: string) => {
                 </button>
               )}
 
-              <div class="flex items-center gap-4 ml-auto md:ml-0">
-                <span class="font-serif italic text-text-main/70 md:opacity-0 md:-translate-x-4 md:group-hover:opacity-100 md:group-hover:translate-x-0 transition-all duration-500 text-sm md:text-base">
+              <div class="flex items-center gap-4 ml-auto xl:ml-0">
+                <span class="font-serif italic text-text-main/70 xl:opacity-0 xl:-translate-x-4 xl:group-hover:opacity-100 xl:group-hover:translate-x-0 transition-all duration-500 text-sm xl:text-base">
                   Explore
                 </span>
                 <div class="flex items-center justify-center w-8 h-8 text-text-main/50 group-hover:text-text-main transition-all duration-500 overflow-hidden relative flex-shrink-0">

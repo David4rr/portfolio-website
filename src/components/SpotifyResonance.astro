@@ -27,12 +27,10 @@ const isCenter = align === "center";
     </span>
   </div>
 
-  <a
-    href="#"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Spotify listening status"
-    class={`spotify-link flex items-center gap-2 pointer-events-none group/link select-none transition-transform duration-300 ${
+  <button
+    type="button"
+    aria-label="Expand Last.fm listening telemetry"
+    class={`spotify-trigger spotify-link flex items-center gap-2 group/link select-none transition-transform duration-300 cursor-pointer ${
       isCenter ? "justify-center" : "justify-end"
     }`}
   >
@@ -50,15 +48,112 @@ const isCenter = align === "center";
     </div>
 
     <div
-      class="spotify-art-wrap w-6 h-6 rounded border border-border-subtle overflow-hidden shrink-0 hidden bg-bg-elevated"
+      class="spotify-art-wrap relative w-6 h-6 rounded border border-border-subtle overflow-hidden shrink-0 hidden bg-bg-elevated group-hover/link:border-accent transition-colors"
     >
       <div
         class="spotify-art w-full h-full bg-cover bg-center"
         role="img"
         aria-label="Spotify Album Art"
       ></div>
+      <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/link:opacity-100 flex items-center justify-center transition-opacity">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-white">
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <polyline points="9 21 3 21 3 15"></polyline>
+          <line x1="21" y1="21" x2="14" y2="10"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+      </div>
     </div>
-  </a>
+  </button>
+</div>
+
+<!-- Last.fm Telemetry Expand Modal (Global Portal) -->
+<div
+  id="lastfm-expand-modal"
+  class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Last.fm Audio Telemetry"
+>
+  <div
+    id="lastfm-modal-card"
+    class="relative w-full max-w-[380px] bg-bg-elevated border border-border-subtle/80 rounded-2xl shadow-2xl p-6 overflow-hidden transform scale-95 transition-all duration-300"
+  >
+    <!-- Ambient Accent Glow -->
+    <div class="absolute -top-12 -right-12 w-36 h-36 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-12 -left-12 w-36 h-36 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-border-subtle/50 pb-3 mb-5 relative z-10">
+      <div class="flex items-center gap-2">
+        <div class="spotify-eq flex items-end gap-[2px] h-3 w-3.5 pb-[1px]" aria-hidden="true">
+          <span class="eq-bar w-[1.5px] h-1.5 bg-text-muted/60 transition-all duration-300"></span>
+          <span class="eq-bar w-[1.5px] h-3 bg-text-muted/60 transition-all duration-300"></span>
+          <span class="eq-bar w-[1.5px] h-2 bg-text-muted/60 transition-all duration-300"></span>
+        </div>
+        <span class="font-mono text-[9px] uppercase tracking-[0.25em] text-text-muted font-medium">
+          AUDIO RESONANCE
+        </span>
+      </div>
+      <button
+        type="button"
+        id="lastfm-modal-close"
+        class="w-7 h-7 rounded-full flex items-center justify-center text-text-muted hover:text-text-main hover:bg-border-subtle/20 transition-colors cursor-pointer"
+        aria-label="Close telemetry preview"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-col items-center text-center relative z-10">
+      <!-- High-res Album Art -->
+      <div class="relative group/art mb-4">
+        <div class="w-36 h-36 rounded-xl border border-border-subtle shadow-xl overflow-hidden bg-bg-subtle relative z-10">
+          <div
+            id="lastfm-modal-art"
+            class="w-full h-full bg-cover bg-center"
+            role="img"
+            aria-label="Album Cover"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Track Information -->
+      <h4 id="lastfm-modal-title" class="font-serif italic text-xl leading-snug text-text-main line-clamp-2 px-2">
+        Awaiting transmission...
+      </h4>
+      <p id="lastfm-modal-artist" class="font-sans text-xs tracking-wider uppercase text-accent font-medium mt-1.5">
+        Chamber Silence
+      </p>
+      <p id="lastfm-modal-album" class="font-serif italic text-xs text-text-muted/80 mt-1 line-clamp-1">
+      </p>
+
+      <!-- Status Pill -->
+      <div class="mt-4 px-3 py-1 rounded-full bg-bg-subtle/60 border border-border-subtle/60 flex items-center gap-2">
+        <span id="lastfm-status-dot" class="w-2 h-2 rounded-full bg-text-muted/50 transition-colors duration-300"></span>
+        <span id="lastfm-modal-status" class="font-mono text-[10px] tracking-widest uppercase text-text-muted">
+          Resonance Idle
+        </span>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex items-center gap-3 w-full mt-6">
+        <a
+          id="lastfm-modal-link"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex-1 py-2.5 px-4 rounded-full border border-border-subtle/80 bg-bg-subtle/50 hover:bg-text-main hover:text-bg text-text-main font-sans text-[10px] uppercase tracking-[0.2em] transition-all duration-300 text-center select-none"
+        >
+          View on Last.fm ↗
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -93,7 +188,113 @@ const isCenter = align === "center";
 <script>
   let spotifyInterval: any = null;
   let isFetching = false;
+  let latestTelemetryData: any = null;
 
+  function formatRelativeTime(uts: string | number) {
+    if (!uts) return "Recently Played";
+    const timestamp = typeof uts === "string" ? parseInt(uts, 10) * 1000 : uts * 1000;
+    if (isNaN(timestamp)) return "Recently Played";
+    const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+    if (diffSec < 60) return "Scrobbled just now";
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `Scrobbled ${diffMin}m ago`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `Scrobbled ${diffHour}h ago`;
+    const diffDay = Math.floor(diffHour / 24);
+    return `Scrobbled ${diffDay}d ago`;
+  }
+
+  function ensureSingleModal() {
+    const modals = document.querySelectorAll('#lastfm-expand-modal');
+    if (modals.length > 1) {
+      for (let i = 1; i < modals.length; i++) {
+        modals[i].remove();
+      }
+    }
+    const modal = document.getElementById('lastfm-expand-modal');
+    if (modal && modal.parentNode !== document.body) {
+      document.body.appendChild(modal);
+    }
+    return modal;
+  }
+
+  function populateModal(data: any) {
+    if (!data) return;
+    const isLive = data.isPlaying;
+    const titleText = data.title || 'Chamber Silence';
+    const artistText = data.artist || (isLive ? 'Unknown Artist' : 'Awaiting transmission...');
+
+    const modalTitle = document.getElementById('lastfm-modal-title');
+    const modalArtist = document.getElementById('lastfm-modal-artist');
+    const modalAlbum = document.getElementById('lastfm-modal-album');
+    const modalArt = document.getElementById('lastfm-modal-art');
+    const modalStatus = document.getElementById('lastfm-modal-status');
+    const statusDot = document.getElementById('lastfm-status-dot');
+    const modalLink = document.getElementById('lastfm-modal-link') as HTMLAnchorElement;
+
+    if (modalTitle) modalTitle.textContent = titleText;
+    if (modalArtist) modalArtist.textContent = artistText;
+    if (modalAlbum) {
+      modalAlbum.textContent = data.album ? `Album: ${data.album}` : '';
+      modalAlbum.style.display = data.album ? 'block' : 'none';
+    }
+    if (modalArt && data.albumImageUrl) {
+      modalArt.style.backgroundImage = `url("${data.albumImageUrl}")`;
+    }
+
+    if (modalStatus && statusDot) {
+      if (isLive) {
+        modalStatus.textContent = "Scrobbling Live on Spotify";
+        modalStatus.classList.add('text-accent');
+        modalStatus.classList.remove('text-text-muted');
+        statusDot.className = "w-2 h-2 rounded-full bg-accent animate-pulse";
+      } else {
+        modalStatus.textContent = data.playedAt ? formatRelativeTime(data.playedAt) : "Resonance Idle";
+        modalStatus.classList.remove('text-accent');
+        modalStatus.classList.add('text-text-muted');
+        statusDot.className = "w-2 h-2 rounded-full bg-text-muted/60";
+      }
+    }
+
+    if (modalLink) {
+      if (data.songUrl) {
+        modalLink.setAttribute('href', data.songUrl);
+        modalLink.classList.remove('pointer-events-none', 'opacity-50');
+      } else {
+        modalLink.removeAttribute('href');
+        modalLink.classList.add('pointer-events-none', 'opacity-50');
+      }
+    }
+  }
+
+  function openLastFmModal() {
+    const modal = ensureSingleModal();
+    if (!modal) return;
+    const card = document.getElementById('lastfm-modal-card');
+    if (!card) return;
+
+    if (latestTelemetryData) {
+      populateModal(latestTelemetryData);
+    }
+
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+    card.classList.remove('scale-95');
+    card.classList.add('scale-100');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLastFmModal() {
+    const modal = document.getElementById('lastfm-expand-modal');
+    const card = document.getElementById('lastfm-modal-card');
+    if (!modal || !card) return;
+
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    card.classList.add('scale-95');
+    card.classList.remove('scale-100');
+    document.body.style.overflow = '';
+  }
   async function updateSpotify() {
     if (isFetching || document.visibilityState === 'hidden') return;
     isFetching = true;
@@ -103,9 +304,10 @@ const isCenter = align === "center";
       if (!res.ok) return;
 
       const data = await res.json();
+      latestTelemetryData = data;
+
       const eqElements = document.querySelectorAll('.spotify-eq');
       const tagElements = document.querySelectorAll('.spotify-tag');
-      const linkElements = document.querySelectorAll('.spotify-link');
       const titleElements = document.querySelectorAll('.spotify-title');
       const artistElements = document.querySelectorAll('.spotify-artist');
       const artWrapElements = document.querySelectorAll('.spotify-art-wrap');
@@ -146,29 +348,11 @@ const isCenter = align === "center";
         artist.textContent = artistText;
       });
 
-      linkElements.forEach(link => {
-        if (data.songUrl) {
-          link.setAttribute('href', data.songUrl);
-          link.classList.remove('pointer-events-none');
-          link.classList.add('cursor-pointer');
-        } else {
-          link.removeAttribute('href');
-          link.classList.add('pointer-events-none');
-          link.classList.remove('cursor-pointer');
-        }
-      });
-
       if (data.albumImageUrl) {
+        artElements.forEach(art => {
+          (art as HTMLElement).style.backgroundImage = `url("${data.albumImageUrl}")`;
+        });
         artWrapElements.forEach(wrap => {
-          const isMobileInstance = wrap.closest('.md\\:hidden');
-          const isDesktopInstance = wrap.closest('.hidden.md\\:flex');
-          if (isMobileInstance && window.innerWidth >= 768) return;
-          if (isDesktopInstance && window.innerWidth < 768) return;
-
-          const artEl = wrap.querySelector('.spotify-art') as HTMLElement;
-          if (artEl) {
-            artEl.style.backgroundImage = `url("${data.albumImageUrl}")`;
-          }
           wrap.classList.remove('hidden');
         });
       } else {
@@ -176,6 +360,9 @@ const isCenter = align === "center";
           wrap.classList.add('hidden');
         });
       }
+
+      // Populate Modal elements
+      populateModal(data);
     } catch (e) {
       // Graceful silence on network hiccups
     } finally {
@@ -183,8 +370,42 @@ const isCenter = align === "center";
     }
   }
 
+  function initListeners() {
+    // Attach trigger listeners
+    document.querySelectorAll('.spotify-trigger').forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLastFmModal();
+      });
+    });
+
+    const closeBtn = document.getElementById('lastfm-modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeLastFmModal();
+      });
+    }
+
+    const modal = document.getElementById('lastfm-expand-modal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeLastFmModal();
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLastFmModal();
+      }
+    });
+  }
+
   function initSpotify() {
     if (spotifyInterval) clearInterval(spotifyInterval);
+    initListeners();
     updateSpotify();
     spotifyInterval = setInterval(updateSpotify, 20000); // 20s telemetry poll
   }
@@ -192,6 +413,7 @@ const isCenter = align === "center";
   document.addEventListener('astro:page-load', initSpotify);
   document.addEventListener('astro:before-preparation', () => {
     if (spotifyInterval) clearInterval(spotifyInterval);
+    closeLastFmModal();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {

@@ -2,6 +2,7 @@
 import AsciiAvatar from "./AsciiAvatar.astro";
 import Typewriter from "./Typewriter.astro";
 import SpotifyResonance from "./SpotifyResonance.astro";
+import LiveClock from "./LiveClock.astro";
 import framesJson from "../data/ascii-frames.json";
 import { getRuntimeEnv } from "../lib/notion";
 
@@ -21,7 +22,7 @@ try {
 ---
 
 <section
-  class="flex flex-col justify-center section-padding pt-20 pb-8 md:pt-16 md:pb-8 relative w-full h-full"
+  class="flex flex-col justify-center pt-10 pb-16 md:py-8 relative w-full h-full"
   id="hero"
 >
   <div
@@ -67,10 +68,10 @@ try {
       </p>
     </div>
 
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+    <div class="flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
       <a
         href="/#projects"
-        class="group inline-flex items-center justify-center gap-2 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-6 py-2 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
+        class="group inline-flex items-center justify-center gap-2 border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[9px] px-5 sm:px-6 py-2 rounded-full hover:bg-text-main hover:text-bg active:bg-text-main active:text-bg active:scale-95 transition-all duration-500"
         >
         <div class="relative w-[4px] h-[4px] flex items-center justify-center transition-all duration-300 group-hover:w-[16px] group-hover:h-[16px]">
           <span class="absolute inset-0 bg-text-main/50 rounded-full transition-all duration-300 group-hover:bg-transparent group-hover:opacity-0" />
@@ -93,8 +94,11 @@ try {
       </a>
     </div>
 
-    <div class="md:hidden mt-3 mb-1 flex justify-center w-full">
+    <!-- Mobile Telemetry Hub: Spotify Resonance & Live Clock (Visible on mobile only) -->
+    <div class="md:hidden mt-3 mb-3 flex flex-col items-center gap-1.5 w-full">
       <SpotifyResonance align="center" />
+      <div class="w-8 h-[1px] bg-border-subtle/40 my-0.5"></div>
+      <LiveClock align="center" />
     </div>
 
   </div>
