@@ -180,7 +180,7 @@ const formatPoetryTitle = (title: string) => {
                           "{project.description}"
                         </p>
                       </div>
-                      
+
                       <div class="flex-shrink-0 w-full md:w-[20%] flex flex-col gap-2 font-serif text-text-muted/80">
                         <div class="text-text-main/90 tracking-[0.2em] uppercase text-[10px]">
                           {project.type || "Digital Fragment"}
@@ -190,19 +190,37 @@ const formatPoetryTitle = (title: string) => {
                         </div>
                       </div>
                       
-                      <div class="flex w-full md:w-auto mt-4 md:mt-0 flex-shrink-0 items-center justify-end md:justify-center gap-4 md:ml-4">
-                        <span class="font-serif italic text-text-main/70 md:opacity-0 md:-translate-x-4 md:group-hover:opacity-100 md:group-hover:translate-x-0 transition-all duration-500 text-sm md:text-base">
-                          Explore
-                        </span>
-                        <div class="flex items-center justify-center w-8 h-8 text-text-main/50 group-hover:text-text-main transition-all duration-500 overflow-hidden relative flex-shrink-0">
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 group-hover:translate-x-8 group-hover:-translate-y-8">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                          </svg>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 -translate-x-8 translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                          </svg>
+                      <div class="flex w-full md:w-auto mt-4 md:mt-0 flex-shrink-0 items-center justify-between md:justify-center gap-4 md:ml-4">
+                        {/* Mobile Peek Pip: Orthogonal Unix preview trigger (hidden on desktop) */}
+                        {project.image && (
+                          <button
+                            type="button"
+                            class="project-peek-btn md:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-subtle/70 bg-bg-subtle/40 text-[10px] font-mono tracking-widest uppercase text-text-muted hover:text-accent hover:border-accent active:scale-95 transition-all duration-200 cursor-pointer select-none"
+                            aria-label={`Preview ${project.title}`}
+                            data-slug={project.slug}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="11" cy="11" r="8"></circle>
+                              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <span>Peek</span>
+                          </button>
+                        )}
+
+                        <div class="flex items-center gap-4 ml-auto md:ml-0">
+                          <span class="font-serif italic text-text-main/70 md:opacity-0 md:-translate-x-4 md:group-hover:opacity-100 md:group-hover:translate-x-0 transition-all duration-500 text-sm md:text-base">
+                            Explore
+                          </span>
+                          <div class="flex items-center justify-center w-8 h-8 text-text-main/50 group-hover:text-text-main transition-all duration-500 overflow-hidden relative flex-shrink-0">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 group-hover:translate-x-8 group-hover:-translate-y-8">
+                              <line x1="5" y1="12" x2="19" y2="12"></line>
+                              <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 -translate-x-8 translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0">
+                              <line x1="5" y1="12" x2="19" y2="12"></line>
+                              <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </a>
@@ -213,21 +231,20 @@ const formatPoetryTitle = (title: string) => {
             
             <!-- Floating Cursor Image Container -->
             <div id="project-cursor-wrapper" class="fixed top-0 left-0 pointer-events-none z-[100]"> <!-- positioning handled purely by JS -->
-              <div id="project-cursor-image" class="w-[450px] rounded-2xl overflow-hidden opacity-0 scale-50 shadow-2xl origin-center bg-bg border border-border-subtle relative">
+              <div id="project-cursor-image" class="w-[260px] sm:w-[320px] md:w-[380px] lg:w-[420px] xl:w-[450px] max-w-[calc(100vw-2rem)] max-h-[48vh] rounded-xl sm:rounded-2xl overflow-hidden opacity-0 scale-50 shadow-2xl origin-center bg-bg border border-border-subtle relative pointer-events-none">
                 {projects.map(project => {
                   const optimizedSrc = project.image && project.image.startsWith('http') 
                     ? `https://wsrv.nl/?url=${encodeURIComponent(project.image)}&w=600&output=webp` 
                     : project.image;
                     
                   return project.image ? (
-                  <Image 
+                  <img 
                     src={optimizedSrc} 
                     alt={`Preview of ${project.title}`} 
-                    width={600} 
-                    height={450} 
-                    class="w-full h-auto absolute hidden cursor-project-img" 
+                    class="w-full h-auto max-h-[48vh] object-contain absolute inset-0 hidden cursor-project-img" 
                     data-slug={project.slug} 
                     loading="eager"
+                    decoding="async"
                   />
                 ) : null})}
                 {blogPosts.map(post => {
@@ -235,9 +252,7 @@ const formatPoetryTitle = (title: string) => {
                   <img 
                     src={post.image} 
                     alt={`Preview of ${post.title}`} 
-                    width="600" 
-                    height="450" 
-                    class="w-full h-auto absolute hidden cursor-project-img object-cover" 
+                    class="w-full h-auto max-h-[48vh] object-contain absolute inset-0 hidden cursor-project-img" 
                     data-slug={post.slug} 
                     loading="eager"
                     decoding="async"
@@ -247,11 +262,18 @@ const formatPoetryTitle = (title: string) => {
             </div>
 
             <script>
+              let cursorCleanup: (() => void) | null = null;
+
               const initProjectCursor = async () => {
-                const cards = document.querySelectorAll('.project-bento-card');
+                if (cursorCleanup) {
+                  cursorCleanup();
+                  cursorCleanup = null;
+                }
+
+                const cards = document.querySelectorAll<HTMLElement>('.project-bento-card');
+                const peekBtns = document.querySelectorAll<HTMLButtonElement>('.project-peek-btn');
                 const cursorWrapper = document.getElementById('project-cursor-wrapper');
                 const cursorImg = document.getElementById('project-cursor-image');
-                const imgTags = document.querySelectorAll('.cursor-project-img');
                 
                 if (!cursorWrapper || !cursorImg || cards.length === 0) return;
 
@@ -260,6 +282,8 @@ const formatPoetryTitle = (title: string) => {
                   document.body.appendChild(cursorWrapper);
                 }
 
+                cursorWrapper.style.display = 'block';
+
                 const { gsap } = await import('gsap');
 
                 const xTo = gsap.quickTo(cursorWrapper, "x", { duration: 0.4, ease: "power3" });
@@ -267,57 +291,95 @@ const formatPoetryTitle = (title: string) => {
 
                 let isHovering = false;
                 let firstHover = true;
+                let activePeekSlug: string | null = null;
 
-                const getClampedPosition = (clientX, clientY) => {
-                  // Dynamically read the image's actual bounds since height is now auto
-                  const rect = cursorImg.getBoundingClientRect();
-                  const imgWidth = rect.width || 450;
-                  const imgHeight = rect.height || 337;
-                  const offset = 20;
-                  
+                // Cache layout dimensions to prevent forced reflows during mousemove
+                let cachedWidth = cursorImg.offsetWidth || 450;
+                let cachedHeight = cursorImg.offsetHeight || 281;
+
+                const updateDimensions = () => {
+                  if (cursorImg) {
+                    cachedWidth = cursorImg.offsetWidth || cachedWidth;
+                    cachedHeight = cursorImg.offsetHeight || cachedHeight;
+                  }
+                };
+
+                const onResize = () => {
+                  updateDimensions();
+                };
+                window.addEventListener('resize', onResize, { passive: true });
+
+                const showProjectImage = (slug: string) => {
+                  const allCursorImgs = cursorImg.querySelectorAll<HTMLElement>('.cursor-project-img');
+                  allCursorImgs.forEach(img => {
+                    img.classList.remove('relative', 'block');
+                    img.classList.add('absolute', 'hidden');
+                  });
+                  const targetImg = cursorImg.querySelector<HTMLElement>(`.cursor-project-img[data-slug="${slug}"]`);
+                  if (targetImg) {
+                    targetImg.classList.remove('absolute', 'hidden');
+                    targetImg.classList.add('relative', 'block');
+                    updateDimensions();
+                    return true;
+                  }
+                  return false;
+                };
+
+                const hidePreview = () => {
+                  isHovering = false;
+                  activePeekSlug = null;
+                  gsap.killTweensOf(cursorImg);
+                  gsap.to(cursorImg, {
+                    opacity: 0,
+                    scale: 0.5,
+                    rotation: 0,
+                    duration: 0.35,
+                    ease: "power3.out"
+                  });
+                };
+
+                const getClampedPosition = (clientX: number, clientY: number) => {
+                  const isSmallScreen = window.innerWidth < 640;
+                  const offset = isSmallScreen ? 10 : 20;
                   let x = clientX + offset;
                   let y = clientY + offset;
                   
                   // Flip to left if it overflows right screen bounds
-                  if (x + imgWidth > window.innerWidth - offset) {
-                    x = clientX - imgWidth - offset;
+                  if (x + cachedWidth > window.innerWidth - offset) {
+                    x = clientX - cachedWidth - offset;
                   }
                   
                   // Flip to top if it overflows bottom screen bounds
-                  if (y + imgHeight > window.innerHeight - offset) {
-                    y = clientY - imgHeight - offset;
+                  if (y + cachedHeight > window.innerHeight - offset) {
+                    y = clientY - cachedHeight - offset;
                   }
                   
-                  // Failsafe bounds check
+                  // Strict mathematical clamping to guarantee zero edge cropping
+                  const maxX = Math.max(offset, window.innerWidth - cachedWidth - offset);
+                  if (x > maxX) x = maxX;
                   if (x < offset) x = offset;
+
+                  const maxY = Math.max(offset, window.innerHeight - cachedHeight - offset);
+                  if (y > maxY) y = maxY;
                   if (y < offset) y = offset;
                   
                   return { x, y };
                 };
 
+                // 1. Desktop mouse hover tracking (Only on devices with fine pointer & desktop screen)
+                const hasFinePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 768;
+
+                const cardListeners: Array<{ card: HTMLElement; enter: any; move: any; leave: any }> = [];
                 cards.forEach(card => {
-                  card.addEventListener('mouseenter', (e: MouseEvent) => {
+                  const onEnter = (e: MouseEvent) => {
+                    if (!hasFinePointer()) return;
                     isHovering = true;
+                    activePeekSlug = null;
                     const slug = card.getAttribute('data-slug');
                     const hasImg = card.getAttribute('data-has-image') === 'true' || card.dataset.hasImage === 'true' || card.hasAttribute('data-has-image');
                     
                     if (!hasImg || !slug) return;
-                    
-                    // Reset all images
-                    const allCursorImgs = cursorImg.querySelectorAll('.cursor-project-img');
-                    allCursorImgs.forEach(img => {
-                      img.classList.remove('relative', 'block');
-                      img.classList.add('absolute', 'hidden');
-                    });
-                    
-                    // Show target image
-                    const targetImg = cursorImg.querySelector(`.cursor-project-img[data-slug="${slug}"]`);
-                    if (targetImg) {
-                      targetImg.classList.remove('absolute', 'hidden');
-                      targetImg.classList.add('relative', 'block');
-                    } else {
-                      return; // image wasn't generated
-                    }
+                    if (!showProjectImage(slug)) return;
                     
                     const pos = getClampedPosition(e.clientX, e.clientY);
                     
@@ -337,28 +399,103 @@ const formatPoetryTitle = (title: string) => {
                       duration: 0.6,
                       ease: "elastic.out(1, 0.8)"
                     });
-                  });
+                  };
 
-                  card.addEventListener('mousemove', (e: MouseEvent) => {
+                  const onMove = (e: MouseEvent) => {
+                    if (!hasFinePointer()) return;
                     if (isHovering) {
                       const pos = getClampedPosition(e.clientX, e.clientY);
                       xTo(pos.x);
                       yTo(pos.y);
                     }
-                  });
+                  };
 
-                  card.addEventListener('mouseleave', () => {
-                    isHovering = false;
-                    gsap.killTweensOf(cursorImg);
-                    gsap.to(cursorImg, {
-                      opacity: 0,
-                      scale: 0.5,
-                      rotation: 0,
-                      duration: 0.4,
-                      ease: "power3.out"
-                    });
-                  });
+                  const onLeave = () => {
+                    if (!hasFinePointer()) return;
+                    hidePreview();
+                  };
+
+                  card.addEventListener('mouseenter', onEnter);
+                  card.addEventListener('mousemove', onMove);
+                  card.addEventListener('mouseleave', onLeave);
+                  cardListeners.push({ card, enter: onEnter, move: onMove, leave: onLeave });
                 });
+
+                // 2. Mobile orthogonal Peek Pip interaction
+                const peekListeners: Array<{ btn: HTMLButtonElement; click: any }> = [];
+                peekBtns.forEach(btn => {
+                  const onPeekClick = (e: MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const slug = btn.getAttribute('data-slug');
+                    if (!slug) return;
+
+                    // Toggle off if already viewing this preview
+                    if (activePeekSlug === slug && isHovering) {
+                      hidePreview();
+                      return;
+                    }
+
+                    if (!showProjectImage(slug)) return;
+                    isHovering = true;
+                    activePeekSlug = slug;
+
+                    // Calculate comfortable mobile position anchored above/below button
+                    const btnRect = btn.getBoundingClientRect();
+                    const x = Math.max(10, Math.round((window.innerWidth - cachedWidth) / 2));
+                    let y = btnRect.top - cachedHeight - 14;
+                    if (y < 20) {
+                      y = btnRect.bottom + 14; // flip below if not enough room above
+                    }
+                    if (y + cachedHeight > window.innerHeight - 20) {
+                      y = Math.max(20, Math.round((window.innerHeight - cachedHeight) / 2));
+                    }
+
+                    gsap.killTweensOf(cursorImg);
+                    gsap.set(cursorWrapper, { x, y });
+                    gsap.fromTo(cursorImg, 
+                      { opacity: 0, scale: 0.85 },
+                      { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" }
+                    );
+                  };
+
+                  btn.addEventListener('click', onPeekClick);
+                  peekListeners.push({ btn, click: onPeekClick });
+                });
+
+                // Dismiss preview on outside click or scroll
+                const onOutsideClick = (e: MouseEvent) => {
+                  if (!isHovering) return;
+                  const target = e.target as HTMLElement | null;
+                  if (target?.closest('.project-peek-btn')) return;
+                  hidePreview();
+                };
+                document.addEventListener('click', onOutsideClick);
+
+                const onScroll = () => {
+                  if (isHovering && !hasFinePointer()) {
+                    hidePreview();
+                  }
+                };
+                window.addEventListener('scroll', onScroll, { passive: true });
+
+                cursorCleanup = () => {
+                  window.removeEventListener('resize', onResize);
+                  window.removeEventListener('scroll', onScroll);
+                  document.removeEventListener('click', onOutsideClick);
+                  cardListeners.forEach(({ card, enter, move, leave }) => {
+                    card.removeEventListener('mouseenter', enter);
+                    card.removeEventListener('mousemove', move);
+                    card.removeEventListener('mouseleave', leave);
+                  });
+                  peekListeners.forEach(({ btn, click }) => {
+                    btn.removeEventListener('click', click);
+                  });
+                  if (cursorImg) {
+                    gsap.killTweensOf(cursorImg);
+                  }
+                };
               };
 
               if (document.readyState === 'loading') {
@@ -367,6 +504,16 @@ const formatPoetryTitle = (title: string) => {
                 initProjectCursor();
               }
               document.addEventListener("astro:page-load", initProjectCursor);
+              document.addEventListener("astro:before-swap", () => {
+                if (cursorCleanup) {
+                  cursorCleanup();
+                  cursorCleanup = null;
+                }
+                const wrapper = document.getElementById('project-cursor-wrapper');
+                if (wrapper && wrapper.parentNode === document.body) {
+                  document.body.removeChild(wrapper);
+                }
+              }, { once: true });
             </script>
           </div>
 

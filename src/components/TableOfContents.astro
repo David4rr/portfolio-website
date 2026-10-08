@@ -29,7 +29,7 @@ const hasItems = items && items.length >= 2;
       <!-- Header Bar -->
       <div id="toc-inline-header" class="flex items-center justify-between border-b border-border-subtle/50 px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-bg-subtle/30 transition-colors duration-200">
         <div class="flex items-center gap-2 sm:gap-2.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_rgba(255,107,53,0.6)]"></span>
+          <span class="font-serif italic text-accent text-xs leading-none select-none">§</span>
           <span class="font-mono text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.25em] text-text-muted font-medium">
             TABLE OF CONTENTS
           </span>
@@ -91,21 +91,23 @@ const hasItems = items && items.length >= 2;
       aria-label="Reading section indicator"
     >
       <!-- Rail Header & Progress Counter -->
-      <div class="mb-3 flex items-center gap-2 pl-3">
-        <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0"></span>
-        <span class="font-mono text-[9px] uppercase tracking-[0.25em] text-text-muted/80 font-medium">INDEX</span>
+      <div class="mb-3.5 flex items-center gap-2 pl-3">
+        <span class="font-serif italic text-accent text-xs font-normal select-none leading-none">§</span>
+        <span class="font-mono text-[9px] uppercase tracking-[0.25em] text-text-muted/70 font-medium">INDEX</span>
+        <span class="text-border-subtle/70 text-[9px] font-mono select-none">/</span>
         <span id="toc-rail-progress" class="font-mono text-[9px] text-accent font-semibold tabular-nums">0%</span>
       </div>
 
       <!-- Rail Items with Dynamic Cursor Track -->
       <div id="toc-rail-track" class="relative flex flex-col py-2 pl-3 border-l border-border-subtle/40 overflow-y-auto max-h-[calc(85vh-2.5rem)] scrollbar-none">
-        <!-- Animated Active Indicator Pin (Driven by anime.js) -->
-        <!-- Animated Active Indicator Pin (Smooth Hardware-Accelerated Indicator) -->
+        <!-- Animated Active Indicator Pin (Refined Editorial Margin Needle) -->
         <div
           id="toc-rail-indicator"
-          class="absolute -left-[2px] w-[3px] bg-accent rounded-full shadow-[0_0_10px_rgba(255,107,53,0.7)] pointer-events-none origin-center transition-[top,height,transform] duration-300 ease-out"
+          class="absolute -left-[1px] w-[2px] bg-accent rounded-[1px] pointer-events-none origin-center transition-[top,height] duration-300 ease-out"
           style="top: 0px; height: 24px;"
-        ></div>
+        >
+          <span class="absolute top-1/2 -translate-y-1/2 left-[2px] w-1.5 h-[1.5px] bg-accent"></span>
+        </div>
 
         <!-- Section Nodes -->
         <div class="space-y-3.5" id="toc-rail-items-container">
@@ -148,9 +150,9 @@ const hasItems = items && items.length >= 2;
         class="h-11 md:h-12 flex items-center gap-2.5 px-4 rounded-full bg-bg/75 backdrop-blur-xl border border-border-subtle/60 shadow-lg shadow-black/20 text-xs text-text-main hover:border-accent active:scale-95 transition-all duration-200 select-none"
         aria-label="Table of contents menu"
       >
-        <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0"></span>
+        <span class="font-serif italic text-accent text-xs font-normal select-none leading-none shrink-0">§</span>
         <span id="toc-mobile-active-num" class="font-mono text-[10px] text-accent font-semibold tabular-nums shrink-0">01</span>
-        <span id="toc-mobile-active-title" class="font-sans text-[11px] max-w-[130px] sm:max-w-[180px] truncate text-text-muted">Contents</span>
+        <span id="toc-mobile-active-title" class="font-serif italic text-xs max-w-[130px] sm:max-w-[180px] truncate text-text-main/90">Contents</span>
         <svg id="toc-mobile-chevron" class="w-3 h-3 text-text-muted/70 transition-transform duration-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="18 15 12 9 6 15"></polyline>
         </svg>
@@ -378,32 +380,27 @@ const hasItems = items && items.length >= 2;
 
       // Update Desktop Rail Nodes
       railNodes.forEach((node, idx) => {
-        const numSpan = node.querySelector('.toc-rail-num');
-        const titleSpan = node.querySelector('.toc-rail-title');
+        const numSpan = node.querySelector<HTMLElement>('.toc-rail-num');
+        const titleSpan = node.querySelector<HTMLElement>('.toc-rail-title');
         if (idx === newIndex) {
           node.classList.add('is-active');
           if (numSpan) {
-            numSpan.classList.add('text-accent', 'font-bold');
+            numSpan.classList.add('text-accent', 'font-semibold', 'translate-x-1');
             numSpan.classList.remove('text-text-muted/60');
-            // Elastic bounce on active number
-            anime({
-              targets: numSpan,
-              scale: [1, 1.3, 1],
-              duration: 450,
-              easing: 'easeOutElastic(1, .6)'
-            });
           }
           if (titleSpan) {
-            titleSpan.classList.add('text-accent', 'opacity-100');
+            titleSpan.classList.add('text-text-main', 'font-serif', 'italic', 'opacity-100');
+            titleSpan.classList.remove('opacity-70', 'text-accent');
           }
         } else {
           node.classList.remove('is-active');
           if (numSpan) {
-            numSpan.classList.remove('text-accent', 'font-bold');
+            numSpan.classList.remove('text-accent', 'font-semibold', 'translate-x-1');
             numSpan.classList.add('text-text-muted/60');
           }
           if (titleSpan) {
-            titleSpan.classList.remove('text-accent', 'opacity-100');
+            titleSpan.classList.remove('text-text-main', 'font-serif', 'italic', 'opacity-100');
+            titleSpan.classList.add('opacity-70');
           }
         }
       });
@@ -416,10 +413,6 @@ const hasItems = items && items.length >= 2;
 
         indicator.style.top = `${targetTop}px`;
         indicator.style.height = `${targetHeight}px`;
-        indicator.style.transform = 'scaleY(1.15)';
-        setTimeout(() => {
-          if (indicator) indicator.style.transform = 'scaleY(1)';
-        }, 150);
       }
 
       // Update Mobile Pill Label
