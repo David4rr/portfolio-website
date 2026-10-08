@@ -249,29 +249,100 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
     return result;
   }, [projects, sizesLoaded, aspectRatios]);
 
+  const [scale, setScale] = useState(1);
+  const scaleRef = useRef(1);
+
   const [pos, setPos] = useState(() => {
     const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
     const cy = typeof window !== 'undefined' ? window.innerHeight / 2 : 500;
     return { x: cx, y: cy }; 
   });
+  const posRef = useRef(pos);
+
+  useEffect(() => {
+    posRef.current = pos;
+  }, [pos]);
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
   
   const hasCentered = useRef(false);
+
+  // Scale boundaries
+  const MIN_SCALE = 0.25;
+  const MAX_SCALE = 3.0;
+
+  // Focal-point invariant zoom around screen coordinate (clientX, clientY)
+  const zoomAt = (clientX: number, clientY: number, factor: number) => {
+    const curScale = scaleRef.current;
+    const curPos = posRef.current;
+    
+    const targetScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, curScale * factor));
+    if (Math.abs(targetScale - curScale) < 0.0001) return;
+    
+    const scaleRatio = targetScale / curScale;
+    const newX = clientX - (clientX - curPos.x) * scaleRatio;
+    const newY = clientY - (clientY - curPos.y) * scaleRatio;
+    
+    scaleRef.current = targetScale;
+    posRef.current = { x: newX, y: newY };
+    
+    setScale(targetScale);
+    setPos({ x: newX, y: newY });
+  };
+
+  // Smooth animated zoom (e.g. for double-click)
+  const animateZoomTo = (clientX: number, clientY: number, targetScale: number, duration = 280) => {
+    const startScale = scaleRef.current;
+    const startPos = posRef.current;
+    const clampedTarget = Math.min(MAX_SCALE, Math.max(MIN_SCALE, targetScale));
+    if (Math.abs(clampedTarget - startScale) < 0.0001) return;
+
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // easeOutCubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      
+      const curScale = startScale + (clampedTarget - startScale) * ease;
+      const wx = (clientX - startPos.x) / startScale;
+      const wy = (clientY - startPos.y) / startScale;
+      const curPos = {
+        x: clientX - wx * curScale,
+        y: clientY - wy * curScale
+      };
+      
+      scaleRef.current = curScale;
+      posRef.current = curPos;
+      setScale(curScale);
+      setPos(curPos);
+      
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
+  };
 
   // Automatically center the canvas on the main 'center-poetry' node after layout
   useEffect(() => {
     if (laidOutProjects.length > 0 && !hasCentered.current && typeof window !== 'undefined') {
       const centerProj = laidOutProjects.find(p => p.id === 'center-poetry');
       if (centerProj) {
-        setPos({
-          x: window.innerWidth / 2 - centerProj.x,
-          y: window.innerHeight / 2 - centerProj.y
-        });
+        const nextPos = {
+          x: window.innerWidth / 2 - centerProj.x * scaleRef.current,
+          y: window.innerHeight / 2 - centerProj.y * scaleRef.current
+        };
+        posRef.current = nextPos;
+        setPos(nextPos);
         hasCentered.current = true;
       }
     }
   }, [laidOutProjects]);
 
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
   const startPos = useRef({ x: 0, y: 0 });
   const hasDraggedRef = useRef(false);
@@ -288,21 +359,22 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 3. Pan and Drag Logic
+  // 3. Pan, Drag, and Buttonless Zoom Logic
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      isDraggingRef.current = true;
       setIsDragging(true);
       hasDraggedRef.current = false;
       lastPos.current = { x: e.clientX, y: e.clientY };
       startPos.current = { x: e.clientX, y: e.clientY };
-      // Do NOT capture pointer here, let click bubble if no drag occurs
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (!isDragging) return;
+      if (!isDraggingRef.current) return;
       const dx = e.clientX - lastPos.current.x;
       const dy = e.clientY - lastPos.current.y;
       
@@ -310,23 +382,118 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
       const totalDy = Math.abs(e.clientY - startPos.current.y);
       if (!hasDraggedRef.current && (totalDx > 3 || totalDy > 3)) {
         hasDraggedRef.current = true;
-        // Only capture the pointer once the user is explicitly dragging
-        container.setPointerCapture(e.pointerId);
+        try {
+          container.setPointerCapture(e.pointerId);
+        } catch {}
       }
       
-      setPos(p => ({ x: p.x + dx, y: p.y + dy }));
+      const nextPos = { x: posRef.current.x + dx, y: posRef.current.y + dy };
+      posRef.current = nextPos;
+      setPos(nextPos);
       lastPos.current = { x: e.clientX, y: e.clientY };
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      isDraggingRef.current = false;
       setIsDragging(false);
       if (hasDraggedRef.current) {
-        container.releasePointerCapture(e.pointerId);
+        try {
+          container.releasePointerCapture(e.pointerId);
+        } catch {}
       }
     };
 
+    // Buttonless Zoom via Wheel, Trackpad Pinch, and Continuous Pan
     const onWheel = (e: WheelEvent) => {
-      setPos(p => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
+      e.preventDefault();
+
+      // 1. Trackpad pinch (macOS/Windows precision) or Ctrl/Cmd + wheel zoom
+      if (e.ctrlKey || e.metaKey) {
+        const factor = Math.exp(-e.deltaY * 0.008);
+        zoomAt(e.clientX, e.clientY, factor);
+        return;
+      }
+
+      // 2. Physical mouse wheel detection (distinct discrete notches, no horizontal delta)
+      const isPhysicalMouseWheel = (e.deltaMode !== 0 || Math.abs(e.deltaY) >= 40) && e.deltaX === 0;
+      if (isPhysicalMouseWheel) {
+        const factor = Math.exp(-e.deltaY * 0.003);
+        zoomAt(e.clientX, e.clientY, factor);
+        return;
+      }
+
+      // 3. Trackpad 2-finger continuous pan
+      const nextPos = { x: posRef.current.x - e.deltaX, y: posRef.current.y - e.deltaY };
+      posRef.current = nextPos;
+      setPos(nextPos);
+    };
+
+    // Touch Screen Multi-Touch Pinch-to-Zoom & Two-Finger Pan
+    let touchStartDist = 0;
+    let touchStartScale = 1;
+    let touchStartMidpoint = { x: 0, y: 0 };
+    let touchStartPos = { x: 0, y: 0 };
+    let isPinching = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        hasDraggedRef.current = true;
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        touchStartDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        touchStartScale = scaleRef.current;
+        touchStartMidpoint = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2
+        };
+        touchStartPos = { ...posRef.current };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const currentMidpoint = {
+          x: (t1.clientX + t2.clientX) / 2,
+          y: (t1.clientY + t2.clientY) / 2
+        };
+
+        if (touchStartDist > 0) {
+          const rawScale = touchStartScale * (currentDist / touchStartDist);
+          const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, rawScale));
+
+          const wx = (touchStartMidpoint.x - touchStartPos.x) / touchStartScale;
+          const wy = (touchStartMidpoint.y - touchStartPos.y) / touchStartScale;
+          const newPos = {
+            x: currentMidpoint.x - wx * newScale,
+            y: currentMidpoint.y - wy * newScale
+          };
+
+          scaleRef.current = newScale;
+          posRef.current = newPos;
+          setScale(newScale);
+          setPos(newPos);
+        }
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        isPinching = false;
+        touchStartDist = 0;
+      }
+    };
+
+    // Double-click to zoom in, Shift + Double-click to zoom out
+    const onDblClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('a') || target.closest('button')) return;
+      const targetScale = e.shiftKey ? scaleRef.current / 1.6 : scaleRef.current * 1.6;
+      animateZoomTo(e.clientX, e.clientY, targetScale, 300);
     };
 
     const onClick = (e: MouseEvent) => {
@@ -340,7 +507,12 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
     container.addEventListener('pointermove', onPointerMove);
     container.addEventListener('pointerup', onPointerUp);
     container.addEventListener('pointercancel', onPointerUp);
-    container.addEventListener('wheel', onWheel, { passive: true });
+    container.addEventListener('wheel', onWheel, { passive: false });
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', onTouchEnd, { passive: true });
+    container.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    container.addEventListener('dblclick', onDblClick);
     container.addEventListener('click', onClick, { capture: true });
 
     return () => {
@@ -349,28 +521,31 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
       container.removeEventListener('pointerup', onPointerUp);
       container.removeEventListener('pointercancel', onPointerUp);
       container.removeEventListener('wheel', onWheel);
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+      container.removeEventListener('touchcancel', onTouchEnd);
+      container.removeEventListener('dblclick', onDblClick);
       container.removeEventListener('click', onClick, { capture: true });
     };
-  }, [isDragging]);
+  }, []);
 
-  // 4. Virtualization
+  // 4. Virtualization with Scale-aware Bounding Box
   const visibleProjects = useMemo(() => {
-    // Only render projects that are within or near the viewport
-    const margin = 1500; // Render a bit outside to prevent pop-in
+    const curScale = scale;
+    const margin = Math.max(1200, 1200 / curScale);
     
-    // Viewport bounding box (in canvas coordinates) assuming wrapper is at center (top-1/2 left-1/2)
-    const minX = -pos.x - viewport.w/2 - margin;
-    const maxX = -pos.x + viewport.w/2 + margin;
-    const minY = -pos.y - viewport.h/2 - margin;
-    const maxY = -pos.y + viewport.h/2 + margin;
+    // Viewport bounding box (in canvas coordinates)
+    const minX = -pos.x / curScale - margin;
+    const maxX = (viewport.w - pos.x) / curScale + margin;
+    const minY = -pos.y / curScale - margin;
+    const maxY = (viewport.h - pos.y) / curScale + margin;
 
     return laidOutProjects.filter(p => {
-      // Check if project overlaps with viewport bounding box
       return (p.x + p.w/2) > minX && (p.x - p.w/2) < maxX &&
              (p.y + p.h/2) > minY && (p.y - p.h/2) < maxY;
     });
-  }, [laidOutProjects, pos, viewport]);
-
+  }, [laidOutProjects, pos, viewport, scale]);
   // 5. Flip State & Anime.js Sequences
   const animMap = useRef(new Map<string, any>());
   const stateMap = useRef(new Map<string, any>());
@@ -492,7 +667,10 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
     >
       <div 
         class="absolute top-0 left-0 will-change-transform"
-        style={{ transform: `translate3d(${pos.x}px, ${pos.y}px, 0)` }}
+        style={{ 
+          transform: `translate3d(${pos.x}px, ${pos.y}px, 0) scale(${scale})`,
+          transformOrigin: '0 0'
+        }}
       >
         {visibleProjects.map(p => {
           if (p.type === 'center') {
