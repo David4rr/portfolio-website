@@ -502,43 +502,83 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     });
   };
 
+  let detailExitCleanup: (() => void) | null = null;
+
   const recordReadingHistory = () => {
     try {
+      if (detailExitCleanup) {
+        detailExitCleanup();
+        detailExitCleanup = null;
+      }
+
       const slug = window.location.pathname.split('/').filter(Boolean).pop();
       if (!slug) return;
       const key = 'omp_reading_history';
       const history = JSON.parse(localStorage.getItem(key) || '{}');
-      const prevTime = history[slug];
+      const priorExitTime = history[slug];
 
-      const indicator = document.getElementById('detail-last-read');
-      if (indicator && prevTime && typeof prevTime === 'number') {
-        const diffSec = Math.floor((Date.now() - prevTime) / 1000);
-        let rel = 'just now';
-        if (diffSec >= 60 && diffSec < 3600) rel = `${Math.floor(diffSec / 60)}m ago`;
-        else if (diffSec >= 3600 && diffSec < 86400) rel = `${Math.floor(diffSec / 3600)}h ago`;
-        else if (diffSec >= 86400 && diffSec < 172800) rel = 'yesterday';
-        else if (diffSec >= 172800) rel = `${Math.floor(diffSec / 86400)}d ago`;
-
-        indicator.textContent = `• last read ${rel}`;
-        indicator.classList.remove('hidden');
+      // Format previous read time ONLY if it existed from an earlier session/exit
+      let prevRel: string | null = null;
+      if (priorExitTime && typeof priorExitTime === 'number') {
+        const diffSec = Math.floor((Date.now() - priorExitTime) / 1000);
+        if (diffSec < 60) prevRel = 'just now';
+        else if (diffSec < 3600) prevRel = `${Math.floor(diffSec / 60)}m ago`;
+        else if (diffSec < 86400) prevRel = `${Math.floor(diffSec / 3600)}h ago`;
+        else if (diffSec >= 86400 && diffSec < 172800) prevRel = 'yesterday';
+        else prevRel = `${Math.floor(diffSec / 86400)}d ago`;
       }
 
-      history[slug] = Date.now();
-      localStorage.setItem(key, JSON.stringify(history));
+      // Display previous read status on detail page ONLY if it was read previously.
+      // If first-time visit (never exited before), keep hidden.
+      const indicator = document.getElementById('detail-last-read');
+      if (indicator) {
+        if (prevRel) {
+          indicator.textContent = `• last read ${prevRel}`;
+          indicator.classList.remove('hidden');
+        } else {
+          indicator.textContent = '';
+          indicator.classList.add('hidden');
+        }
+      }
+
+      // Record / flush current timestamp ONLY when leaving / exiting the writing detail page
+      let hasFlushed = false;
+      const flushTimestamp = () => {
+        if (hasFlushed) return;
+        hasFlushed = true;
+        try {
+          const currentHistory = JSON.parse(localStorage.getItem(key) || '{}');
+          currentHistory[slug] = Date.now();
+          localStorage.setItem(key, JSON.stringify(currentHistory));
+        } catch {}
+      };
+
+      // 1. Direct Return button click (covers Selected Writings return and Canvas Gallery return)
+      const returnBtn = document.getElementById('magnetic-area');
+      if (returnBtn) {
+        returnBtn.addEventListener('click', flushTimestamp);
+      }
+
+      // 2. Astro View Transitions navigation away from page (Return button, logo click, back button, nav links)
+      const onBeforeSwap = () => {
+        flushTimestamp();
+        cleanup();
+      };
+      document.addEventListener('astro:before-swap', onBeforeSwap, { once: true });
+
+      const cleanup = () => {
+        if (returnBtn) returnBtn.removeEventListener('click', flushTimestamp);
+        document.removeEventListener('astro:before-swap', onBeforeSwap);
+      };
+
+      detailExitCleanup = cleanup;
     } catch {}
   };
 
-  document.addEventListener('astro:page-load', () => {
-    setupReturnAnimation();
-    setupCopyButtons();
-    recordReadingHistory();
-  });
-  setupReturnAnimation();
   const setupSmoothCardScroll = () => {
     document.querySelectorAll('.terminal-body, .table-wrapper').forEach((el) => {
       el.addEventListener('wheel', (e: Event) => {
         const we = e as WheelEvent;
-        // Allow vertical mouse-wheel and trackpad gestures to scroll the page with zero resistance
         if (Math.abs(we.deltaY) > Math.abs(we.deltaX)) {
           return;
         }
@@ -546,9 +586,20 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     });
   };
 
-  setupCopyButtons();
-  setupSmoothCardScroll();
-  recordReadingHistory();
+  const initDetailPage = () => {
+    setupReturnAnimation();
+    setupCopyButtons();
+    setupSmoothCardScroll();
+    recordReadingHistory();
+  };
+
+  document.addEventListener('astro:page-load', initDetailPage);
+  window.addEventListener('pageshow', recordReadingHistory);
+  if (document.readyState === 'complete') {
+    initDetailPage();
+  } else {
+    window.addEventListener('DOMContentLoaded', initDetailPage);
+  }
 </script>
 
 <style is:global>

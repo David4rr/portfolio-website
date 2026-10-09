@@ -175,12 +175,21 @@ const formatPoetryTitle = (title: string) => {
 </div>
 
 <script>
+  let lastReadTicker: number | null = null;
+
   const initLastReadTimes = () => {
     try {
-      const history = JSON.parse(localStorage.getItem('omp_reading_history') || '{}');
+      const raw = localStorage.getItem('omp_reading_history');
+      const history = raw ? JSON.parse(raw) : {};
       document.querySelectorAll<HTMLElement>('.last-read-tag[data-slug]').forEach((el) => {
         const slug = el.dataset.slug;
-        if (!slug || !history[slug]) return;
+        if (!slug || !history[slug]) {
+          if (!el.classList.contains('hidden')) {
+            el.classList.add('hidden');
+            el.textContent = '';
+          }
+          return;
+        }
         const time = history[slug];
         const diffSec = Math.floor((Date.now() - time) / 1000);
         let rel = 'just now';
@@ -189,10 +198,32 @@ const formatPoetryTitle = (title: string) => {
         else if (diffSec >= 86400 && diffSec < 172800) rel = 'yesterday';
         else if (diffSec >= 172800) rel = `${Math.floor(diffSec / 86400)}d ago`;
 
-        el.textContent = `• Read ${rel}`;
-        el.classList.remove('hidden');
+        const newText = `• last read ${rel}`;
+        if (el.textContent !== newText) {
+          el.textContent = newText;
+        }
+        if (el.classList.contains('hidden')) {
+          el.classList.remove('hidden');
+        }
       });
     } catch {}
+  };
+
+  const startLastReadTicker = () => {
+    initLastReadTimes();
+    if (lastReadTicker) window.clearInterval(lastReadTicker);
+    lastReadTicker = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        initLastReadTimes();
+      }
+    }, 1000);
+  };
+
+  const stopLastReadTicker = () => {
+    if (lastReadTicker) {
+      window.clearInterval(lastReadTicker);
+      lastReadTicker = null;
+    }
   };
 
   const setupSelectedCards = () => {
@@ -208,10 +239,29 @@ const formatPoetryTitle = (title: string) => {
   };
 
   document.addEventListener('astro:page-load', () => {
-    initLastReadTimes();
+    startLastReadTicker();
     setupSelectedCards();
   });
-  initLastReadTimes();
+  document.addEventListener('astro:before-swap', stopLastReadTicker);
+  window.addEventListener('pageshow', startLastReadTicker);
+  window.addEventListener('storage', initLastReadTimes);
+  window.addEventListener('focus', initLastReadTimes);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      initLastReadTimes();
+    }
+  });
+
+  if (document.readyState === 'complete') {
+    startLastReadTicker();
+    setupSelectedCards();
+  } else {
+    window.addEventListener('DOMContentLoaded', () => {
+      startLastReadTicker();
+      setupSelectedCards();
+    });
+  }
+  startLastReadTicker();
   setupSelectedCards();
 </script>
 

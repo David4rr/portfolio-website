@@ -72,13 +72,33 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
 
   const [readingHistory, setReadingHistory] = useState<Record<string, number>>({});
 
+  const [, setTick] = useState(0);
+
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('omp_reading_history');
-      if (raw) {
-        setReadingHistory(JSON.parse(raw));
+    const updateReading = () => {
+      try {
+        const raw = localStorage.getItem('omp_reading_history');
+        if (raw) {
+          setReadingHistory(JSON.parse(raw));
+        }
+      } catch {}
+      setTick((t) => t + 1);
+    };
+    updateReading();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        updateReading();
       }
-    } catch {}
+    }, 2000);
+    window.addEventListener('pageshow', updateReading);
+    window.addEventListener('storage', updateReading);
+    window.addEventListener('focus', updateReading);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('pageshow', updateReading);
+      window.removeEventListener('storage', updateReading);
+      window.removeEventListener('focus', updateReading);
+    };
   }, []);
 
   const getRelativeLastRead = (slug: string): string | null => {
@@ -758,7 +778,7 @@ export default function InfiniteCanvas({ projects }: { projects: Project[] }) {
                     {isBlog && (postDate || lastRead) && (
                       <div class="flex items-center justify-center gap-2 font-mono text-[9px] md:text-[10px] uppercase tracking-wider text-text-muted/80 mb-2 px-2">
                         <span>{postDate}</span>
-                        {lastRead && <span class="text-accent font-medium">• Read {lastRead}</span>}
+                        {lastRead && <span class="text-accent font-medium">• last read {lastRead}</span>}
                       </div>
                     )}
                     <h3 class="font-serif text-[clamp(1rem,1.3vw,1.5rem)] leading-snug font-normal text-text-main mb-2.5 px-3">

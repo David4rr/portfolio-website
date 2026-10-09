@@ -30,7 +30,7 @@ const isCenter = align === "center";
   <button
     type="button"
     aria-label="Expand Last.fm listening telemetry"
-    class={`spotify-trigger spotify-link flex items-center gap-2 group/link select-none transition-transform duration-300 cursor-pointer ${
+    class={`spotify-trigger spotify-link flex items-center gap-2 group/link select-none transition-all duration-200 active:scale-[0.97] active:duration-100 cursor-pointer ${
       isCenter ? "justify-center" : "justify-end"
     }`}
   >
@@ -70,49 +70,48 @@ const isCenter = align === "center";
 <!-- Last.fm Telemetry Expand Modal (Global Portal) -->
 <div
   id="lastfm-expand-modal"
-  class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300"
+  class="fixed inset-0 z-[120] opacity-0 pointer-events-none transition-opacity duration-200"
   role="dialog"
   aria-modal="true"
   aria-label="Last.fm Audio Telemetry"
 >
+  <!-- Transparent Backdrop Click Catcher -->
+  <div id="lastfm-backdrop" class="absolute inset-0 bg-black/15 backdrop-blur-[2px]"></div>
+
+  <!-- Anchored Editorial Specimen Slip -->
   <div
     id="lastfm-modal-card"
-    class="relative w-full max-w-[380px] bg-bg-elevated border border-border-subtle/80 rounded-2xl shadow-2xl p-6 overflow-hidden transform scale-95 transition-all duration-300"
+    class="absolute w-[290px] sm:w-[320px] bg-bg-elevated/95 backdrop-blur-md border border-border-subtle/80 rounded-xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)] p-4 sm:p-5 overflow-hidden will-change-transform"
   >
     <!-- Ambient Accent Glow -->
-    <div class="absolute -top-12 -right-12 w-36 h-36 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-12 -left-12 w-36 h-36 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -top-10 -right-10 w-28 h-28 bg-accent/10 rounded-full blur-2xl pointer-events-none"></div>
 
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-border-subtle/50 pb-3 mb-5 relative z-10">
-      <div class="flex items-center gap-2">
-        <div class="spotify-eq flex items-end gap-[2px] h-3 w-3.5 pb-[1px]" aria-hidden="true">
-          <span class="eq-bar w-[1.5px] h-1.5 bg-text-muted/60 transition-all duration-300"></span>
-          <span class="eq-bar w-[1.5px] h-3 bg-text-muted/60 transition-all duration-300"></span>
-          <span class="eq-bar w-[1.5px] h-2 bg-text-muted/60 transition-all duration-300"></span>
+    <div class="relative z-10 w-full flex flex-col">
+      <!-- Slip Header -->
+      <div class="flex items-center justify-between border-b border-border-subtle/50 pb-2.5 mb-3.5">
+        <div class="flex items-center gap-2">
+          <div class="spotify-eq flex items-end gap-[2px] h-2.5 w-3 pb-[1px]" aria-hidden="true">
+            <span class="eq-bar w-[1.5px] h-1 bg-text-muted/60 transition-all duration-300"></span>
+            <span class="eq-bar w-[1.5px] h-2.5 bg-text-muted/60 transition-all duration-300"></span>
+            <span class="eq-bar w-[1.5px] h-1.5 bg-text-muted/60 transition-all duration-300"></span>
+          </div>
+          <span class="font-mono text-[8.5px] uppercase tracking-[0.22em] text-accent font-medium">
+            SPECIMEN // AUDIO TELEMETRY
+          </span>
         </div>
-        <span class="font-mono text-[9px] uppercase tracking-[0.25em] text-text-muted font-medium">
-          AUDIO RESONANCE
-        </span>
+        <button
+          type="button"
+          id="lastfm-modal-close"
+          class="w-5 h-5 rounded flex items-center justify-center text-text-muted hover:text-text-main hover:bg-border-subtle/20 transition-colors cursor-pointer text-xs leading-none"
+          aria-label="Close telemetry preview"
+        >
+          ✕
+        </button>
       </div>
-      <button
-        type="button"
-        id="lastfm-modal-close"
-        class="w-7 h-7 rounded-full flex items-center justify-center text-text-muted hover:text-text-main hover:bg-border-subtle/20 transition-colors cursor-pointer"
-        aria-label="Close telemetry preview"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-    </div>
 
-    <!-- Main Content -->
-    <div class="flex flex-col items-center text-center relative z-10">
-      <!-- High-res Album Art -->
-      <div class="relative group/art mb-4">
-        <div class="w-36 h-36 rounded-xl border border-border-subtle shadow-xl overflow-hidden bg-bg-subtle relative z-10">
+      <!-- Content Row (Art + Track Details) -->
+      <div class="flex items-center gap-3.5 mb-3.5">
+        <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-md border border-border-subtle/80 overflow-hidden shrink-0 bg-bg-subtle relative shadow-sm">
           <div
             id="lastfm-modal-art"
             class="w-full h-full bg-cover bg-center"
@@ -120,36 +119,34 @@ const isCenter = align === "center";
             aria-label="Album Cover"
           ></div>
         </div>
+        <div class="flex flex-col min-w-0 flex-1">
+          <h4 id="lastfm-modal-title" class="font-serif italic text-sm sm:text-[15px] leading-snug text-text-main truncate w-full">
+            Awaiting transmission...
+          </h4>
+          <p id="lastfm-modal-artist" class="font-sans text-[10px] tracking-wider uppercase text-accent font-medium mt-0.5 truncate w-full">
+            Chamber Silence
+          </p>
+          <p id="lastfm-modal-album" class="font-serif italic text-[11px] text-text-muted/70 mt-0.5 truncate w-full">
+          </p>
+        </div>
       </div>
 
-      <!-- Track Information -->
-      <h4 id="lastfm-modal-title" class="font-serif italic text-xl leading-snug text-text-main line-clamp-2 px-2">
-        Awaiting transmission...
-      </h4>
-      <p id="lastfm-modal-artist" class="font-sans text-xs tracking-wider uppercase text-accent font-medium mt-1.5">
-        Chamber Silence
-      </p>
-      <p id="lastfm-modal-album" class="font-serif italic text-xs text-text-muted/80 mt-1 line-clamp-1">
-      </p>
-
-      <!-- Status Pill -->
-      <div class="mt-4 px-3 py-1 rounded-full bg-bg-subtle/60 border border-border-subtle/60 flex items-center gap-2">
-        <span id="lastfm-status-dot" class="w-2 h-2 rounded-full bg-text-muted/50 transition-colors duration-300"></span>
-        <span id="lastfm-modal-status" class="font-mono text-[10px] tracking-widest uppercase text-text-muted">
-          Resonance Idle
-        </span>
-      </div>
-
-      <!-- Action Footer -->
-      <div class="flex items-center gap-3 w-full mt-6">
+      <!-- Footer (Status Pill + External Link) -->
+      <div class="flex items-center justify-between pt-2.5 border-t border-border-subtle/50">
+        <div class="flex items-center gap-2">
+          <span id="lastfm-status-dot" class="w-1.5 h-1.5 rounded-full bg-text-muted/50 transition-colors duration-300"></span>
+          <span id="lastfm-modal-status" class="font-mono text-[8.5px] tracking-[0.16em] uppercase text-text-muted">
+            Resonance Idle
+          </span>
+        </div>
         <a
           id="lastfm-modal-link"
           href="#"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex-1 py-2.5 px-4 rounded-full border border-border-subtle/80 bg-bg-subtle/50 hover:bg-text-main hover:text-bg text-text-main font-sans text-[10px] uppercase tracking-[0.2em] transition-all duration-300 text-center select-none"
+          class="font-mono text-[9px] tracking-[0.12em] text-text-muted hover:text-text-main transition-colors flex items-center gap-1 select-none"
         >
-          View on Last.fm ↗
+          LAST.FM ↗
         </a>
       </div>
     </div>
@@ -186,9 +183,13 @@ const isCenter = align === "center";
 </style>
 
 <script>
+  import anime from 'animejs';
+
   let spotifyInterval: any = null;
   let isFetching = false;
   let latestTelemetryData: any = null;
+  let activeTriggerEl: HTMLElement | null = null;
+  let isMorphing = false;
 
   function formatRelativeTime(uts: string | number) {
     if (!uts) return "Recently Played";
@@ -244,15 +245,15 @@ const isCenter = align === "center";
 
     if (modalStatus && statusDot) {
       if (isLive) {
-        modalStatus.textContent = "Scrobbling Live on Spotify";
+        modalStatus.textContent = "Scrobbling Live";
         modalStatus.classList.add('text-accent');
         modalStatus.classList.remove('text-text-muted');
-        statusDot.className = "w-2 h-2 rounded-full bg-accent animate-pulse";
+        statusDot.className = "w-1.5 h-1.5 rounded-full bg-accent animate-pulse";
       } else {
         modalStatus.textContent = data.playedAt ? formatRelativeTime(data.playedAt) : "Resonance Idle";
         modalStatus.classList.remove('text-accent');
         modalStatus.classList.add('text-text-muted');
-        statusDot.className = "w-2 h-2 rounded-full bg-text-muted/60";
+        statusDot.className = "w-1.5 h-1.5 rounded-full bg-text-muted/60";
       }
     }
 
@@ -267,33 +268,155 @@ const isCenter = align === "center";
     }
   }
 
-  function openLastFmModal() {
+  function positionSlip(triggerEl: HTMLElement) {
+    const card = document.getElementById('lastfm-modal-card');
+    if (!card) return;
+    const tR = triggerEl.getBoundingClientRect();
+    const isCenterAligned = triggerEl.closest('.spotify-resonance-root')?.classList.contains('items-center');
+
+    if (isCenterAligned || window.innerWidth < 768) {
+      // Mobile / center-aligned layout
+      card.style.left = '50%';
+      card.style.right = 'auto';
+      card.style.top = 'auto';
+      card.style.bottom = `${Math.max(16, window.innerHeight - tR.top + 10)}px`;
+      card.style.transformOrigin = 'bottom center';
+    } else {
+      // Desktop bottom-right aligned layout
+      const rightOffset = window.innerWidth - tR.right;
+      const bottomOffset = window.innerHeight - tR.bottom;
+      card.style.right = `${Math.max(16, rightOffset)}px`;
+      card.style.bottom = `${Math.max(16, bottomOffset - 8)}px`;
+      card.style.left = 'auto';
+      card.style.top = 'auto';
+      card.style.transformOrigin = 'bottom right';
+    }
+  }
+
+  function openLastFmModal(triggerEl?: HTMLElement | null) {
+    if (isMorphing) return;
     const modal = ensureSingleModal();
     if (!modal) return;
     const card = document.getElementById('lastfm-modal-card');
     if (!card) return;
 
+    activeTriggerEl = triggerEl || (document.querySelector('.spotify-trigger:not([style*="display: none"])') as HTMLElement) || (document.querySelector('.spotify-trigger') as HTMLElement);
+
     if (latestTelemetryData) {
       populateModal(latestTelemetryData);
     }
 
+    if (activeTriggerEl) {
+      positionSlip(activeTriggerEl);
+    }
+
+    isMorphing = true;
+    anime.remove(card);
+    anime.remove(modal);
+    if (activeTriggerEl) anime.remove(activeTriggerEl);
+
     modal.classList.remove('opacity-0', 'pointer-events-none');
     modal.classList.add('opacity-100', 'pointer-events-auto');
-    card.classList.remove('scale-95');
-    card.classList.add('scale-100');
-    document.body.style.overflow = 'hidden';
+
+    // Smoothly dissolve the trigger into the expanding specimen slip
+    if (activeTriggerEl) {
+      anime({
+        targets: activeTriggerEl,
+        opacity: [1, 0],
+        duration: 150,
+        easing: 'easeOutQuad',
+      });
+    }
+
+    const isMobile = window.innerWidth < 768 || activeTriggerEl?.closest('.spotify-resonance-root')?.classList.contains('items-center');
+
+    if (isMobile) {
+      anime({
+        targets: card,
+        opacity: [0, 1],
+        scale: [0.93, 1],
+        translateY: [8, 0],
+        translateX: ['-50%', '-50%'],
+        duration: 320,
+        easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+        complete: () => {
+          isMorphing = false;
+        },
+      });
+    } else {
+      anime({
+        targets: card,
+        opacity: [0, 1],
+        scale: [0.93, 1],
+        translateY: [8, 0],
+        duration: 320,
+        easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+        complete: () => {
+          isMorphing = false;
+        },
+      });
+    }
   }
 
   function closeLastFmModal() {
+    if (isMorphing) return;
     const modal = document.getElementById('lastfm-expand-modal');
     const card = document.getElementById('lastfm-modal-card');
     if (!modal || !card) return;
 
-    modal.classList.add('opacity-0', 'pointer-events-none');
-    modal.classList.remove('opacity-100', 'pointer-events-auto');
-    card.classList.add('scale-95');
-    card.classList.remove('scale-100');
-    document.body.style.overflow = '';
+    isMorphing = true;
+    anime.remove(card);
+    anime.remove(modal);
+    if (activeTriggerEl) anime.remove(activeTriggerEl);
+
+    const isMobile = window.innerWidth < 768 || activeTriggerEl?.closest('.spotify-resonance-root')?.classList.contains('items-center');
+
+    if (isMobile) {
+      anime({
+        targets: card,
+        opacity: [1, 0],
+        scale: [1, 0.93],
+        translateY: [0, 8],
+        translateX: ['-50%', '-50%'],
+        duration: 220,
+        easing: 'cubicBezier(0.25, 1, 0.5, 1)',
+        complete: () => {
+          modal.classList.add('opacity-0', 'pointer-events-none');
+          modal.classList.remove('opacity-100', 'pointer-events-auto');
+          isMorphing = false;
+          if (activeTriggerEl) {
+            anime({
+              targets: activeTriggerEl,
+              opacity: [0, 1],
+              duration: 200,
+              easing: 'easeOutQuad',
+            });
+          }
+        },
+      });
+    } else {
+      anime({
+        targets: card,
+        opacity: [1, 0],
+        scale: [1, 0.93],
+        translateY: [0, 8],
+        duration: 220,
+        easing: 'cubicBezier(0.25, 1, 0.5, 1)',
+        complete: () => {
+          modal.classList.add('opacity-0', 'pointer-events-none');
+          modal.classList.remove('opacity-100', 'pointer-events-auto');
+          isMorphing = false;
+          if (activeTriggerEl) {
+            anime({
+              targets: activeTriggerEl,
+              opacity: [0, 1],
+              duration: 200,
+              easing: 'easeOutQuad',
+            });
+          }
+        },
+      });
+    }
   }
   async function updateSpotify() {
     if (isFetching || document.visibilityState === 'hidden') return;
@@ -375,13 +498,21 @@ const isCenter = align === "center";
     document.querySelectorAll('.spotify-trigger').forEach(trigger => {
       trigger.addEventListener('click', (e) => {
         e.preventDefault();
-        openLastFmModal();
+        openLastFmModal(trigger as HTMLElement);
       });
     });
 
     const closeBtn = document.getElementById('lastfm-modal-close');
     if (closeBtn) {
       closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeLastFmModal();
+      });
+    }
+
+    const backdrop = document.getElementById('lastfm-backdrop');
+    if (backdrop) {
+      backdrop.addEventListener('click', (e) => {
         e.preventDefault();
         closeLastFmModal();
       });
@@ -405,6 +536,7 @@ const isCenter = align === "center";
 
   function initSpotify() {
     if (spotifyInterval) clearInterval(spotifyInterval);
+    ensureSingleModal();
     initListeners();
     updateSpotify();
     spotifyInterval = setInterval(updateSpotify, 20000); // 20s telemetry poll
