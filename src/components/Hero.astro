@@ -2,7 +2,6 @@
 import AsciiAvatar from "./AsciiAvatar.astro";
 import Typewriter from "./Typewriter.astro";
 import SpotifyResonance from "./SpotifyResonance.astro";
-import LiveClock from "./LiveClock.astro";
 import framesJson from "../data/ascii-frames.json";
 import { getRuntimeEnv } from "../lib/notion";
 
@@ -94,11 +93,9 @@ try {
       </a>
     </div>
 
-    <!-- Mobile Telemetry Hub: Spotify Resonance & Live Clock (Visible on mobile only) -->
+    <!-- Mobile Telemetry Hub: Spotify Resonance (Visible on mobile only) -->
     <div class="md:hidden mt-3 mb-3 flex flex-col items-center gap-1.5 w-full">
       <SpotifyResonance align="center" />
-      <div class="w-8 h-[1px] bg-border-subtle/40 my-0.5"></div>
-      <LiveClock align="center" />
     </div>
 
   </div>
