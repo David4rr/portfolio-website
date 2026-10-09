@@ -12,6 +12,16 @@ interface TelemetryTrack {
   albumImageUrl?: string;
   songUrl?: string;
   playedAt?: string;
+  username?: string;
+  artistInfo?: {
+    name: string;
+    bio?: string;
+    tags?: string[];
+    listeners?: number;
+    playcount?: number;
+    userPlaycount?: number;
+    url?: string;
+  };
 }
 
 export const GET: APIRoute = async () => {
@@ -47,8 +57,9 @@ export const GET: APIRoute = async () => {
 
     if (lfmRes.ok) {
       const data = await lfmRes.json();
-      const rawTrack = data?.recenttracks?.track;
-      const track = Array.isArray(rawTrack) ? rawTrack[0] : rawTrack;
+      const rawTracks = data?.recenttracks?.track;
+      const tracks = Array.isArray(rawTracks) ? rawTracks : rawTracks ? [rawTracks] : [];
+      const track = tracks[0];
 
       if (track) {
         const isPlaying = track["@attr"]?.nowplaying === "true";
@@ -61,18 +72,86 @@ export const GET: APIRoute = async () => {
           images[0]?.["#text"] ||
           "";
 
+        const trackName = track.name;
+        const artistName = track.artist?.["#text"] || track.artist?.name;
+        let artistInfo: TelemetryTrack["artistInfo"] = undefined;
+
+        if (artistName) {
+          try {
+            const aInfoRes = await fetch(
+              `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&api_key=${encodeURIComponent(
+                apiKey
+              )}&artist=${encodeURIComponent(artistName)}&username=${encodeURIComponent(
+                username
+              )}&format=json`,
+              { signal: AbortSignal.timeout(1500) }
+            );
+            if (aInfoRes.ok) {
+              const aData = await aInfoRes.json();
+              const aObj = aData?.artist;
+              if (aObj) {
+                let bio = aObj.bio?.summary || "";
+                bio = bio.replace(/<a[\s\S]*$/i, "").replace(/<[^>]+>/g, "").trim();
+                bio = bio.replace(/\(\s*\/[^)]+\/\s*[^)]*\)/g, "");
+                bio = bio.replace(/\(\s*born\s+[^)]+\)/gi, "");
+                bio = bio.replace(/\(\s*[^)]*;\s*born\s+[^)]+\)/gi, "");
+                bio = bio.replace(/\s{2,}/g, " ").replace(/\s+([.,;:])/g, "$1").trim();
+
+                const sentences = bio.match(/[^.!?]+[.!?]+/g) || [bio];
+                let note = sentences[0]?.trim() || "";
+                if (note.length < 60 && sentences[1]) {
+                  const combined = note + " " + sentences[1].trim();
+                  if (combined.length <= 160) {
+                    note = combined;
+                  }
+                }
+                if (note.length > 160) {
+                  const cut = note.slice(0, 155);
+                  const lastSpace = cut.lastIndexOf(" ");
+                  note = (lastSpace > 100 ? cut.slice(0, lastSpace) : cut) + "…";
+                }
+                bio = note.trim();
+
+                const tags = (aObj.tags?.tag || [])
+                  .map((t: { name: string }) => t.name)
+                  .slice(0, 3);
+                const listeners = aObj.stats?.listeners
+                  ? parseInt(aObj.stats.listeners, 10)
+                  : undefined;
+                const playcount = aObj.stats?.playcount
+                  ? parseInt(aObj.stats.playcount, 10)
+                  : undefined;
+                const userPlaycount = aObj.stats?.userplaycount
+                  ? parseInt(aObj.stats.userplaycount, 10)
+                  : undefined;
+
+                artistInfo = {
+                  name: aObj.name || artistName,
+                  bio: bio || undefined,
+                  tags: tags.length > 0 ? tags : undefined,
+                  listeners,
+                  playcount,
+                  userPlaycount,
+                  url: aObj.url || undefined,
+                };
+              }
+            }
+          } catch {
+            // Non-blocking artist enrichment
+          }
+        }
+
         const payload: TelemetryTrack = {
           configured: true,
           isPlaying,
-          title: track.name || "Unknown Track",
-          artist:
-            track.artist?.["#text"] ||
-            track.artist?.name ||
-            "Unknown Artist",
+          title: trackName || "Unknown Track",
+          artist: artistName || "Unknown Artist",
           album: track.album?.["#text"] || "",
           albumImageUrl: albumImg,
           songUrl: track.url || "",
           playedAt: track.date?.uts,
+          username,
+          artistInfo,
         };
 
         return new Response(JSON.stringify(payload), {

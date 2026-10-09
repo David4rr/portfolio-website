@@ -78,76 +78,133 @@ const isCenter = align === "center";
   <!-- Transparent Backdrop Click Catcher -->
   <div id="lastfm-backdrop" class="absolute inset-0 bg-black/15 backdrop-blur-[2px]"></div>
 
-  <!-- Anchored Editorial Specimen Slip -->
+  <!-- Anchored Minimalist Player & Credits Specimen Slip -->
   <div
     id="lastfm-modal-card"
-    class="absolute w-[290px] sm:w-[320px] bg-bg-elevated/95 backdrop-blur-md border border-border-subtle/80 rounded-xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)] p-4 sm:p-5 overflow-hidden will-change-transform"
+    class="absolute w-[305px] sm:w-[335px] bg-bg-elevated/98 backdrop-blur-md border border-border-subtle/80 rounded-xl shadow-[0_16px_36px_-6px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.03)] p-4 sm:p-5 overflow-hidden will-change-transform"
   >
-    <!-- Ambient Accent Glow -->
-    <div class="absolute -top-10 -right-10 w-28 h-28 bg-accent/10 rounded-full blur-2xl pointer-events-none"></div>
+    <!-- Header: Quiet Status + Minimal Close -->
+    <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-white/[0.06]">
+      <div class="flex items-center gap-2">
+        <span id="lastfm-status-dot" class="w-1.5 h-1.5 rounded-full bg-text-muted/50 transition-colors duration-300"></span>
+        <span id="lastfm-modal-status" class="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+          Resonance Idle
+        </span>
+      </div>
+      <button
+        type="button"
+        id="lastfm-modal-close"
+        class="text-text-muted hover:text-text-main transition-colors cursor-pointer text-xs leading-none p-1 -mr-1"
+        aria-label="Close preview"
+      >
+        ✕
+      </button>
+    </div>
 
-    <div class="relative z-10 w-full flex flex-col">
-      <!-- Slip Header -->
-      <div class="flex items-center justify-between border-b border-border-subtle/50 pb-2.5 mb-3.5">
-        <div class="flex items-center gap-2">
-          <div class="spotify-eq flex items-end gap-[2px] h-2.5 w-3 pb-[1px]" aria-hidden="true">
-            <span class="eq-bar w-[1.5px] h-1 bg-text-muted/60 transition-all duration-300"></span>
-            <span class="eq-bar w-[1.5px] h-2.5 bg-text-muted/60 transition-all duration-300"></span>
-            <span class="eq-bar w-[1.5px] h-1.5 bg-text-muted/60 transition-all duration-300"></span>
-          </div>
-          <span class="font-mono text-[8.5px] uppercase tracking-[0.22em] text-accent font-medium">
-            SPECIMEN // AUDIO TELEMETRY
-          </span>
-        </div>
-        <button
-          type="button"
-          id="lastfm-modal-close"
-          class="w-5 h-5 rounded flex items-center justify-center text-text-muted hover:text-text-main hover:bg-border-subtle/20 transition-colors cursor-pointer text-xs leading-none"
-          aria-label="Close telemetry preview"
-        >
-          ✕
-        </button>
+    <!-- Section 1: The Music Player Deck -->
+    <div class="flex items-start gap-3.5 mb-3">
+      <!-- 1:1 Album Art -->
+      <div class="w-14 h-14 sm:w-15 sm:h-15 rounded-lg border border-white/10 overflow-hidden shrink-0 bg-bg-subtle relative shadow-sm group/art">
+        <div
+          id="lastfm-modal-art"
+          class="w-full h-full bg-cover bg-center transition-transform duration-300 group-hover/art:scale-105"
+          role="img"
+          aria-label="Album Cover"
+        ></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
       </div>
 
-      <!-- Content Row (Art + Track Details) -->
-      <div class="flex items-center gap-3.5 mb-3.5">
-        <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-md border border-border-subtle/80 overflow-hidden shrink-0 bg-bg-subtle relative shadow-sm">
-          <div
-            id="lastfm-modal-art"
-            class="w-full h-full bg-cover bg-center"
-            role="img"
-            aria-label="Album Cover"
-          ></div>
-        </div>
-        <div class="flex flex-col min-w-0 flex-1">
-          <h4 id="lastfm-modal-title" class="font-serif italic text-sm sm:text-[15px] leading-snug text-text-main truncate w-full">
-            Awaiting transmission...
-          </h4>
-          <p id="lastfm-modal-artist" class="font-sans text-[10px] tracking-wider uppercase text-accent font-medium mt-0.5 truncate w-full">
-            Chamber Silence
-          </p>
-          <p id="lastfm-modal-album" class="font-serif italic text-[11px] text-text-muted/70 mt-0.5 truncate w-full">
-          </p>
-        </div>
+      <!-- Track Information -->
+      <div class="flex flex-col min-w-0 flex-1 pt-0.5">
+        <h4
+          id="lastfm-modal-title"
+          class="font-serif italic text-sm sm:text-[15px] leading-snug text-text-main truncate w-full"
+        >
+          Awaiting transmission...
+        </h4>
+        <p
+          id="lastfm-modal-artist"
+          class="font-sans text-xs text-accent font-medium mt-0.5 truncate w-full"
+        >
+          Chamber Silence
+        </p>
+        <p
+          id="lastfm-modal-album"
+          class="font-serif italic text-[10.5px] text-text-muted/70 mt-0.5 truncate w-full"
+        >
+        </p>
+      </div>
+    </div>
+
+    <!-- Player Progress & EQ Waveform Track -->
+    <div class="flex items-center gap-2.5 px-0.5 mb-3.5">
+      <!-- Animated Equalizer Bars -->
+      <div id="lastfm-player-eq" class="flex items-end gap-[2px] h-3 w-3 shrink-0" aria-hidden="true">
+        <span class="w-[1.5px] h-1.5 bg-accent/80 rounded-full animate-[eqBounce1_0.8s_ease-in-out_infinite]"></span>
+        <span class="w-[1.5px] h-3 bg-accent rounded-full animate-[eqBounce2_0.8s_ease-in-out_infinite]"></span>
+        <span class="w-[1.5px] h-2 bg-accent/80 rounded-full animate-[eqBounce3_0.8s_ease-in-out_infinite]"></span>
       </div>
 
-      <!-- Footer (Status Pill + External Link) -->
-      <div class="flex items-center justify-between pt-2.5 border-t border-border-subtle/50">
-        <div class="flex items-center gap-2">
-          <span id="lastfm-status-dot" class="w-1.5 h-1.5 rounded-full bg-text-muted/50 transition-colors duration-300"></span>
-          <span id="lastfm-modal-status" class="font-mono text-[8.5px] tracking-[0.16em] uppercase text-text-muted">
-            Resonance Idle
-          </span>
-        </div>
-        <a
-          id="lastfm-modal-link"
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="font-mono text-[9px] tracking-[0.12em] text-text-muted hover:text-text-main transition-colors flex items-center gap-1 select-none"
+      <!-- Scrubber Track Rail -->
+      <div class="flex-1 h-1 bg-white/[0.07] rounded-full overflow-hidden relative">
+        <div id="lastfm-player-rail" class="h-full bg-accent/85 rounded-full w-2/3 transition-all duration-500"></div>
+      </div>
+
+      <!-- Playback State Badge -->
+      <span id="lastfm-player-label" class="font-mono text-[8px] uppercase tracking-wider text-text-muted/70 shrink-0">
+        Streaming
+      </span>
+    </div>
+
+    <!-- Section 2: Credits & Liner Notes -->
+    <div class="pt-3 border-t border-white/[0.06]">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="font-mono text-[8px] uppercase tracking-[0.16em] text-text-muted/50">
+          Credits & Liner Notes
+        </span>
+        <span
+          id="lastfm-artist-tags"
+          class="font-mono text-[8.5px] uppercase tracking-[0.1em] text-accent truncate max-w-[170px]"
         >
-          LAST.FM ↗
-        </a>
+        </span>
+      </div>
+
+      <!-- Clean Liner Notes Excerpt (Strict 2 lines) -->
+      <p
+        id="lastfm-artist-bio"
+        class="font-sans text-[11px] leading-relaxed text-text-muted/85 mb-3"
+        style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
+      >
+        Telemetric audio signal standby...
+      </p>
+
+      <!-- Footer: Listeners & Clean Tactile Micro-Buttons -->
+      <div class="flex items-center justify-between pt-2 border-t border-white/[0.05]">
+        <span id="lastfm-artist-listeners" class="font-mono text-[9px] text-text-muted/70 truncate">
+          -- listeners
+        </span>
+        <div class="flex items-center gap-1.5 shrink-0 ml-2">
+          <a
+            id="lastfm-song-link"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/[0.04] hover:bg-accent/15 border border-white/10 hover:border-accent/40 text-text-muted hover:text-accent font-mono text-[9px] font-medium tracking-wide transition-all duration-200 active:scale-95 select-none group/trackbtn"
+          >
+            <span>Track</span>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="opacity-70 group-hover/trackbtn:opacity-100 group-hover/trackbtn:translate-x-0.5 group-hover/trackbtn:-translate-y-0.5 transition-all"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+          </a>
+          <a
+            id="lastfm-artist-link"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/[0.04] hover:bg-accent/15 border border-white/10 hover:border-accent/40 text-text-muted hover:text-accent font-mono text-[9px] font-medium tracking-wide transition-all duration-200 active:scale-95 select-none group/artbtn"
+          >
+            <span>Artist</span>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="opacity-70 group-hover/artbtn:opacity-100 group-hover/artbtn:translate-x-0.5 group-hover/artbtn:-translate-y-0.5 transition-all"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -204,6 +261,20 @@ const isCenter = align === "center";
     const diffDay = Math.floor(diffHour / 24);
     return `Scrobbled ${diffDay}d ago`;
   }
+  function formatDuration(ms?: number) {
+    if (!ms || ms <= 0) return "--:--";
+    const totalSec = Math.floor(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${min}:${sec.toString().padStart(2, '0')} min`;
+  }
+
+  function formatCount(num?: number) {
+    if (num === undefined || num === null) return "--";
+    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+    if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+    return num.toLocaleString();
+  }
 
   function ensureSingleModal() {
     const modals = document.querySelectorAll('#lastfm-expand-modal');
@@ -224,14 +295,22 @@ const isCenter = align === "center";
     const isLive = data.isPlaying;
     const titleText = data.title || 'Chamber Silence';
     const artistText = data.artist || (isLive ? 'Unknown Artist' : 'Awaiting transmission...');
+    const artistInfo = data.artistInfo;
 
     const modalTitle = document.getElementById('lastfm-modal-title');
     const modalArtist = document.getElementById('lastfm-modal-artist');
     const modalAlbum = document.getElementById('lastfm-modal-album');
     const modalArt = document.getElementById('lastfm-modal-art');
+    const playerEq = document.getElementById('lastfm-player-eq');
+    const playerRail = document.getElementById('lastfm-player-rail');
+    const playerLabel = document.getElementById('lastfm-player-label');
+    const artistTags = document.getElementById('lastfm-artist-tags');
+    const artistBio = document.getElementById('lastfm-artist-bio');
+    const artistListeners = document.getElementById('lastfm-artist-listeners');
     const modalStatus = document.getElementById('lastfm-modal-status');
     const statusDot = document.getElementById('lastfm-status-dot');
-    const modalLink = document.getElementById('lastfm-modal-link') as HTMLAnchorElement;
+    const songLink = document.getElementById('lastfm-song-link') as HTMLAnchorElement;
+    const artistLink = document.getElementById('lastfm-artist-link') as HTMLAnchorElement;
 
     if (modalTitle) modalTitle.textContent = titleText;
     if (modalArtist) modalArtist.textContent = artistText;
@@ -243,9 +322,71 @@ const isCenter = align === "center";
       modalArt.style.backgroundImage = `url("${data.albumImageUrl}")`;
     }
 
+    if (playerEq) {
+      if (isLive) {
+        playerEq.classList.remove('opacity-40');
+      } else {
+        playerEq.classList.add('opacity-40');
+       }
+    }
+
+    if (playerRail) {
+      playerRail.style.width = isLive ? '75%' : '100%';
+    }
+
+    if (playerLabel) {
+      playerLabel.textContent = isLive ? 'Live Stream' : 'Playback Finished';
+    }
+
+    if (artistTags) {
+      if (artistInfo?.tags && artistInfo.tags.length > 0) {
+        artistTags.textContent = artistInfo.tags.slice(0, 2).join(' • ');
+        artistTags.style.display = 'inline';
+      } else {
+        artistTags.style.display = 'none';
+      }
+    }
+
+    if (artistBio) {
+      if (artistInfo?.bio) {
+        let bio = artistInfo.bio;
+        bio = bio.replace(/\(\s*\/[^)]+\/\s*[^)]*\)/g, '');
+        bio = bio.replace(/\(\s*born\s+[^)]+\)/gi, '');
+        bio = bio.replace(/\(\s*[^)]*;\s*born\s+[^)]+\)/gi, '');
+        bio = bio.replace(/\s{2,}/g, ' ').replace(/\s+([.,;:])/g, '$1').trim();
+
+        const sentences = bio.match(/[^.!?]+[.!?]+/g) || [bio];
+        let note = sentences[0]?.trim() || "";
+        if (note.length < 60 && sentences[1]) {
+          const combined = note + " " + sentences[1].trim();
+          if (combined.length <= 160) {
+            note = combined;
+          }
+        }
+        if (note.length > 160) {
+          const cut = note.slice(0, 155);
+          const lastSpace = cut.lastIndexOf(' ');
+          note = (lastSpace > 100 ? cut.slice(0, lastSpace) : cut) + '…';
+        }
+        artistBio.textContent = note.trim();
+        artistBio.style.display = 'block';
+      } else {
+        artistBio.textContent = `Liner notes archived for ${artistText}. Streamed via Last.fm broadcast.`;
+        artistBio.style.display = 'block';
+      }
+    }
+
+    if (artistListeners) {
+      if (artistInfo?.listeners && artistInfo.listeners > 0) {
+        artistListeners.textContent = `${formatCount(artistInfo.listeners)} listeners`;
+      } else {
+        artistListeners.textContent = `Audio Archive`;
+      }
+    }
+
     if (modalStatus && statusDot) {
       if (isLive) {
-        modalStatus.textContent = "Scrobbling Live";
+        modalStatus.textContent = "Live Broadcast";
         modalStatus.classList.add('text-accent');
         modalStatus.classList.remove('text-text-muted');
         statusDot.className = "w-1.5 h-1.5 rounded-full bg-accent animate-pulse";
@@ -257,13 +398,24 @@ const isCenter = align === "center";
       }
     }
 
-    if (modalLink) {
+    if (songLink) {
       if (data.songUrl) {
-        modalLink.setAttribute('href', data.songUrl);
-        modalLink.classList.remove('pointer-events-none', 'opacity-50');
+        songLink.setAttribute('href', data.songUrl);
+        songLink.classList.remove('pointer-events-none', 'opacity-40');
       } else {
-        modalLink.removeAttribute('href');
-        modalLink.classList.add('pointer-events-none', 'opacity-50');
+        songLink.removeAttribute('href');
+        songLink.classList.add('pointer-events-none', 'opacity-40');
+      }
+    }
+
+    if (artistLink) {
+      const aUrl = artistInfo?.url || (data.artist ? `https://www.last.fm/music/${encodeURIComponent(data.artist)}` : null);
+      if (aUrl) {
+        artistLink.setAttribute('href', aUrl);
+        artistLink.classList.remove('pointer-events-none', 'opacity-40');
+      } else {
+        artistLink.removeAttribute('href');
+        artistLink.classList.add('pointer-events-none', 'opacity-40');
       }
     }
   }
@@ -443,7 +595,6 @@ const isCenter = align === "center";
 
       const titleText = data.title || 'Chamber Silence';
       const artistText = data.artist || (isLive ? 'Unknown Artist' : 'Awaiting transmission...');
-
       eqElements.forEach(eq => {
         if (isLive) {
           eq.classList.add('eq-playing');
