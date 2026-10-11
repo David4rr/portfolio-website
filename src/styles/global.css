@@ -25,19 +25,6 @@
   --font-serif: "Fraunces", serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --animate-slide-up: slide-up 0.8s cubic-bezier(0.25, 1, 0.3, 1) both;
-
-  @keyframes slide-up {
-    0% {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   --animate-type-blink: type-blink 1s steps(2, start) infinite;
 
   @keyframes type-blink {
@@ -99,25 +86,10 @@
       will-change: transform, opacity;
     }
   }
-
-  [data-reveal="ink-bloom"] [data-animate] {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  [data-reveal="word-cascade"] [data-word],
-  [data-reveal="word-cascade"] [data-card] {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  [data-reveal="letter-unfold"] [data-animate] {
-    transform: scaleY(0);
-    opacity: 0;
-    transform-origin: top center;
-  }
 }
 
 @layer base {
-  :root, .theme-dark {
+  :root {
     --bg: #1C1613;
     --bg-elevated: #2A221E;
     --bg-subtle: #231C18;
@@ -129,7 +101,7 @@
     --accent-glow: rgba(255,122,0,0.25);
   }
 
-  :root.light, .theme-light {
+  :root.light {
     --bg: #F8F4EC;
     --bg-elevated: #FFFFFF;
     --bg-subtle: #F0EBE0;
@@ -151,9 +123,7 @@
   }
 
   /* Morphing Theme Icon */
-  .theme-icon .sun-core {
-    transition: r 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+  .theme-icon .sun-core { transition: r 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
   .theme-icon .moon-mask-circle {
     transition: cx 0.5s cubic-bezier(0.4, 0, 0.2, 1), cy 0.5s cubic-bezier(0.4, 0, 0.2, 1), r 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -162,107 +132,51 @@
     transform-origin: center;
   }
 
-  :root.light .theme-icon .sun-core {
-    r: 5px;
-  }
-  :root.light .theme-icon .moon-mask-circle {
-    cx: 24px;
-    cy: 10px;
-    r: 6px;
-  }
-  :root.light .theme-icon .sun-rays {
-    transform: rotate(0deg);
-    opacity: 1;
-  }
+  :root.light .theme-icon .sun-core { r: 5px; }
+  :root.light .theme-icon .moon-mask-circle { cx: 24px; cy: 10px; r: 6px; }
+  :root.light .theme-icon .sun-rays { transform: rotate(0deg); opacity: 1; }
 
-  :root:not(.light) .theme-icon .sun-core {
-    r: 9px;
-  }
-  :root:not(.light) .theme-icon .moon-mask-circle {
-    cx: 15px;
-    cy: 9px;
-    r: 9px;
-  }
-  :root:not(.light) .theme-icon .sun-rays {
-    transform: rotate(90deg);
-    opacity: 0;
-  }
+  :root:not(.light) .theme-icon .sun-core { r: 9px; }
+  :root:not(.light) .theme-icon .moon-mask-circle { cx: 15px; cy: 9px; r: 9px; }
+  :root:not(.light) .theme-icon .sun-rays { transform: rotate(90deg); opacity: 0; }
 
-  /* View transition customization for theme toggle */
   .theme-transitioning::view-transition-old(root),
   .theme-transitioning::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;
   }
 
-  /* Custom Polaroid Background */
-  .card-polaroid {
-    background-color: var(--color-bg-elevated);
-  }
-  :root.light .card-polaroid, .theme-light .card-polaroid {
-    background-color: var(--color-bg);
-  }
+  .card-polaroid { background-color: var(--color-bg-elevated); }
+  :root.light .card-polaroid { background-color: var(--color-bg); }
 
   /* Editorial Prose Typography (Lists, Markers, Blockquotes) */
-  .prose ul,
-  article ul {
-    list-style-type: disc !important;
+  .prose ul, article ul,
+  .prose ol, article ol {
     padding-left: 1.6rem !important;
-    margin-top: 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-block: 1.25rem;
   }
-
-  .prose ol,
-  article ol {
-    list-style-type: decimal !important;
-    padding-left: 1.6rem !important;
-    margin-top: 1.25rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .prose li,
-  article li {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+  .prose ul, article ul { list-style-type: disc !important; }
+  .prose ol, article ol { list-style-type: decimal !important; }
+  .prose li, article li {
+    margin-block: 0.5rem;
     padding-left: 0.35rem;
     line-height: 1.75;
   }
-
-  .prose ul > li::marker,
-  article ul > li::marker {
-    color: var(--color-accent);
-  }
-
-  .prose ol > li::marker,
-  article ol > li::marker {
+  .prose ul > li::marker, article ul > li::marker { color: var(--color-accent); }
+  .prose ol > li::marker, article ol > li::marker {
     color: var(--color-accent);
     font-family: var(--font-sans);
     font-weight: 600;
   }
-
-  .prose ul ul,
-  article ul ul {
-    list-style-type: circle !important;
+  .prose ul ul, article ul ul,
+  .prose ol ol, article ol ol {
     padding-left: 1.4rem !important;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-block: 0.5rem;
   }
+  .prose ul ul, article ul ul { list-style-type: circle !important; }
+  .prose ol ol, article ol ol { list-style-type: lower-alpha !important; }
+  .prose li > p, article li > p { margin-block: 0.25rem; }
 
-  .prose ol ol,
-  article ol ol {
-    list-style-type: lower-alpha !important;
-    padding-left: 1.4rem !important;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .prose li > p,
-  article li > p {
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
-  }
-
-  /* Inline code inside prose (TOC token spec) */
   .prose code:not(pre code),
   article code:not(pre code) {
     background-color: color-mix(in srgb, var(--color-bg-subtle) 60%, transparent) !important;
@@ -274,19 +188,21 @@
     font-family: var(--font-mono) !important;
     font-weight: 500 !important;
   }
-  /* Target Anchor Flash Highlight (Scoped to Article Citations via JS) */
+  .prose blockquote,
+  article blockquote {
+    background-color: color-mix(in srgb, var(--color-bg-subtle) 40%, transparent);
+    border-left: 3px solid var(--color-accent) !important;
+    border-radius: 0 0.5rem 0.5rem 0;
+    padding: 1rem 1.25rem !important;
+    margin: 1.5rem 0 !important;
+  }
   article .anchor-highlight {
     animation: anchor-flash 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     border-radius: 4px;
     transition: background-color 0.3s ease;
   }
-
   @keyframes anchor-flash {
-    0% {
-      background-color: var(--color-accent-glow);
-      outline: 1px solid var(--color-accent);
-    }
-    60% {
+    0%, 60% {
       background-color: var(--color-accent-glow);
       outline: 1px solid var(--color-accent);
     }
@@ -295,13 +211,6 @@
       outline: 1px solid transparent;
     }
   }
-}
-/* Luxury Editorial Reveal Motion (Zero layout-thrashing, GPU Composited) */
-[data-reveal] [data-animate],
-[data-reveal] [data-word],
-[data-reveal] [data-card] {
-  opacity: 0;
-  will-change: transform, opacity;
 }
 
 /* 1. Masked Curtain Line Reveal (For All Titles & Headings) */
@@ -334,20 +243,15 @@
 
 /* Staggering for cascade items */
 [data-reveal="word-cascade"].is-revealed [data-card]:nth-child(1),
-[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(1),
-[data-reveal="word-cascade"].is-revealed #writing-list-container > *:nth-child(1) { transition-delay: 0ms; }
+[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(1) { transition-delay: 0ms; }
 [data-reveal="word-cascade"].is-revealed [data-card]:nth-child(2),
-[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(2),
-[data-reveal="word-cascade"].is-revealed #writing-list-container > *:nth-child(2) { transition-delay: 75ms; }
+[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(2) { transition-delay: 75ms; }
 [data-reveal="word-cascade"].is-revealed [data-card]:nth-child(3),
-[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(3),
-[data-reveal="word-cascade"].is-revealed #writing-list-container > *:nth-child(3) { transition-delay: 150ms; }
+[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(3) { transition-delay: 150ms; }
 [data-reveal="word-cascade"].is-revealed [data-card]:nth-child(4),
-[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(4),
-[data-reveal="word-cascade"].is-revealed #writing-list-container > *:nth-child(4) { transition-delay: 225ms; }
+[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(4) { transition-delay: 225ms; }
 [data-reveal="word-cascade"].is-revealed [data-card]:nth-child(5),
-[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(5),
-[data-reveal="word-cascade"].is-revealed #writing-list-container > *:nth-child(5) { transition-delay: 300ms; }
+[data-reveal="word-cascade"].is-revealed #project-list-container > *:nth-child(5) { transition-delay: 300ms; }
 [data-reveal="word-cascade"].is-revealed [data-word] { transition-delay: 0ms; }
 /* Reduced motion fallbacks */
 [data-reveal].is-revealed-reduced [data-animate],
@@ -359,14 +263,14 @@
   transition: none !important;
 }
 
-@keyframes flame-flicker {
+@keyframes rocket-flame-flicker {
   0% { transform: scale(1, 1); }
   33% { transform: scale(1.4, 0.85); }
   66% { transform: scale(0.85, 1.1); }
   100% { transform: scale(1.2, 0.95); }
 }
 .animate-rocket-flicker {
-  animation: flame-flicker 0.35s ease-in-out infinite alternate;
+  animation: rocket-flame-flicker 0.35s ease-in-out infinite alternate;
 }
 
 /* GPU layer promotion and texture pinning for smooth 120fps parallax stack */

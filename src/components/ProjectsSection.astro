@@ -1,0 +1,110 @@
+---
+import type { NotionProject } from '../lib/notion';
+import { formatPoetryTitle } from '../lib/detail-helpers';
+import ExploreRocketButton from './ExploreRocketButton.astro';
+
+interface Props {
+  projects: NotionProject[];
+}
+
+const { projects } = Astro.props;
+const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+---
+
+<div class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100svh-3rem)]">
+  <div>
+    <div class="overflow-hidden mb-16 text-center">
+      <h2
+        data-word
+        class="font-serif text-[clamp(2.5rem,5vw,4rem)] text-text-main font-normal tracking-tight"
+      >
+        Selected Works<span class="text-accent">.</span>
+      </h2>
+    </div>
+
+    <div class="flex flex-col border-t border-border-subtle/50" id="project-list-container">
+      {
+        projects.map((project, i) => {
+          const numeral = romanNumerals[i] || i + 1;
+
+          return (
+            <a
+              data-card
+              href={`/projects/${project.slug}`}
+              class="project-bento-card cursor-pointer group relative flex flex-col xl:flex-row xl:items-center gap-6 xl:gap-8 py-6 xl:py-10 px-2 xl:px-6 border-b border-border-subtle/50 hover:bg-border-subtle/5 transition-all duration-700"
+              data-slug={project.slug}
+              data-has-image={!!project.image}
+            >
+              <div class="flex-shrink-0 w-full xl:w-20 text-text-muted font-serif italic text-sm xl:text-base">
+                {numeral}.
+              </div>
+
+              <div class="flex-shrink-0 w-full xl:w-[32%]">
+                <h3
+                  class="font-serif text-[1.75rem] xl:text-[2.25rem] leading-tight text-text-main group-hover:text-accent transition-colors duration-700 tracking-tight pr-0 xl:pr-4 line-clamp-2"
+                  set:html={formatPoetryTitle(project.title)}
+                />
+              </div>
+
+              <div class="flex-1 w-full max-w-xl pr-0 xl:pr-4">
+                <p class="font-serif italic font-light text-sm xl:text-[15px] leading-loose text-text-main/70 line-clamp-4">
+                  "{project.description}"
+                </p>
+              </div>
+
+              <div class="flex-shrink-0 w-full xl:w-[20%] flex flex-col gap-2 font-serif text-text-muted/80">
+                <div class="text-text-main/90 tracking-[0.2em] uppercase text-[10px]">
+                  {project.type || 'Digital Fragment'}
+                </div>
+                <div class="font-light italic opacity-70 leading-relaxed line-clamp-2 text-xs">
+                  {project.timeline || '2024'} &mdash; {project.techStack.join(', ')}
+                </div>
+              </div>
+
+              <div class="flex w-full xl:w-auto mt-4 xl:mt-0 flex-shrink-0 items-center justify-between xl:justify-center gap-4 xl:ml-4">
+                {project.image && (
+                  <button
+                    type="button"
+                    class="project-peek-btn xl:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-subtle/70 bg-bg-subtle/40 text-[10px] font-mono tracking-widest uppercase text-text-muted hover:text-accent hover:border-accent active:scale-95 transition-all duration-200 cursor-pointer select-none"
+                    aria-label={`Preview ${project.title}`}
+                    data-slug={project.slug}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Peek</span>
+                  </button>
+                )}
+
+                <div class="flex items-center gap-4 ml-auto xl:ml-0">
+                  <span class="font-serif italic text-text-main/70 xl:opacity-0 xl:-translate-x-4 xl:group-hover:opacity-100 xl:group-hover:translate-x-0 transition-all duration-500 text-sm xl:text-base">
+                    Explore
+                  </span>
+                  <div class="flex items-center justify-center w-8 h-8 text-text-main/50 group-hover:text-text-main transition-all duration-500 overflow-hidden relative flex-shrink-0">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 group-hover:translate-x-8 group-hover:-translate-y-8">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="absolute transition-transform duration-500 ease-out transform -rotate-45 -translate-x-8 translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
+  </div>
+
+  <ExploreRocketButton
+    href="/explore?from=projects"
+    id="rocket-btn"
+    label="View More Projects"
+    ariaLabel="View more projects"
+    clipId="rope-clip"
+  />
+</div>

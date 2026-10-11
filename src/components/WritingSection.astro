@@ -1,5 +1,7 @@
 ---
 import type { BlogPost } from '../lib/blogger';
+import { formatPoetryTitle } from '../lib/detail-helpers';
+import ExploreRocketButton from './ExploreRocketButton.astro';
 
 interface Props {
   posts: BlogPost[];
@@ -11,14 +13,6 @@ const { posts } = Astro.props;
 const popularPosts = [...posts]
   .sort((a, b) => (a.popularRank ?? 999) - (b.popularRank ?? 999))
   .slice(0, 4);
-const formatPoetryTitle = (title: string) => {
-  const words = title.split(' ');
-  if (words.length > 1) {
-    const last = words.pop();
-    return `${words.join(' ')} <span class="italic font-light pr-1">${last}</span>`;
-  }
-  return title;
-};
 ---
 
 <div class="py-[clamp(4rem,8vw,8rem)] relative border-t border-border-subtle/50 flex flex-col justify-between min-h-[calc(100svh-3rem)]">
@@ -121,57 +115,13 @@ const formatPoetryTitle = (title: string) => {
     </div>
   </div>
 
-  <div class="mt-16 flex justify-center w-full relative">
-    <a
-      href="/explore?from=writing"
-      id="rocket-btn-writing"
-      aria-label="View more writings"
-      class="rocket-btn-element relative z-10 bg-bg inline-flex items-center border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] pl-8 pr-14 py-4 rounded-full group hover:border-text-main/50 active:scale-95 transition-colors duration-300 cursor-pointer select-none"
-    >
-      <span class="relative z-10 btn-text pointer-events-none">View More Writing</span>
-
-      <!-- Shared Container for Rocket -->
-      <div class="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
-        <div class="rocket-system absolute w-[100px] h-[100px] flex items-center justify-center overflow-visible origin-center" style="transform: scale(0.7);">
-          <svg class="w-full h-full overflow-visible" viewBox="-50 -50 100 100" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <defs>
-              <clipPath id="rope-clip-writing">
-                <rect x="32" y="-50" width="200" height="100" />
-              </clipPath>
-            </defs>
-            <g clip-path="url(#rope-clip-writing)">
-              <line class="rope-top text-text-main/50" x1="32" y1="-18" x2="-18.9" y2="-9" stroke="currentColor" stroke-width="1.5" />
-              <line class="rope-bottom text-text-main/50" x1="32" y1="18" x2="-18.9" y2="9" stroke="currentColor" stroke-width="1.5" />
-            </g>
-            <g class="rocket-mover">
-              <g class="rocket-body text-text-main" transform="scale(0.45) translate(-70, -30)">
-                <g class="rocket-flames opacity-0 text-accent">
-                  <g class="rocket-flames-flicker origin-[16px_30px]">
-                    <path d="M 16 12 L -50 30 L 16 48" fill="currentColor" stroke="none" opacity="0.3" />
-                    <path d="M 16 18 L -25 30 L 16 42" fill="currentColor" stroke="none" opacity="0.6" />
-                    <path d="M 16 24 L -5 30 L 16 36" fill="currentColor" stroke="none" />
-                  </g>
-                </g>
-                <g stroke="currentColor" fill="none" stroke-linecap="round">
-                  <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" stroke-width="4.5" />
-                  <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" stroke-width="4.5" />
-                  <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" stroke-width="4" />
-                  <path d="M 50 14 Q 65 30 50 46" stroke-width="3" />
-                </g>
-                <g class="transition-colors duration-300 group-hover:text-accent" stroke="currentColor" fill="none" stroke-linecap="round" stroke-width="2">
-                  <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" />
-                  <path d="M 76 22 Q 68 30 76 38" />
-                  <path d="M 74 22 Q 95 25 115 30" />
-                  <path d="M 71 30 Q 85 30 95 30" />
-                  <path d="M 74 38 Q 95 35 115 30" />
-                </g>
-              </g>
-            </g>
-          </svg>
-        </div>
-      </div>
-    </a>
-  </div>
+  <ExploreRocketButton
+    href="/explore?from=writing"
+    id="rocket-btn-writing"
+    label="View More Writing"
+    ariaLabel="View more writings"
+    clipId="rope-clip-writing"
+  />
 </div>
 
 <script>
@@ -216,7 +166,7 @@ const formatPoetryTitle = (title: string) => {
       if (document.visibilityState === 'visible') {
         initLastReadTimes();
       }
-    }, 1000);
+    }, 60000);
   };
 
   const stopLastReadTicker = () => {
@@ -226,22 +176,7 @@ const formatPoetryTitle = (title: string) => {
     }
   };
 
-  const setupSelectedCards = () => {
-    document.querySelectorAll('.project-bento-card').forEach((card) => {
-      card.addEventListener('click', () => {
-        try {
-          sessionStorage.removeItem('explore_item');
-          sessionStorage.removeItem('explore_origin');
-          sessionStorage.removeItem('nav_from');
-        } catch {}
-      });
-    });
-  };
-
-  document.addEventListener('astro:page-load', () => {
-    startLastReadTicker();
-    setupSelectedCards();
-  });
+  document.addEventListener('astro:page-load', startLastReadTicker);
   document.addEventListener('astro:before-swap', stopLastReadTicker);
   window.addEventListener('pageshow', startLastReadTicker);
   window.addEventListener('storage', initLastReadTimes);
@@ -251,17 +186,5 @@ const formatPoetryTitle = (title: string) => {
       initLastReadTimes();
     }
   });
-
-  if (document.readyState === 'complete') {
-    startLastReadTicker();
-    setupSelectedCards();
-  } else {
-    window.addEventListener('DOMContentLoaded', () => {
-      startLastReadTicker();
-      setupSelectedCards();
-    });
-  }
-  startLastReadTicker();
-  setupSelectedCards();
 </script>
 

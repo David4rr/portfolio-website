@@ -1,6 +1,5 @@
 ---
-import ThemeToggle from './ThemeToggle.astro';
-import { getRuntimeEnv } from '../lib/notion';
+import { getRuntimeEnv } from '../lib/env';
 
 const currentPath = Astro.url.pathname;
 const isWritingDetail = /^\/writing\/[^\/]+/.test(currentPath);
@@ -86,10 +85,17 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
 
 <script>
   let clockInterval: ReturnType<typeof setInterval> | null = null;
+  const timeFormatter = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
 
   function initNavClock() {
-    const display = document.getElementById('nav-mobile-clock');
-    if (!display) return;
+    const mobileDisplay = document.getElementById('nav-mobile-clock');
+    const liveDisplays = document.querySelectorAll('.live-clock-display');
+    if (!mobileDisplay && liveDisplays.length === 0) return;
     
     if (clockInterval) {
       clearInterval(clockInterval);
@@ -97,21 +103,23 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
     }
     
     const updateTime = () => {
+      if (document.visibilityState === 'hidden') return;
       try {
         const now = new Date();
-        const timeStr = new Intl.DateTimeFormat('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }).format(now);
-        
+        const timeStr = timeFormatter.format(now);
         const offset = -now.getTimezoneOffset() / 60;
         const gmtStr = `GMT${offset >= 0 ? '+' : ''}${offset}`;
         
-        display.textContent = `${timeStr} • ${gmtStr}`;
-      } catch (e) {
-        // Fallback if timezone not supported
-      }
+        if (mobileDisplay) {
+          mobileDisplay.textContent = `${timeStr.slice(0, 5)} • ${gmtStr}`;
+        }
+        if (liveDisplays.length > 0) {
+          const fullText = `${timeStr.replace(/:/g, ' : ')} • ${gmtStr}`;
+          liveDisplays.forEach(d => {
+            d.textContent = fullText;
+          });
+        }
+      } catch {}
     };
     
     updateTime();
@@ -287,10 +295,4 @@ const githubUrl = await getRuntimeEnv('GITHUB_URL') || await getRuntimeEnv('PUBL
       clockInterval = null;
     }
   });
-
-  if (document.readyState === 'complete') {
-    initNavClock();
-  } else {
-    window.addEventListener('DOMContentLoaded', initNavClock);
-  }
 </script>

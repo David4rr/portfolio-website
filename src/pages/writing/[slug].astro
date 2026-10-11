@@ -1,9 +1,13 @@
 ---
+import '../../styles/writing-article.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
-import TableOfContents, { type TocItem } from '../../components/TableOfContents.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
 import ScrollUpButton from '../../components/ScrollUpButton.astro';
+import VisitActionButton from '../../components/VisitActionButton.astro';
 import { getBlogPostBySlug } from '../../lib/blogger';
+import { optimizeImageUrl, resolveReturnLink } from '../../lib/detail-helpers';
+import { transformBloggerArticleContent } from '../../lib/article-transformer';
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
 
@@ -14,185 +18,10 @@ if (!post) {
   return Astro.redirect('/404');
 }
 
-const fromExplore = Astro.url.searchParams.get('from') === 'explore';
-const origin = Astro.url.searchParams.get('origin');
-const returnHref = fromExplore 
-  ? (origin === 'writing' ? '/explore?from=writing' : '/explore')
-  : '/#writing';
-const returnLabel = fromExplore ? 'Return to Gallery' : 'Return';
-
-const optimizeImageUrl = (url?: string, width = 1200): string => {
-  if (!url) return '';
-  if (url.includes('googleusercontent.com') || url.includes('blogger.com')) {
-    if (/\/(s\d+|w\d+|s\d+-c)\//.test(url)) {
-      return url.replace(/\/(s\d+|w\d+|s\d+-c)\//, `/w${width}-rw/`);
-    }
-    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
-  }
-  if (url.startsWith('http')) {
-    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=webp`;
-  }
-  return url;
-};
-
+const { returnHref, returnLabel } = resolveReturnLink(Astro.url.searchParams, '/#writing');
 const optimizedCover = post.image ? optimizeImageUrl(post.image, 1200) : '';
+const { sanitizedContent, toc } = transformBloggerArticleContent(post.content || '', post.title);
 
-// Post-process inline images from Blogger content to satisfy Astro performance audits:
-// 1. Transform Blogger's archaic table captions (<table class="tr-caption-container">) into semantic <figure> & <figcaption>
-// 2. Unwrap raw image anchors (<a href="...googleusercontent..."><img ...></a>) to fix "Missing content: Headings and anchors must have an accessible name"
-// 3. Add data-image-component="" to satisfy perf-use-image-component
-// 4. First image is above the fold: loading="eager" (satisfies perf-use-loading-eager)
-// 5. Subsequent images are below the fold: loading="lazy" (satisfies perf-use-loading-lazy)
-let imageCount = 0;
-let sanitizedContent = post.content || '';
-
-// Step 1: Convert tr-caption-container tables to semantic <figure>
-sanitizedContent = sanitizedContent.replace(
-  /<table[^>]*?class=["'][^"']*?tr-caption-container[^"']*?["'][^>]*?>[\s\S]*?<\/table>/gi,
-  (tableMatch) => {
-    const srcMatch = tableMatch.match(/<img[^>]+src=["']([^"']+)["']/i);
-    const altMatch = tableMatch.match(/<img[^>]+alt=["']([^"']+)["']/i);
-    const captionMatch = tableMatch.match(/<td[^>]*?class=["'][^"']*?tr-caption[^"']*?["'][^>]*?>([\s\S]*?)<\/td>/i);
-    
-    if (!srcMatch) return tableMatch;
-    
-    const rawSrc = srcMatch[1];
-    const alt = (altMatch && altMatch[1].trim()) || post.title;
-    const caption = captionMatch ? captionMatch[1].trim() : '';
-    const optimizedSrc = optimizeImageUrl(rawSrc, 1200);
-
-    const isFirst = imageCount === 0;
-    imageCount++;
-    const loading = isFirst ? 'eager' : 'lazy';
-    const captionHtml = caption ? '<figcaption class="text-xs text-text-muted/80 mt-3 font-serif italic">' + caption + '</figcaption>' : '';
-
-    return '<figure class="my-10 text-center"><img src="' + optimizedSrc + '" alt="' + alt + '" loading="' + loading + '" decoding="async" data-image-component="" data-processed="true" class="rounded-sm shadow-xl border border-border-subtle/40 mx-auto max-w-full h-auto object-cover" />' + captionHtml + '</figure>';
-  }
-);
-
-// Step 2: Unwrap any remaining standalone <a href="..."><img ...></a> pointing to images
-sanitizedContent = sanitizedContent.replace(
-  /<a\b[^>]*?href=["'][^"']*?(?:googleusercontent|blogger|\.jpg|\.png|\.webp|\.jpeg)[^"']*?["'][^>]*?>\s*(<img\b[^>]*?>)\s*<\/a>/gi,
-  '$1'
-);
-
-// Step 3: Optimize only unprocessed standalone <img> tags
-sanitizedContent = sanitizedContent.replace(
-  /<img\b([^>]*?)>/gi,
-  (imgTag, attrs) => {
-    if (attrs.includes('data-processed="true"')) {
-      return imgTag.replace(' data-processed="true"', '');
-    }
-
-    const srcMatch = imgTag.match(/\bsrc=["']([^"']+)["']/i);
-    const altMatch = imgTag.match(/\balt=["']([^"']+)["']/i);
-    const titleMatch = imgTag.match(/\btitle=["']([^"']*)["']/i);
-
-    const rawSrc = srcMatch ? srcMatch[1] : '';
-    const altText = (altMatch && altMatch[1].trim()) || post.title;
-    const titleText = titleMatch ? ' title="' + titleMatch[1] + '"' : '';
-    const optimizedSrc = optimizeImageUrl(rawSrc, 1200);
-
-    const isFirst = imageCount === 0;
-    imageCount++;
-    const loading = isFirst ? 'eager' : 'lazy';
-
-    return '<img src="' + optimizedSrc + '" alt="' + altText + '"' + titleText + ' loading="' + loading + '" decoding="async" data-image-component="" class="rounded-sm shadow-xl border border-border-subtle/40 mx-auto my-10 max-w-full h-auto" />';
-  }
-);
-
-// Step 4: Extract Headings and Inject Anchors into sanitizedContent for dynamic Table of Contents
-const toc: TocItem[] = [];
-const usedIds = new Map<string, number>();
-
-function createSlug(text: string): string {
-  const base = text
-    .toLowerCase()
-    .replace(/<[^>]*>/g, '')
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-  return base || 'section';
-}
-
-sanitizedContent = sanitizedContent.replace(
-  /<(h[2-4])\b([^>]*)>([\s\S]*?)<\/\1>/gi,
-  (fullMatch, tag, attrs, innerHtml) => {
-    const cleanText = innerHtml.replace(/<[^>]*>/g, '').trim();
-    if (!cleanText) return fullMatch;
-
-    const baseSlug = createSlug(cleanText);
-    const count = (usedIds.get(baseSlug) || 0) + 1;
-    usedIds.set(baseSlug, count);
-    const id = count === 1 ? baseSlug : `${baseSlug}-${count}`;
-
-    const level = parseInt(tag[1], 10);
-    toc.push({ id, text: cleanText, level });
-
-    let updatedAttrs = attrs;
-    if (/id=["'][^"']*["']/i.test(updatedAttrs)) {
-      updatedAttrs = updatedAttrs.replace(/id=["'][^"']*["']/i, `id="${id}"`);
-    } else {
-      updatedAttrs = ` id="${id}"` + updatedAttrs;
-    }
-
-    const scrollClass = 'scroll-mt-28 group relative';
-    if (/class=["'][^"']*["']/i.test(updatedAttrs)) {
-      updatedAttrs = updatedAttrs.replace(/class=["']([^"']*)["']/i, `class="$1 ${scrollClass}"`);
-    } else {
-      updatedAttrs = ` class="${scrollClass}"` + updatedAttrs;
-    }
-
-    return `<${tag}${updatedAttrs}>${innerHtml}</${tag}>`;
-  }
-);
-
-// Step 5: Remove hardcoded Blogger inline style tags that conflict with theme
-sanitizedContent = sanitizedContent.replace(/<style[\s\S]*?<\/style>/gi, '');
-
-// Step 6: Transform code blocks into theme-matched macOS terminal cards
-sanitizedContent = sanitizedContent.replace(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi, (_match, _attrs, code) => {
-  const rawText = code.replace(/<[^>]*>/g, '').trim();
-  let title = 'terminal';
-  if (rawText.startsWith('{') || rawText.startsWith('[')) title = 'config.json';
-  else if (rawText.includes('├──') || rawText.includes('└──')) title = 'structure';
-  else if (rawText.startsWith('---')) title = 'frontmatter.md';
-  else if (rawText.startsWith('mkdir') || rawText.startsWith('cat') || rawText.startsWith('npm') || rawText.startsWith('git') || rawText.startsWith('ln -s') || rawText.startsWith('curl')) title = 'bash';
-
-  return `<div class="terminal-card relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40 transition-colors duration-200">
-    <div class="terminal-header flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-bg-subtle/60 border-b border-border-subtle/50 select-none gap-2">
-      <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-        <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F56]/80 border border-[#E0443E]/40 shrink-0"></span>
-        <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FFBD2E]/80 border border-[#DEA123]/40 shrink-0"></span>
-        <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#27C93F]/80 border border-[#1AAB29]/40 shrink-0"></span>
-        <span class="ml-1 sm:ml-2 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.2em] text-text-muted font-medium flex items-center gap-1.5 truncate">
-          <svg class="w-3 h-3 text-accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
-          <span class="truncate">${title}</span>
-        </span>
-      </div>
-      <button type="button" class="copy-terminal-btn shrink-0 group flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded text-[10px] md:text-[11px] font-mono uppercase tracking-wider text-text-muted hover:text-accent hover:bg-bg-subtle border border-transparent hover:border-border-subtle/50 transition-colors cursor-pointer" aria-label="Copy code">
-        <svg class="w-3.5 h-3.5 copy-icon transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        <span class="copy-label">Copy</span>
-      </button>
-    </div>
-    <pre class="terminal-body font-mono text-xs sm:text-[13px] md:text-sm text-text-main bg-bg-subtle/20 p-3.5 sm:p-4 md:p-5 overflow-x-auto leading-relaxed selection:bg-accent/20" data-lenis-prevent-horizontal="true"><code>${code}</code></pre>
-  </div>`;
-});
-
-// Step 7: Transform non-caption tables into responsive theme-styled tables
-sanitizedContent = sanitizedContent.replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/gi, (match, attrs, inner) => {
-  if (attrs.includes('tr-caption-container')) return match;
-  // Clean hardcoded percentage / fixed widths from table cells to prevent mobile column squishing
-  const cleanInner = inner.replace(/\bstyle=["'][^"']*?\bwidth\s*:\s*[^;"']+;?[^"']*?["']/gi, (styleAttr) => {
-    return styleAttr.replace(/\bwidth\s*:\s*[^;"']+;?/gi, '');
-  });
-  return `<div class="table-container relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40">
-    <div class="table-wrapper overflow-x-auto" data-lenis-prevent-horizontal="true">
-      <table class="theme-table w-full border-collapse text-left text-sm md:text-base">${cleanInner}</table>
-    </div>
-  </div>`;
-});
-// Prevent double image: if Blogger content already has an image, do not show duplicate cover
 const hasImageInContent = /<img\b/i.test(post.content || '');
 const showCover = Boolean(optimizedCover && !hasImageInContent);
 
@@ -200,22 +29,20 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
   weekday: 'long',
   day: 'numeric',
   month: 'long',
-  year: 'numeric'
+  year: 'numeric',
 });
 ---
 
-<BaseLayout 
+<BaseLayout
   title={`${post.title} | David Arrozaqi`}
   description={post.excerpt}
-  image={optimizedCover || "/og-image.png"}
+  image={optimizedCover || '/og-image.png'}
   type="article"
 >
   <Nav />
-  
+
   <main class="min-h-screen pt-24 sm:pt-28 md:pt-32 pb-36 sm:pb-48 md:pb-64 bg-bg overflow-x-clip w-full">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 md:px-8">
-      
-      {/* Return link - identical to project detail page */}
       <div class="flex justify-center mb-12 sm:mb-16 md:mb-20">
         <a id="magnetic-area" href={returnHref} class="p-4 sm:p-6 cursor-pointer group">
           <div id="back-button" class="flex items-center text-text-muted group-hover:text-accent transition-colors duration-300 uppercase font-sans text-[10px] tracking-[0.25em] sm:tracking-[0.3em]">
@@ -226,7 +53,6 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         </a>
       </div>
 
-      {/* Header */}
       <header class="text-center mb-10 sm:mb-14 md:mb-16">
         <div class="font-mono text-[11px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] text-text-muted mb-3 sm:mb-4 flex items-center justify-center gap-2 flex-wrap">
           <span>{formattedDate}</span>
@@ -236,14 +62,12 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         <h1 class="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-[1.25] text-text-main font-normal tracking-tight italic mb-6 break-words">
           {post.title}
         </h1>
-
       </header>
 
-      {/* Standalone cover only if content does NOT already have an image (prevents double image bug) */}
       {showCover && (
         <div class="mb-14 overflow-hidden rounded-sm border border-border-subtle/50">
-          <img 
-            src={optimizedCover} 
+          <img
+            src={optimizedCover}
             alt={post.title}
             class="w-full h-auto object-cover max-h-[500px]"
             loading="eager"
@@ -253,231 +77,22 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         </div>
       )}
 
-      {/* Dynamic Table of Contents */}
       <TableOfContents items={toc} />
 
-      {/* Article Body */}
-      <article 
+      <article
         class="prose prose-invert max-w-none text-text-main/90 font-serif text-base md:text-lg leading-relaxed space-y-6 [&>p]:leading-relaxed [&>h2]:font-serif [&>h2]:text-2xl [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:break-words [&>h3]:font-serif [&>h3]:text-xl [&>h3]:mt-8 [&>h3]:mb-3 [&>h3]:break-words [&>h4]:break-words [&>a]:text-accent [&>a]:underline [&>blockquote]:border-l-2 [&>blockquote]:border-accent [&>blockquote]:pl-4 [&>blockquote]:italic [&_ul]:list-disc [&_ul]:pl-5 sm:[&_ul]:pl-6 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-5 sm:[&_ol]:pl-6 [&_ol]:my-4 [&_li]:my-2 [&_li]:pl-1 [&_li::marker]:text-accent"
         set:html={sanitizedContent}
       />
 
-      {/* Single Visit button matching project detail page */}
-      {post.url && (
-        <div class="mt-20 mb-16 flex flex-col items-center justify-center relative z-20">
-          <a 
-            href={post.url} 
-            target="_blank"
-            rel="noopener noreferrer"
-            id="visit-site-btn"
-            class="group relative inline-flex items-center justify-center overflow-hidden border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500 w-48 h-12"
-          >
-            {/* The Text */}
-            <span class="btn-text absolute transition-all duration-500 group-hover:opacity-0 group-hover:-translate-y-4">Visit Article</span>
-            
-            {/* The Rocket (Hidden initially, appears on hover) */}
-            <div class="btn-rocket absolute opacity-0 translate-y-6 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 w-40 h-16 flex items-center justify-center pointer-events-none origin-center">
-              <svg viewBox="-60 0 180 60" class="w-full h-full overflow-visible -rotate-12 animate-rocket-hover">
-                {/* Speed lines */}
-                <g class="stroke-text-muted/30 group-hover:stroke-bg/50 stroke-[1px] transition-colors duration-500">
-                  <line x1="120" y1="10" x2="140" y2="10" class="animate-seq-speed" style="animation-delay: 1.2s" />
-                  <line x1="80" y1="50" x2="110" y2="50" class="animate-seq-speed" style="animation-delay: 1.25s" />
-                  <line x1="50" y1="60" x2="90" y2="60" class="animate-seq-speed" style="animation-delay: 1.3s" />
-                </g>
-                {/* Flames */}
-                <g class="animate-seq-flame origin-[20px_30px]">
-                  <path d="M 16 12 L -50 30 L 16 48" class="fill-accent/60 stroke-none" />
-                  <path d="M 16 18 L -25 30 L 16 42" class="fill-accent stroke-none" />
-                  <path d="M 16 24 L -5 30 L 16 36" class="fill-bg stroke-none" />
-                </g>
-                {/* Structural Body - AI */}
-                <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
-                <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
-                <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4" stroke-linecap="round" />
-                <path d="M 50 14 Q 65 30 50 46" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="3" stroke-linecap="round" />
-                {/* Glowing Poetic Wiring - ME */}
-                <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
-                <path d="M 76 22 Q 68 30 76 38" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
-                <path d="M 74 22 Q 95 25 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
-                <path d="M 71 30 Q 85 30 95 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
-                <path d="M 74 38 Q 95 35 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
-              </svg>
-            </div>
-          </a>
-        </div>
-      )}
-
+      {post.url && <VisitActionButton href={post.url} label="Visit Article" />}
     </div>
   </main>
 
-  {/* Floating Scroll to Top Button */}
   <ScrollUpButton />
 </BaseLayout>
 
 <script>
-  import anime from 'animejs';
-
-  const initBackButton = () => {
-    const params = new URLSearchParams(window.location.search);
-    const fromParam = params.get('from');
-    let originParam = params.get('origin');
-    
-    const historyState = window.history.state || {};
-    let isFromExplore = false;
-
-    if (fromParam === 'explore') {
-      isFromExplore = true;
-      try {
-        sessionStorage.setItem('explore_item', window.location.pathname);
-        if (originParam) {
-          sessionStorage.setItem('explore_origin', originParam);
-        } else {
-          sessionStorage.removeItem('explore_origin');
-        }
-      } catch {}
-    } else if (
-      historyState.fromExplore === true ||
-      (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('explore_item') === window.location.pathname)
-    ) {
-      // Restored on exact same item reload after address bar sanitization
-      isFromExplore = true;
-      if (!originParam && historyState.exploreOrigin) {
-        originParam = historyState.exploreOrigin;
-      } else if (!originParam) {
-        try { originParam = sessionStorage.getItem('explore_origin'); } catch {}
-      }
-    } else {
-      // Navigation from Selected Writings, direct link, or homepage
-      try {
-        sessionStorage.removeItem('explore_item');
-        sessionStorage.removeItem('explore_origin');
-        sessionStorage.removeItem('nav_from');
-      } catch {}
-    }
-
-    const btn = document.getElementById('magnetic-area') as HTMLAnchorElement | null;
-    const text = document.getElementById('back-text');
-    if (btn && text) {
-      if (isFromExplore) {
-        btn.href = originParam === 'writing' ? '/explore?from=writing' : '/explore';
-        btn.setAttribute('data-astro-reload', '');
-        text.innerText = 'Return to Gallery';
-      } else {
-        btn.href = '/#writing';
-        btn.removeAttribute('data-astro-reload');
-        text.innerText = 'Return';
-      }
-    }
-
-    // Clean URL query params so copying the link yields clean canonical URL with full OG support
-    if (fromParam || params.has('origin')) {
-      try {
-        window.history.replaceState(
-          { ...historyState, fromExplore: isFromExplore, exploreOrigin: originParam },
-          '',
-          window.location.pathname
-        );
-      } catch {}
-    }
-  };
-
-  const setupReturnAnimation = () => {
-    initBackButton();
-
-    // Mobile / touch bypass: skip magnetic mouse physics & continuous layout reflow loop
-    if (window.matchMedia('(hover: none)').matches || window.innerWidth < 768) {
-      return;
-    }
-
-    // Magnetic & breathing Return Button
-    const magneticArea = document.getElementById('magnetic-area');
-    const returnBtn = document.getElementById('back-button');
-    const leftLine = document.querySelector('.return-line-left');
-    const rightLine = document.querySelector('.return-line-right');
-    
-    if (magneticArea && returnBtn && leftLine && rightLine) {
-      // Idle breathing
-      let idleAnim = anime({
-        targets: [leftLine, rightLine],
-        width: ['12px', '28px'],
-        duration: 1800,
-        direction: 'alternate',
-        loop: true,
-        easing: 'easeInOutSine'
-      });
-
-      // Magnetic Hover Effect
-      magneticArea.addEventListener('mousemove', (e: Event) => {
-        const mouseEvent = e as MouseEvent;
-        const rect = magneticArea.getBoundingClientRect();
-        const x = (mouseEvent.clientX - rect.left) - (rect.width / 2);
-        const y = (mouseEvent.clientY - rect.top) - (rect.height / 2);
-        
-        anime({
-          targets: returnBtn,
-          translateX: x * 0.4,
-          translateY: y * 0.4,
-          duration: 0,
-          easing: 'linear'
-        });
-      });
-
-      magneticArea.addEventListener('mouseenter', () => {
-        idleAnim.pause();
-        
-        anime({
-          targets: leftLine,
-          width: '40px',
-          translateX: -6,
-          duration: 600,
-          easing: 'easeOutElastic(1, .5)'
-        });
-        
-        anime({
-          targets: rightLine,
-          width: '40px',
-          translateX: 6,
-          duration: 600,
-          easing: 'easeOutElastic(1, .5)'
-        });
-
-        anime({
-          targets: returnBtn,
-          letterSpacing: '0.5em',
-          duration: 400,
-          easing: 'easeOutExpo'
-        });
-      });
-
-      magneticArea.addEventListener('mouseleave', () => {
-        anime({
-          targets: returnBtn,
-          translateX: 0,
-          translateY: 0,
-          letterSpacing: '0.3em',
-          duration: 800,
-          easing: 'easeOutElastic(1, .5)'
-        });
-        anime({
-          targets: [leftLine, rightLine],
-          width: '12px',
-          translateX: 0,
-          duration: 400,
-          easing: 'easeOutQuad',
-          complete: () => {
-            idleAnim = anime({
-              targets: [leftLine, rightLine],
-              width: ['12px', '28px'],
-              duration: 1800,
-              direction: 'alternate',
-              loop: true,
-              easing: 'easeInOutSine'
-            });
-          }
-        });
-      });
-    }
-  };
+  import { setupDetailBackButton } from '../../lib/detail-helpers';
 
   const setupCopyButtons = () => {
     document.querySelectorAll('.copy-terminal-btn').forEach((btn) => {
@@ -517,7 +132,6 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
       const history = JSON.parse(localStorage.getItem(key) || '{}');
       const priorExitTime = history[slug];
 
-      // Format previous read time ONLY if it existed from an earlier session/exit
       let prevRel: string | null = null;
       if (priorExitTime && typeof priorExitTime === 'number') {
         const diffSec = Math.floor((Date.now() - priorExitTime) / 1000);
@@ -528,8 +142,6 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         else prevRel = `${Math.floor(diffSec / 86400)}d ago`;
       }
 
-      // Display previous read status on detail page ONLY if it was read previously.
-      // If first-time visit (never exited before), keep hidden.
       const indicator = document.getElementById('detail-last-read');
       if (indicator) {
         if (prevRel) {
@@ -541,7 +153,6 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         }
       }
 
-      // Record / flush current timestamp ONLY when leaving / exiting the writing detail page
       let hasFlushed = false;
       const flushTimestamp = () => {
         if (hasFlushed) return;
@@ -553,13 +164,11 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         } catch {}
       };
 
-      // 1. Direct Return button click (covers Selected Writings return and Canvas Gallery return)
       const returnBtn = document.getElementById('magnetic-area');
       if (returnBtn) {
         returnBtn.addEventListener('click', flushTimestamp);
       }
 
-      // 2. Astro View Transitions navigation away from page (Return button, logo click, back button, nav links)
       const onBeforeSwap = () => {
         flushTimestamp();
         cleanup();
@@ -575,247 +184,12 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     } catch {}
   };
 
-  const setupSmoothCardScroll = () => {
-    document.querySelectorAll('.terminal-body, .table-wrapper').forEach((el) => {
-      el.addEventListener('wheel', (e: Event) => {
-        const we = e as WheelEvent;
-        if (Math.abs(we.deltaY) > Math.abs(we.deltaX)) {
-          return;
-        }
-      }, { passive: true });
-    });
-  };
-
   const initDetailPage = () => {
-    setupReturnAnimation();
+    setupDetailBackButton('/#writing');
     setupCopyButtons();
-    setupSmoothCardScroll();
     recordReadingHistory();
   };
 
   document.addEventListener('astro:page-load', initDetailPage);
   window.addEventListener('pageshow', recordReadingHistory);
-  if (document.readyState === 'complete') {
-    initDetailPage();
-  } else {
-    window.addEventListener('DOMContentLoaded', initDetailPage);
-  }
 </script>
-
-<style is:global>
-  /* Hardware-accelerated 120fps smooth scrolling for Terminal & Tables */
-  .terminal-card,
-  .table-container {
-    contain: layout style;
-  }
-
-  .terminal-body,
-  .table-wrapper {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: auto;
-    overscroll-behavior-x: auto;
-    touch-action: pan-y pan-x;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--text-muted) 35%, transparent) transparent;
-  }
-
-  .terminal-body::-webkit-scrollbar,
-  .table-wrapper::-webkit-scrollbar {
-    height: 5px;
-  }
-  .terminal-body::-webkit-scrollbar-track,
-  .table-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .terminal-body::-webkit-scrollbar-thumb,
-  .table-wrapper::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--text-muted) 28%, transparent);
-    border-radius: 9999px;
-  }
-  .terminal-body::-webkit-scrollbar-thumb:hover,
-  .table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--text-muted) 50%, transparent);
-  }
-
-  /* Theme-matched Table & Content Styling (TOC Card Spec) */
-  .table-container {
-    background-color: color-mix(in srgb, var(--bg-subtle) 40%, transparent);
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
-  }
-  .theme-table {
-    width: 100%;
-    min-width: 480px;
-    border-collapse: collapse;
-    font-family: var(--font-sans);
-  }
-  .theme-table th {
-    background-color: color-mix(in srgb, var(--bg-subtle) 75%, transparent);
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid var(--border-subtle);
-    text-align: left;
-  }
-  .theme-table td {
-    padding: 0.875rem 1rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 40%, transparent);
-    color: var(--text-main);
-    font-size: 0.875rem;
-    line-height: 1.6;
-    vertical-align: top;
-  }
-  .theme-table tr:last-child td {
-    border-bottom: none;
-  }
-  .theme-table tr:nth-child(even) td {
-    background-color: color-mix(in srgb, var(--bg-subtle) 30%, transparent);
-  }
-  .theme-table tr:hover td {
-    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
-  }
-  .theme-table td code {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    padding: 0.15rem 0.35rem;
-    border-radius: 0.25rem;
-    background-color: color-mix(in srgb, var(--bg-subtle) 80%, transparent);
-    color: var(--accent);
-    border: 1px solid var(--border-subtle);
-  }
-  .theme-table td.bad, .bad {
-    color: #f87171 !important;
-    font-weight: 600;
-  }
-  .theme-table td.good, .good {
-    color: #34d399 !important;
-    font-weight: 600;
-  }
-
-  /* Support for Blogger content utility containers (.panel, .note, .bx, .flow) */
-  .sb .panel,
-  .panel {
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
-    border-radius: 0.75rem;
-    padding: 1.25rem 1.5rem;
-    background-color: color-mix(in srgb, var(--bg-subtle) 40%, transparent);
-    color: var(--text-main);
-    margin: 1.5rem 0;
-  }
-  .sb .panel h4,
-  .panel h4 {
-    margin: 0 0 0.5rem;
-    font-family: var(--font-serif);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-main);
-  }
-  .sb .note,
-  .note {
-    border-left: 3px solid var(--accent);
-    background-color: color-mix(in srgb, var(--bg-subtle) 50%, transparent);
-    padding: 1rem 1.25rem;
-    margin: 1.5rem 0;
-    border-radius: 0 0.5rem 0.5rem 0;
-    color: var(--text-main);
-  }
-  .sb .flow,
-  .flow {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    margin: 1.25rem 0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.5rem;
-    scrollbar-width: thin;
-    max-width: 100%;
-  }
-  .sb .bx,
-  .bx {
-    flex-shrink: 0;
-    border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
-    background-color: color-mix(in srgb, var(--bg-subtle) 40%, transparent);
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-    font-family: var(--font-mono);
-    color: var(--text-main);
-    line-height: 1.4;
-  }
-  .sb .bx.hot,
-  .bx.hot {
-    background-color: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.35);
-    color: #f87171;
-  }
-  .sb .bx.ok,
-  .bx.ok {
-    background-color: rgba(16, 185, 129, 0.12);
-    border-color: rgba(16, 185, 129, 0.35);
-    color: #34d399;
-  }
-  .sb .ar,
-  .ar {
-    flex-shrink: 0;
-    color: var(--text-muted);
-    font-size: 1.125rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Support for Blogger Bar Charts & Editorial Captions */
-  .sb .bar,
-  .bar {
-    height: 28px;
-    border-radius: 6px;
-    color: #ffffff;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 28px;
-    padding: 0 10px;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sb .cap,
-  .cap {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    text-align: center;
-    margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
-    opacity: 0.85;
-  }
-
-  /* Inline code & blockquote styling inside article prose (TOC token spec) */
-  article code:not(pre code) {
-    background-color: color-mix(in srgb, var(--bg-subtle) 60%, transparent) !important;
-    color: var(--accent) !important;
-    border: 1px solid var(--border-subtle) !important;
-    padding: 0.15rem 0.4rem !important;
-    border-radius: 0.375rem !important;
-    font-size: 0.875em !important;
-    font-family: var(--font-mono) !important;
-  }
-  article blockquote {
-    background-color: color-mix(in srgb, var(--bg-subtle) 40%, transparent);
-    border-left: 3px solid var(--accent) !important;
-    border-radius: 0 0.5rem 0.5rem 0;
-    padding: 1rem 1.25rem !important;
-    margin: 1.5rem 0 !important;
-  }
-</style>

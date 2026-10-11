@@ -3,7 +3,7 @@ import AsciiAvatar from "./AsciiAvatar.astro";
 import Typewriter from "./Typewriter.astro";
 import SpotifyResonance from "./SpotifyResonance.astro";
 import framesJson from "../data/ascii-frames.json";
-import { getRuntimeEnv } from "../lib/notion";
+import { getRuntimeEnv } from "../lib/env";
 
 const contactEmail = await getRuntimeEnv('CONTACT_EMAIL') || "hello@example.com";
 

@@ -19,7 +19,6 @@ export interface NotionProject {
 }
 
 import { getRuntimeEnv } from "./env";
-export { getRuntimeEnv };
 
 // Function to fetch all published projects
 export async function getProjectsFromNotion(): Promise<NotionProject[]> {

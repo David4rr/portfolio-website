@@ -1,0 +1,229 @@
+---
+import { optimizeImageUrl } from '../lib/detail-helpers';
+
+interface PreviewItem {
+  slug: string;
+  title: string;
+  image?: string;
+}
+
+interface Props {
+  items: PreviewItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div id="project-cursor-wrapper" class="fixed top-0 left-0 pointer-events-none z-[100]">
+  <div
+    id="project-cursor-image"
+    style="transform: scale(0.5);"
+    class="w-[260px] sm:w-[320px] md:w-[380px] lg:w-[420px] xl:w-[450px] max-w-[calc(100vw-2rem)] max-h-[48vh] rounded-xl sm:rounded-2xl overflow-hidden opacity-0 shadow-2xl origin-center bg-bg border border-border-subtle relative pointer-events-none"
+  >
+    {
+      items.map((item) => {
+        if (!item.image) return null;
+        const optimizedSrc = optimizeImageUrl(item.image, 600);
+        return (
+          <img
+            src={optimizedSrc}
+            alt={`Preview of ${item.title}`}
+            class="w-full h-auto max-h-[48vh] object-contain absolute inset-0 hidden cursor-project-img"
+            data-slug={item.slug}
+            loading="eager"
+            decoding="async"
+          />
+        );
+      })
+    }
+  </div>
+</div>
+
+<script>
+  import anime from 'animejs';
+
+  let cursorCleanup: (() => void) | null = null;
+
+  const initProjectCursor = () => {
+    cursorCleanup?.();
+    cursorCleanup = null;
+
+    const cards = document.querySelectorAll<HTMLElement>('.project-bento-card');
+    const peekBtns = document.querySelectorAll<HTMLButtonElement>('.project-peek-btn');
+    const cursorWrapper = document.getElementById('project-cursor-wrapper');
+    const cursorImg = document.getElementById('project-cursor-image');
+    if (!cursorWrapper || !cursorImg || cards.length === 0) return;
+
+    if (cursorWrapper.parentNode !== document.body) {
+      document.body.appendChild(cursorWrapper);
+    }
+    cursorWrapper.style.display = 'block';
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    let currX = 0;
+    let currY = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let rafId: number | null = null;
+
+    const setWrapperPos = (x: number, y: number) => {
+      currX = targetX = x;
+      currY = targetY = y;
+      cursorWrapper.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+
+    const tickPosition = () => {
+      currX += (targetX - currX) * 0.22;
+      currY += (targetY - currY) * 0.22;
+      cursorWrapper.style.transform = `translate3d(${currX.toFixed(2)}px, ${currY.toFixed(2)}px, 0)`;
+      rafId =
+        Math.abs(targetX - currX) > 0.15 || Math.abs(targetY - currY) > 0.15
+          ? requestAnimationFrame(tickPosition)
+          : null;
+    };
+
+    const moveWrapperTo = (x: number, y: number) => {
+      targetX = x;
+      targetY = y;
+      if (rafId === null) rafId = requestAnimationFrame(tickPosition);
+    };
+
+    let isHovering = false;
+    let firstHover = true;
+    let activePeekSlug: string | null = null;
+    let cachedWidth = cursorImg.offsetWidth || 450;
+    let cachedHeight = cursorImg.offsetHeight || 281;
+
+    const updateDimensions = () => {
+      cachedWidth = cursorImg.offsetWidth || cachedWidth;
+      cachedHeight = cursorImg.offsetHeight || cachedHeight;
+    };
+    window.addEventListener('resize', updateDimensions, { passive: true, signal });
+
+    const showProjectImage = (slug: string) => {
+      let matched = false;
+      cursorImg.querySelectorAll<HTMLElement>('.cursor-project-img').forEach((img) => {
+        const isTarget = img.dataset.slug === slug;
+        img.classList.toggle('relative', isTarget);
+        img.classList.toggle('block', isTarget);
+        img.classList.toggle('absolute', !isTarget);
+        img.classList.toggle('hidden', !isTarget);
+        if (isTarget) matched = true;
+      });
+      if (matched) updateDimensions();
+      return matched;
+    };
+
+    const hidePreview = () => {
+      isHovering = false;
+      activePeekSlug = null;
+      anime.remove(cursorImg);
+      anime({ targets: cursorImg, opacity: 0, scale: 0.5, rotate: 0, duration: 350, easing: 'easeOutCubic' });
+    };
+
+    const getClampedPosition = (clientX: number, clientY: number) => {
+      const offset = window.innerWidth < 640 ? 10 : 20;
+      const rawX = clientX + offset + cachedWidth > window.innerWidth - offset ? clientX - cachedWidth - offset : clientX + offset;
+      const rawY = clientY + offset + cachedHeight > window.innerHeight - offset ? clientY - cachedHeight - offset : clientY + offset;
+      const maxX = Math.max(offset, window.innerWidth - cachedWidth - offset);
+      const maxY = Math.max(offset, window.innerHeight - cachedHeight - offset);
+      return {
+        x: Math.min(Math.max(offset, rawX), maxX),
+        y: Math.min(Math.max(offset, rawY), maxY),
+      };
+    };
+
+    const hasFinePointer = () =>
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 768;
+
+    cards.forEach((card) => {
+      card.addEventListener('mouseenter', (e: MouseEvent) => {
+        if (!hasFinePointer()) return;
+        isHovering = true;
+        activePeekSlug = null;
+        const slug = card.getAttribute('data-slug');
+        const hasImg = card.dataset.hasImage === 'true' || card.hasAttribute('data-has-image');
+        if (!hasImg || !slug || !showProjectImage(slug)) return;
+
+        const pos = getClampedPosition(e.clientX, e.clientY);
+        if (firstHover) {
+          setWrapperPos(pos.x, pos.y);
+          firstHover = false;
+        } else {
+          moveWrapperTo(pos.x, pos.y);
+        }
+        anime.remove(cursorImg);
+        anime({ targets: cursorImg, opacity: 1, scale: 1, rotate: 0, duration: 600, easing: 'easeOutElastic(1, .8)' });
+      }, { signal });
+
+      card.addEventListener('mousemove', (e: MouseEvent) => {
+        if (hasFinePointer() && isHovering) {
+          const pos = getClampedPosition(e.clientX, e.clientY);
+          moveWrapperTo(pos.x, pos.y);
+        }
+      }, { signal });
+
+      card.addEventListener('mouseleave', () => {
+        if (hasFinePointer()) hidePreview();
+      }, { signal });
+    });
+
+    peekBtns.forEach((btn) => {
+      btn.addEventListener('click', (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const slug = btn.getAttribute('data-slug');
+        if (!slug) return;
+        if (activePeekSlug === slug && isHovering) {
+          hidePreview();
+          return;
+        }
+        if (!showProjectImage(slug)) return;
+        isHovering = true;
+        activePeekSlug = slug;
+
+        const btnRect = btn.getBoundingClientRect();
+        const x = Math.max(10, Math.round((window.innerWidth - cachedWidth) / 2));
+        let y = btnRect.top - cachedHeight - 14;
+        if (y < 20) y = btnRect.bottom + 14;
+        if (y + cachedHeight > window.innerHeight - 20) {
+          y = Math.max(20, Math.round((window.innerHeight - cachedHeight) / 2));
+        }
+        anime.remove(cursorImg);
+        setWrapperPos(x, y);
+        anime({ targets: cursorImg, opacity: [0, 1], scale: [0.85, 1], duration: 400, easing: 'easeOutQuad' });
+      }, { signal });
+    });
+
+    document.addEventListener('click', (e: MouseEvent) => {
+      if (!isHovering) return;
+      if ((e.target as HTMLElement | null)?.closest('.project-peek-btn')) return;
+      hidePreview();
+    }, { signal });
+
+    window.addEventListener('scroll', () => {
+      if (isHovering && !hasFinePointer()) hidePreview();
+    }, { passive: true, signal });
+
+    cursorCleanup = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      controller.abort();
+      anime.remove(cursorImg);
+    };
+  };
+
+  document.addEventListener('astro:page-load', initProjectCursor);
+  document.addEventListener('astro:before-swap', () => {
+    cursorCleanup?.();
+    cursorCleanup = null;
+    const wrapper = document.getElementById('project-cursor-wrapper');
+    if (wrapper?.parentNode === document.body) {
+      document.body.removeChild(wrapper);
+    }
+  });
+</script>

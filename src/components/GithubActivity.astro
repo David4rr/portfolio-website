@@ -48,12 +48,11 @@ const { username } = Astro.props;
     const username = container.dataset.username;
     if (!username) return;
 
-    let timeout;
-    let interval;
+    let interval: ReturnType<typeof setInterval> | null = null;
     let isRunning = true;
 
     async function fetchActivity() {
-      if (!isRunning) return;
+      if (!isRunning || document.visibilityState === 'hidden') return;
       try {
         const res = await fetch(`https://api.github.com/users/${username}/events/public`);
         if (!res.ok) {
@@ -113,26 +112,27 @@ const { username } = Astro.props;
       `;
     }
 
-    const executeFetch = () => {
-      fetchActivity();
-    };
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          executeFetch();
+          fetchActivity();
+          if (!interval) {
+            interval = setInterval(fetchActivity, 600000);
+          }
           observer.disconnect();
         }
       });
     }, { rootMargin: '100px' });
 
     observer.observe(container);
-    interval = setInterval(fetchActivity, 600000);
 
     document.addEventListener('astro:before-preparation', () => {
       isRunning = false;
-      clearTimeout(timeout);
-      clearInterval(interval);
+      observer.disconnect();
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
     }, { once: true });
   });
 </script>

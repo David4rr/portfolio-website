@@ -1,0 +1,113 @@
+---
+interface Props {
+  href: string;
+  label: string;
+}
+
+const { href, label } = Astro.props;
+---
+
+<div class="mt-16 mb-24 flex flex-col items-center justify-center relative z-20">
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    id="visit-site-btn"
+    class="group relative inline-flex items-center justify-center overflow-hidden border border-text-main/20 text-text-main font-sans uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-text-main hover:text-bg active:scale-95 transition-all duration-500 w-48 h-12"
+  >
+    <span class="btn-text absolute transition-all duration-500 group-hover:opacity-0 group-hover:-translate-y-4">{label}</span>
+
+    <div class="btn-rocket absolute opacity-0 translate-y-6 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 w-40 h-16 flex items-center justify-center pointer-events-none origin-center">
+      <svg viewBox="-60 0 180 60" class="w-full h-full overflow-visible -rotate-12 animate-rocket-hover">
+        <g class="stroke-text-muted/30 group-hover:stroke-bg/50 stroke-[1px] transition-colors duration-500">
+          <line x1="120" y1="10" x2="140" y2="10" class="animate-seq-speed" style="animation-delay: 1.2s" />
+          <line x1="80" y1="50" x2="110" y2="50" class="animate-seq-speed" style="animation-delay: 1.25s" />
+          <line x1="50" y1="60" x2="90" y2="60" class="animate-seq-speed" style="animation-delay: 1.3s" />
+        </g>
+        <g class="animate-seq-flame origin-[20px_30px]">
+          <path d="M 16 12 L -50 30 L 16 48" class="fill-accent/60 stroke-none" />
+          <path d="M 16 18 L -25 30 L 16 42" class="fill-accent stroke-none" />
+          <path d="M 16 24 L -5 30 L 16 36" class="fill-bg stroke-none" />
+        </g>
+        <path d="M 12 6 Q 18 6 18 10 L 18 50 Q 18 54 12 54" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
+        <path d="M 24 6 Q 18 6 18 10 M 24 54 Q 18 54 18 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4.5" stroke-linecap="round" />
+        <path d="M 28 10 Q 75 15 115 30 Q 75 45 28 50" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="4" stroke-linecap="round" />
+        <path d="M 50 14 Q 65 30 50 46" class="stroke-text-main group-hover:stroke-bg animate-seq-ai fill-none transition-colors duration-500" stroke-width="3" stroke-linecap="round" />
+        <path d="M 36 40 Q 36 24 40 24 Q 44 24 44 32 Q 44 24 48 24 Q 52 24 52 40" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+        <path d="M 76 22 Q 68 30 76 38" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+        <path d="M 74 22 Q 95 25 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+        <path d="M 71 30 Q 85 30 95 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+        <path d="M 74 38 Q 95 35 115 30" class="stroke-accent fill-none animate-seq-me" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </div>
+  </a>
+</div>
+
+<script>
+  import anime from 'animejs';
+
+  document.addEventListener('astro:page-load', () => {
+    const visitBtn = document.getElementById('visit-site-btn') as HTMLAnchorElement | null;
+    if (!visitBtn) return;
+
+    visitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const href = visitBtn.getAttribute('href');
+      const rocket = visitBtn.querySelector<HTMLElement>('.btn-rocket');
+      const btnText = visitBtn.querySelector<HTMLElement>('.btn-text');
+
+      if (!rocket || !href || visitBtn.dataset.clicked) return;
+      visitBtn.dataset.clicked = 'true';
+
+      const startWarp = () => {
+        visitBtn.classList.remove('group');
+        rocket.classList.remove('transition-all', 'duration-500');
+        visitBtn.style.overflow = 'visible';
+        visitBtn.style.borderColor = 'transparent';
+        visitBtn.style.background = 'transparent';
+        if (btnText) btnText.style.display = 'none';
+
+        anime({
+          targets: rocket,
+          scale: [1, 40],
+          translateX: [0, window.innerWidth < 768 ? 400 : 800],
+          translateY: [0, -400],
+          rotate: [-12, -25],
+          opacity: [1, 0],
+          duration: window.innerWidth < 768 ? 900 : 1200,
+          easing: 'easeInExpo',
+          complete: () => {
+            window.open(href, '_blank');
+            setTimeout(() => {
+              visitBtn.dataset.clicked = '';
+              visitBtn.classList.add('group');
+              rocket.classList.add('transition-all', 'duration-500');
+              visitBtn.style.overflow = 'hidden';
+              visitBtn.style.borderColor = '';
+              visitBtn.style.background = '';
+              if (btnText) btnText.style.display = '';
+              anime.set(rocket, { scale: 1, translateX: 0, translateY: 0, rotate: 0, opacity: '' });
+            }, 1000);
+          },
+        });
+      };
+
+      const styles = window.getComputedStyle(rocket);
+      if (styles.opacity === '0' || styles.opacity === '0.001') {
+        visitBtn.classList.add('bg-text-main', 'text-bg');
+        if (btnText) btnText.style.opacity = '0';
+
+        anime({
+          targets: rocket,
+          opacity: [0, 1],
+          translateY: [24, 0],
+          duration: 300,
+          easing: 'easeOutQuad',
+          complete: startWarp,
+        });
+      } else {
+        startWarp();
+      }
+    });
+  });
+</script>

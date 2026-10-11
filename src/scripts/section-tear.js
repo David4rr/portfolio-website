@@ -20,8 +20,6 @@ const initRevealObserver = () => {
 };
 
 document.addEventListener('astro:page-load', initRevealObserver);
-if (document.readyState === 'complete') initRevealObserver();
-else window.addEventListener('DOMContentLoaded', initRevealObserver);
 
 document.addEventListener('astro:before-swap', () => {
   observer.disconnect();

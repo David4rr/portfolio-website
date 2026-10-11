@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
-import { getRuntimeEnv } from '../lib/notion';
+import { getRuntimeEnv } from '../lib/env';
 
 interface Props {
   title: string;
@@ -144,8 +144,6 @@ if (ogImageUrl.includes('output=webp') || ogImageUrl.includes('.webp')) {
       }
 
       document.addEventListener('astro:page-load', initLenis);
-      if (document.readyState === 'complete') initLenis();
-      else window.addEventListener('DOMContentLoaded', initLenis);
 
       document.addEventListener('astro:before-swap', () => {
         if (lenisInstance) {

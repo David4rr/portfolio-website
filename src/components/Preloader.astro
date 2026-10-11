@@ -27,54 +27,72 @@ import RocketLoader from "./RocketLoader.astro";
 </script>
 
 <script>
+  let failsafeTimer: ReturnType<typeof setTimeout> | null = null;
+  let hideTimer: ReturnType<typeof setTimeout> | null = null;
+  let rafId: number | null = null;
+
+  const cleanupPreloader = () => {
+    if (failsafeTimer) {
+      clearTimeout(failsafeTimer);
+      failsafeTimer = null;
+    }
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    document.body.style.overflow = '';
+  };
+
   document.addEventListener('astro:page-load', () => {
+    cleanupPreloader();
     const preloader = document.getElementById('preloader-overlay');
     const percentEl = document.getElementById('preloader-percent');
     
     let hasSeen = false;
     try {
       hasSeen = !!sessionStorage.getItem('hasSeenPreloader');
-    } catch (e) {
+    } catch {
       hasSeen = true;
     }
 
-    if (hasSeen) {
+    if (hasSeen || !preloader || !percentEl) {
       if (preloader) preloader.style.display = 'none';
       document.body.style.overflow = '';
       return;
     }
     
-    if (preloader && percentEl) {
-      try {
-        sessionStorage.setItem('hasSeenPreloader', 'true');
-      } catch (e) {}
-      document.body.style.overflow = 'hidden';
-      let pct = 0;
-      
-      const interval = setInterval(() => {
-        pct += 1;
-        if (pct >= 100) {
-          pct = 100;
-          clearInterval(interval);
-          
-          setTimeout(() => {
-            preloader.classList.add('opacity-0');
-            preloader.style.pointerEvents = 'none';
-            setTimeout(() => {
-              preloader.style.display = 'none';
-              document.body.style.overflow = '';
-            }, 1000);
-          }, 500);
-        }
-        percentEl.textContent = `${pct}%`;
-      }, 25);
-    } else {
+    try {
+      sessionStorage.setItem('hasSeenPreloader', 'true');
+    } catch {}
+
+    const start = performance.now();
+    const duration = 350;
+
+    const tick = (now: number) => {
+      const pct = Math.min(100, Math.round(((now - start) / duration) * 100));
+      percentEl.textContent = `${pct}%`;
+      if (pct < 100) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        rafId = null;
+        document.body.style.overflow = '';
+        preloader.classList.add('opacity-0');
+        preloader.style.pointerEvents = 'none';
+        hideTimer = setTimeout(() => {
+          preloader.style.display = 'none';
+        }, 500);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    failsafeTimer = setTimeout(() => {
       document.body.style.overflow = '';
-    }
+    }, 1000);
   });
 
-  // Emergency failsafe: ensure scroll is always unlocked after 4s max
-  setTimeout(() => {
-    document.body.style.overflow = '';
-  }, 4000);
+  document.addEventListener('astro:before-swap', cleanupPreloader);
 </script>

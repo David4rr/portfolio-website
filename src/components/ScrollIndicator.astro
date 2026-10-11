@@ -31,9 +31,9 @@ items.forEach((item, index) => {
           data-index={item.activeIndex}
           aria-label={`Navigate to ${item.data.label}`}
         >
-           <div class="absolute inset-0 bg-gradient-to-r from-bg-main via-bg-main/90 to-transparent z-[-1]"></div>
+           <div class="absolute inset-0 bg-gradient-to-r from-bg via-bg/90 to-transparent z-[-1]"></div>
            <span class="w-4 h-[1px] bg-accent/50 mr-3 shrink-0 transition-all duration-300 group-hover/label:w-6 group-hover/label:bg-accent"></span>
-           <span class="font-serif italic text-text-main text-[11px] tracking-[0.2em] whitespace-nowrap drop-shadow-[0_0_2px_var(--color-bg-main)] transition-colors duration-300 group-hover/label:text-accent">{item.data.label}</span>
+           <span class="font-serif italic text-text-main text-[11px] tracking-[0.2em] whitespace-nowrap drop-shadow-[0_0_2px_var(--color-bg)] transition-colors duration-300 group-hover/label:text-accent">{item.data.label}</span>
         </button>
       </div>
     ) : (
@@ -43,19 +43,26 @@ items.forEach((item, index) => {
 </div>
 
 <script>
+  let activeScrollHandler: (() => void) | null = null;
+
+  const cleanupScrollIndicator = () => {
+    if (activeScrollHandler) {
+      window.removeEventListener('scroll', activeScrollHandler);
+      activeScrollHandler = null;
+    }
+    if ((window as any)._scrollIndicatorRO) {
+      (window as any)._scrollIndicatorRO.disconnect();
+      (window as any)._scrollIndicatorRO = null;
+    }
+  };
+
   const setupScrollIndicator = () => {
+    cleanupScrollIndicator();
     const scrollItems = document.querySelectorAll('.scroll-item');
-    const sections = document.querySelectorAll('section[data-section]');
-    
-    // Cleanup previous instances for Astro View Transitions
-    if (window._scrollIndicatorRAF) cancelAnimationFrame(window._scrollIndicatorRAF);
-    if (window._scrollIndicatorRO) window._scrollIndicatorRO.disconnect();
-    
+    const sections = document.querySelectorAll<HTMLElement>('section[data-section]');
     if (!scrollItems.length || !sections.length) return;
     
-    let currentScroll = window.scrollY;
-    let offsets = [];
-
+    let offsets: number[] = [];
     const calculateOffsets = () => {
       let currentTop = 0;
       offsets = Array.from(sections).map(sec => {
@@ -134,6 +141,7 @@ items.forEach((item, index) => {
       });
     };
 
+    activeScrollHandler = updateMarker;
     window.addEventListener('scroll', updateMarker, { passive: true });
     updateMarker();
     const labels = document.querySelectorAll('.scroll-label');
@@ -143,8 +151,8 @@ items.forEach((item, index) => {
         const index = parseInt(label.getAttribute('data-index') || '0');
         if (offsets[index] !== undefined) {
           const target = offsets[index];
-          if (window.lenis) {
-            window.lenis.scrollTo(target);
+          if ((window as any).lenis) {
+            (window as any).lenis.scrollTo(target);
           } else {
             window.scrollTo({ top: target, behavior: 'smooth' });
           }
@@ -154,4 +162,5 @@ items.forEach((item, index) => {
   };
 
   document.addEventListener('astro:page-load', setupScrollIndicator);
+  document.addEventListener('astro:before-swap', cleanupScrollIndicator);
 </script>
