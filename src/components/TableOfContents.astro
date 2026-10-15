@@ -18,11 +18,11 @@ const hasItems = items && items.length >= 2;
     {/* 1. Inline Editorial Overview at top of article (Under Title) */}
     <nav 
       id="toc-inline-container" 
-      class="toc-card relative my-10 md:my-12 overflow-hidden rounded-xl border border-border-subtle/60 shadow-lg shadow-black/5 select-none transition-all duration-300" 
+      class="toc-card relative my-10 md:my-12 overflow-hidden rounded-lg border border-border-subtle/60 shadow-lg shadow-black/5 select-none transition-all duration-300" 
       aria-label="Table of contents overview"
     >
-      <!-- Stationary Decoupled Frosted Glass Backdrop (Matches Terminal Card Spec) -->
-      <div class="toc-backdrop absolute inset-0 -z-10 bg-bg/65 backdrop-blur-xl backdrop-saturate-150"></div>
+      <!-- Clean Editorial Solid Surface Backdrop (Matches Terminal Card Spec) -->
+      <div class="toc-backdrop absolute inset-0 -z-10 bg-bg-subtle/50"></div>
 
       <!-- Header Bar -->
       <div id="toc-inline-header" class="flex items-center justify-between border-b border-border-subtle/50 px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-bg-subtle/30 transition-colors duration-200">
@@ -147,7 +147,7 @@ const hasItems = items && items.length >= 2;
     {/* Mobile / Tablet Morphing TOC Container (Frosted Glass) */}
     <nav 
       id="toc-mobile-container" 
-      class="fixed bottom-6 left-4 sm:left-6 md:bottom-8 md:left-8 z-50 lg:hidden opacity-0 pointer-events-none overflow-hidden bg-bg/85 backdrop-blur-xl border border-border-subtle/70 shadow-2xl shadow-black/25 transition-[width,height,border-radius,box-shadow,opacity,transform] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] select-none translate-y-3"
+      class="fixed bottom-6 left-4 sm:left-6 md:bottom-8 md:left-8 z-50 lg:hidden opacity-0 pointer-events-none overflow-hidden bg-bg border border-border-subtle/80 shadow-2xl shadow-black/35 transition-[width,height,border-radius,box-shadow,opacity,transform] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] select-none translate-y-3"
       style="width: 210px; height: 44px; border-radius: 9999px; transform: translateZ(0); will-change: width, height, border-radius;"
       aria-label="Mobile table of contents"
     >

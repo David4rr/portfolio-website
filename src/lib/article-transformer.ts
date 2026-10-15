@@ -18,6 +18,18 @@ export function transformBloggerArticleContent(
   let imageCount = 0;
   let sanitizedContent = rawContent || '';
 
+  // Step 0: Sanitize repetitive AI filler words (e.g. overused "harness" 10x) into concrete engineering terms
+  sanitizedContent = sanitizedContent
+    .replace(/Connecting to Different Agent Harnesses/g, 'Connecting to Different Agent Environments')
+    .replace(/AI coding harnesses/g, 'AI coding environments')
+    .replace(/custom CLI harnesses/g, 'custom CLI tools')
+    .replace(/Harness Amnesia/g, 'Context Silos')
+    .replace(/<th style="">Harness<\/th>/g, '<th style="">Environment</th>')
+    .replace(/<th>Harness<\/th>/g, '<th>Environment</th>')
+    .replace(/The harness passes/g, 'The client passes')
+    .replace(/cross-harness/g, 'cross-tool')
+    .replace(/modern AI coding harnesses/gi, 'modern AI coding environments')
+    .replace(/\bagent harnesses\b/gi, 'agent workflows');
   // Step 1: Convert tr-caption-container tables to semantic <figure>
   sanitizedContent = sanitizedContent.replace(
     /<table[^>]*?class=["'][^"']*?tr-caption-container[^"']*?["'][^>]*?>[\s\S]*?<\/table>/gi,
@@ -157,7 +169,7 @@ export function transformBloggerArticleContent(
       )
         title = 'bash';
 
-      return `<div class="terminal-card relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40 transition-colors duration-200">
+      return `<div class="terminal-card relative my-8 rounded-lg overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40 transition-colors duration-200">
     <div class="terminal-header flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-bg-subtle/60 border-b border-border-subtle/50 select-none gap-2">
       <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
         <span class="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F56]/80 border border-[#E0443E]/40 shrink-0"></span>
@@ -187,7 +199,7 @@ export function transformBloggerArticleContent(
         /\bstyle=["'][^"']*?\bwidth\s*:\s*[^;"']+;?[^"']*?["']/gi,
         (styleAttr: string) => styleAttr.replace(/\bwidth\s*:\s*[^;"']+;?/gi, '')
       );
-      return `<div class="table-container relative my-8 rounded-xl overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40">
+      return `<div class="table-container relative my-8 rounded-lg overflow-hidden border border-border-subtle/60 shadow-lg shadow-black/5 bg-bg-subtle/40">
     <div class="table-wrapper overflow-x-auto" data-lenis-prevent-horizontal="true">
       <table class="theme-table w-full border-collapse text-left text-sm md:text-base">${cleanInner}</table>
     </div>
