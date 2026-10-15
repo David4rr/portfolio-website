@@ -1,0 +1,166 @@
+---
+// Ultra-Clean Kinetic Word Reel - CSS Grid Stack with Studio Motion
+---
+
+<div
+  id="role-reel-container"
+  class="relative inline-grid grid-cols-1 grid-rows-1 items-center justify-center text-center overflow-hidden h-[1.6em] select-none cursor-pointer group"
+  role="button"
+  tabindex="0"
+  aria-label="Click to cycle role"
+  title="Click to cycle role"
+>
+  <span
+    class="role-item col-start-1 row-start-1 flex items-center justify-center whitespace-nowrap font-sans font-medium uppercase tracking-[0.25em] text-text-muted group-hover:text-accent transition-colors duration-200 will-change-transform"
+    style="transform: translateY(0%); opacity: 1;"
+  >
+    Software Engineer
+  </span>
+  <span
+    class="role-item col-start-1 row-start-1 flex items-center justify-center whitespace-nowrap font-sans font-medium uppercase tracking-[0.25em] text-text-muted group-hover:text-accent transition-colors duration-200 will-change-transform pointer-events-none"
+    style="transform: translateY(120%); opacity: 0;"
+  >
+    Android & Web Systems
+  </span>
+  <span
+    class="role-item col-start-1 row-start-1 flex items-center justify-center whitespace-nowrap font-sans font-medium uppercase tracking-[0.25em] text-text-muted group-hover:text-accent transition-colors duration-200 will-change-transform pointer-events-none"
+    style="transform: translateY(120%); opacity: 0;"
+  >
+    Creative Technologist
+  </span>
+</div>
+
+<script>
+  import anime from 'animejs';
+
+  let currentIndex = 0;
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+  let isTransitioning = false;
+  let isHovered = false;
+
+  function initRoleReel() {
+    const container = document.getElementById('role-reel-container');
+    const items = container ? Array.from(container.querySelectorAll<HTMLElement>('.role-item')) : [];
+
+    if (!container || items.length === 0) return;
+
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    currentIndex = 0;
+
+    // Reset initial states
+    items.forEach((item, idx) => {
+      if (idx === 0) {
+        item.style.transform = 'translateY(0%)';
+        item.style.opacity = '1';
+        item.classList.remove('pointer-events-none');
+      } else {
+        item.style.transform = 'translateY(120%)';
+        item.style.opacity = '0';
+        item.classList.add('pointer-events-none');
+      }
+    });
+
+    const advanceRole = (isManual = false) => {
+      if (isTransitioning) return;
+      isTransitioning = true;
+
+      const nextIndex = (currentIndex + 1) % items.length;
+      const outgoing = items[currentIndex];
+      const incoming = items[nextIndex];
+
+      outgoing.classList.add('pointer-events-none');
+
+      // Reduced motion fallback
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        outgoing.style.transform = 'translateY(120%)';
+        outgoing.style.opacity = '0';
+        incoming.style.transform = 'translateY(0%)';
+        incoming.style.opacity = '1';
+        incoming.classList.remove('pointer-events-none');
+        currentIndex = nextIndex;
+        isTransitioning = false;
+        return;
+      }
+
+      // Prepare incoming from bottom
+      incoming.style.transform = 'translateY(120%)';
+      incoming.style.opacity = '0';
+
+      const tl = anime.timeline({
+        easing: 'cubicBezier(0.16, 1, 0.3, 1)',
+        complete: () => {
+          outgoing.style.transform = 'translateY(120%)';
+          outgoing.style.opacity = '0';
+
+          incoming.style.transform = 'translateY(0%)';
+          incoming.style.opacity = '1';
+          incoming.classList.remove('pointer-events-none');
+
+          currentIndex = nextIndex;
+          isTransitioning = false;
+        }
+      });
+
+      // Outgoing: slides UP and vanishes
+      tl.add({
+        targets: outgoing,
+        translateY: ['0%', '-120%'],
+        opacity: [1, 0],
+        duration: isManual ? 420 : 560,
+      }, 0);
+
+      // Incoming: slides UP from below into center
+      tl.add({
+        targets: incoming,
+        translateY: ['120%', '0%'],
+        opacity: [0, 1],
+        duration: isManual ? 460 : 620,
+      }, 50);
+    };
+
+    const startTimer = () => {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = setInterval(() => {
+        if (!isHovered && !document.hidden) {
+          advanceRole(false);
+        }
+      }, 3400);
+    };
+
+    container.addEventListener('mouseenter', () => {
+      isHovered = true;
+    });
+
+    container.addEventListener('mouseleave', () => {
+      isHovered = false;
+    });
+
+    container.addEventListener('click', () => {
+      advanceRole(true);
+      startTimer();
+    });
+
+    container.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        advanceRole(true);
+        startTimer();
+      }
+    });
+
+    startTimer();
+
+    document.addEventListener('astro:before-swap', () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }, { once: true });
+  }
+
+  document.addEventListener('astro:page-load', initRoleReel);
+</script>

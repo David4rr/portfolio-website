@@ -80,7 +80,7 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
 
       // Description (rich_text)
       const descProp = props.Description || props.description || props.Summary || props.summary;
-      const description = descProp?.rich_text?.map((rt: any) => rt.plain_text).join('') || '';
+      const description = (descProp?.rich_text?.map((rt: { plain_text?: string }) => rt.plain_text || '').join('') || '').replace(/[\u2014—]/g, ' - ');
 
       // Type (select or multi_select)
       const typeProp = props.Type || props.type;
@@ -154,13 +154,13 @@ export async function getProjectsFromNotion(): Promise<NotionProject[]> {
       // Timeline / Duration
       const timelineKey = Object.keys(props).find(k => k.toLowerCase() === 'timeline' || k.toLowerCase() === 'duration' || k.toLowerCase() === 'time');
       const timelineProp = timelineKey ? props[timelineKey] : null;
-      let timeline = '';
+      let rawTimeline = '';
       if (timelineProp && timelineProp.rich_text && timelineProp.rich_text.length > 0) {
-        timeline = timelineProp.rich_text.map((rt: any) => rt.plain_text).join('');
+        rawTimeline = timelineProp.rich_text.map((rt: any) => rt.plain_text).join('');
       } else if (timelineProp && timelineProp.title && timelineProp.title.length > 0) {
-         timeline = timelineProp.title.map((rt: any) => rt.plain_text).join('');
+        rawTimeline = timelineProp.title.map((rt: any) => rt.plain_text).join('');
       }
-
+      const timeline = rawTimeline.replace(/[\u2014—]/g, ' - ');
       // Featured (checkbox type)
       const featuredProp = props.Featured || props.featured || props.Selected || props.selected || props.Highlight || props.highlight;
       let featured = false;
@@ -218,7 +218,8 @@ export async function getProjectContent(pageId: string): Promise<string> {
     
     const mdblocks = await n2m.pageToMarkdown(pageId);
     const mdString = n2m.toMarkdownString(mdblocks);
-    return mdString.parent || '';
+    const rawContent = mdString.parent || '';
+    return rawContent.replace(/[\u2014—]/g, ' - ');
   } catch (error) {
     console.error("Error fetching Notion content:", error);
     return '';

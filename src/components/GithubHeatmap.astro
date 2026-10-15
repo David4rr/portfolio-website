@@ -35,7 +35,7 @@ for (let i = 0; i < 12; i++) {
   data-username={username}
   class={`w-full max-w-4xl mx-auto px-4 py-8 relative ${className}`}
 >
-  <div class="border border-border-subtle/60 bg-bg-subtle/80 md:bg-bg-subtle/30 md:backdrop-blur-[2px] rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-border-subtle">
+  <div class="border border-border-subtle/60 bg-bg-subtle/50 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:border-border-subtle">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border-subtle/40">
       <div>
         <div class="flex items-center gap-2 font-sans uppercase tracking-[0.2em] text-[10px] text-text-muted/70 mb-1">
@@ -43,10 +43,10 @@ for (let i = 0; i < 12; i++) {
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
           </span>
-          <span>Activity Chronicle</span>
+          <span>Engineering Cadence</span>
         </div>
         <h3 class="font-serif text-lg sm:text-xl text-text-main font-normal tracking-tight">
-          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 transition-all duration-500">520+</span>contributions in the past year
+          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 transition-all duration-500">520+</span>recorded commit events in the past 12 months
         </h3>
       </div>
 
@@ -92,13 +92,13 @@ for (let i = 0; i < 12; i++) {
 
     <div class="flex items-center justify-end mt-4 pt-3 border-t border-border-subtle/30 text-[11px] font-sans text-text-muted/70">
       <div class="flex items-center gap-1.5">
-        <span class="text-[10px] mr-1">Less</span>
+        <span class="text-[10px] mr-1 text-text-muted/60">Quiet</span>
         <div class="w-[10px] h-[10px] rounded-[2px] bg-border-subtle/30 border border-border-subtle/20" title="Level 0"></div>
         <div class="w-[10px] h-[10px] rounded-[2px] bg-accent/30 border border-accent/30" title="Level 1"></div>
         <div class="w-[10px] h-[10px] rounded-[2px] bg-accent/60 border border-accent/50" title="Level 2"></div>
         <div class="w-[10px] h-[10px] rounded-[2px] bg-accent/85 border border-accent/75" title="Level 3"></div>
         <div class="w-[10px] h-[10px] rounded-[2px] bg-accent border border-accent shadow-[0_0_6px_var(--color-accent-glow)]" title="Level 4"></div>
-        <span class="text-[10px] ml-1">More</span>
+        <span class="text-[10px] ml-1 text-text-muted/60">Peak</span>
       </div>
     </div>
 

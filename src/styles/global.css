@@ -21,7 +21,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-glow: var(--accent-glow);
 
-  --font-sans: "Geist Sans", "Geist", sans-serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Fraunces", serif;
   --font-mono: "JetBrains Mono", monospace;
 
@@ -277,4 +277,61 @@
 [data-section] {
   backface-visibility: hidden;
   transform-style: flat;
+}
+
+/* Optical Fog-to-Focus & Kinetic Typography (Project Detail) */
+.optical-focus-ready {
+  opacity: 0.08;
+  filter: blur(8px);
+  transform: translateY(12px);
+  letter-spacing: 0.025em;
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              letter-spacing 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+}
+.optical-focus-in {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0);
+  letter-spacing: normal;
+}
+@media (prefers-reduced-motion: reduce) {
+  .optical-focus-ready {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    letter-spacing: normal !important;
+    transition: none !important;
+  }
+  .kinetic-word {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+}
+
+/* Editorial Optical Focus (Writing Detail Long-Form Reading) */
+.writing-optical-ready {
+  opacity: 0.15;
+  filter: blur(3px);
+  transform: translateY(8px);
+  transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+}
+.writing-optical-in {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .writing-optical-ready {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }

@@ -1,122 +1,203 @@
 import anime from 'animejs';
 import { setupDetailBackButton } from '../lib/detail-helpers';
 
-function splitTextToLetters(el: HTMLElement) {
-  if (el.dataset.split) return;
-  el.dataset.split = 'true';
+function splitTextToWords(el: HTMLElement): HTMLElement[] {
+  if (el.dataset.splitWords) {
+    return Array.from(el.querySelectorAll<HTMLElement>('.kinetic-word'));
+  }
+  el.dataset.splitWords = 'true';
 
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
   const textNodes: Node[] = [];
-  let node;
+  let node: Node | null;
   while ((node = walker.nextNode())) {
-    if (node.nodeValue && node.nodeValue.trim() !== '') textNodes.push(node);
+    if (node.nodeValue && node.nodeValue.trim() !== '') {
+      textNodes.push(node);
+    }
   }
 
+  const collectedWordEls: HTMLElement[] = [];
+
   textNodes.forEach((textNode) => {
+    const rawVal = textNode.nodeValue || '';
     const fragment = document.createDocumentFragment();
-    const words = textNode.nodeValue!.split(/(\s+)/);
-    words.forEach((word) => {
-      if (word.trim() === '') {
-        fragment.appendChild(document.createTextNode(word));
+    const tokens = rawVal.split(/(\s+)/);
+
+    tokens.forEach((token) => {
+      if (token.trim() === '') {
+        fragment.appendChild(document.createTextNode(token));
       } else {
-        const spanWrap = document.createElement('span');
-        spanWrap.className = 'inline-block whitespace-nowrap';
-        spanWrap.innerHTML = [...word]
-          .map((l) => `<span class="letter inline-block opacity-0 origin-bottom-left">${l}</span>`)
-          .join('');
-        fragment.appendChild(spanWrap);
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'kinetic-word inline-block will-change-transform';
+        wordSpan.textContent = token;
+        wordSpan.style.opacity = '0';
+        wordSpan.style.transform = 'translateY(18px)';
+
+        fragment.appendChild(wordSpan);
+        collectedWordEls.push(wordSpan);
       }
     });
+
     textNode.parentNode?.replaceChild(fragment, textNode);
   });
+
+  return collectedWordEls;
 }
 
 function initProjectDetail() {
   setupDetailBackButton('/#projects');
 
-  const revealElements = document.querySelectorAll('.premium-reveal');
-  if (revealElements.length > 0) {
-    anime({
-      targets: revealElements,
-      translateY: [40, 0],
-      opacity: [0, 1],
-      duration: 1400,
-      delay: anime.stagger(200, { start: 100 }),
-      easing: 'easeOutQuart',
-    });
-  }
-
+  const timelineEl = document.getElementById('project-timeline');
+  const titleEl = document.getElementById('project-title');
   const descEl = document.querySelector<HTMLElement>('.hero-desc-writing');
-  if (descEl) {
-    splitTextToLetters(descEl);
+  const tagsEl = document.getElementById('project-tags');
+  const mediaEl = document.getElementById('project-media');
+  const proseElements = document.querySelectorAll<HTMLElement>('.prose > *');
 
-    anime({
-      targets: '.hero-desc-writing .letter',
-      opacity: [0, 1],
-      skewX: [30, 0],
-      scaleY: [0.2, 1],
-      translateY: [5, 0],
-      duration: 500,
-      easing: 'easeOutQuint',
-      delay: anime.stagger(4, { start: 350 }),
+  const titleWords = titleEl ? splitTextToWords(titleEl) : [];
+  const descWords = descEl ? splitTextToWords(descEl) : [];
+  const allHeroWords = [...titleWords, ...descWords];
+
+  // Accessibility: instant display if prefers-reduced-motion is requested
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (timelineEl) timelineEl.style.opacity = '1';
+    if (tagsEl) tagsEl.style.opacity = '1';
+    if (mediaEl) mediaEl.style.opacity = '1';
+    allHeroWords.forEach((w) => {
+      w.style.opacity = '1';
+      w.style.transform = 'none';
+    });
+    proseElements.forEach((p) => p.classList.add('optical-focus-in'));
+  } else {
+    // Unified, harmonic entrance timeline (Zero conflicting legacy animations)
+    const entranceTimeline = anime.timeline({
+      easing: 'easeOutQuart',
+      complete: () => {
+        // Enable hover transitions only after entrance completes to avoid frame contention
+        allHeroWords.forEach((word) => {
+          word.style.transition = 'color 0.2s ease, transform 0.2s ease';
+        });
+
+        const heroZone = document.getElementById('project-hero-zone');
+        if (heroZone && allHeroWords.length > 0 && window.matchMedia('(pointer: fine)').matches) {
+          let rafId: number | null = null;
+          let lastX = 0;
+          let lastY = 0;
+
+          const onMouseMove = (e: MouseEvent) => {
+            lastX = e.clientX;
+            lastY = e.clientY;
+            if (rafId !== null) return;
+
+            rafId = requestAnimationFrame(() => {
+              rafId = null;
+              const radius = 90;
+              allHeroWords.forEach((word) => {
+                const rect = word.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const dist = Math.hypot(lastX - centerX, lastY - centerY);
+
+                if (dist < radius) {
+                  const norm = 1 - dist / radius;
+                  word.style.transform = `translateY(-${(norm * 3.5).toFixed(1)}px)`;
+                  word.style.color = 'var(--color-accent)';
+                } else {
+                  word.style.transform = 'translateY(0px)';
+                  word.style.color = '';
+                }
+              });
+            });
+          };
+
+          const onMouseLeave = () => {
+            if (rafId !== null) {
+              cancelAnimationFrame(rafId);
+              rafId = null;
+            }
+            allHeroWords.forEach((word) => {
+              word.style.transform = 'translateY(0px)';
+              word.style.color = '';
+            });
+          };
+
+          heroZone.addEventListener('mousemove', onMouseMove, { passive: true });
+          heroZone.addEventListener('mouseleave', onMouseLeave);
+        }
+      },
     });
 
-    anime({
-      targets: descEl,
-      opacity: [0, 1],
-      duration: 100,
-    });
+    if (timelineEl) {
+      timelineEl.style.opacity = '0';
+      entranceTimeline.add({
+        targets: timelineEl,
+        translateY: [15, 0],
+        opacity: [0, 1],
+        duration: 550,
+      }, 0);
+    }
+
+    if (titleWords.length > 0) {
+      entranceTimeline.add({
+        targets: titleWords,
+        translateY: [20, 0],
+        opacity: [0, 1],
+        duration: 800,
+        delay: anime.stagger(24),
+      }, 100);
+    }
+
+    if (descWords.length > 0) {
+      entranceTimeline.add({
+        targets: descWords,
+        translateY: [15, 0],
+        opacity: [0, 1],
+        duration: 700,
+        delay: anime.stagger(12),
+      }, 350);
+    }
+
+    if (tagsEl) {
+      tagsEl.style.opacity = '0';
+      entranceTimeline.add({
+        targets: tagsEl,
+        translateY: [12, 0],
+        opacity: [0, 1],
+        duration: 550,
+      }, 500);
+    }
+
+    if (mediaEl) {
+      mediaEl.style.opacity = '0';
+      entranceTimeline.add({
+        targets: mediaEl,
+        translateY: [20, 0],
+        opacity: [0, 1],
+        duration: 750,
+      }, 600);
+    }
   }
 
-  const proseElements = document.querySelectorAll<HTMLElement>('.prose > *');
+  // Optical Fog-to-Focus for Article Prose
   if (proseElements.length > 0 && 'IntersectionObserver' in window) {
-    proseElements.forEach((el) => {
-      el.style.opacity = '0';
-      splitTextToLetters(el);
-    });
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const target = entry.target as HTMLElement;
-            target.style.opacity = '1';
-
-            const letters = target.querySelectorAll('.letter');
-            if (letters.length > 0) {
-              anime({
-                targets: letters,
-                opacity: [0, 1],
-                skewX: [30, 0],
-                scaleY: [0.2, 1],
-                translateY: [5, 0],
-                duration: 600,
-                easing: 'easeOutQuint',
-                delay: anime.stagger(6),
-              });
-            }
-
-            const nonTextElements = target.querySelectorAll('img, video, hr, iframe');
-            if (nonTextElements.length > 0 || letters.length === 0) {
-              anime({
-                targets: letters.length === 0 ? target : nonTextElements,
-                translateY: [25, 0],
-                opacity: [0, 1],
-                duration: 1200,
-                easing: 'easeOutCubic',
-              });
-            }
-
+            target.classList.add('optical-focus-in');
             observer.unobserve(target);
           }
         });
       },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
 
-    proseElements.forEach((el) => observer.observe(el));
+    proseElements.forEach((el) => {
+      el.classList.add('optical-focus-ready');
+      observer.observe(el);
+    });
   }
-
   const container = document.querySelector('.card-stack-container');
   if (container) {
     const cards = Array.from(container.querySelectorAll('.card-stack-item')) as HTMLElement[];

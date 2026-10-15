@@ -53,19 +53,19 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
         </a>
       </div>
 
-      <header class="text-center mb-10 sm:mb-14 md:mb-16">
-        <div class="font-mono text-[11px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] text-text-muted mb-3 sm:mb-4 flex items-center justify-center gap-2 flex-wrap">
+      <header id="writing-hero-zone" class="text-center mb-10 sm:mb-14 md:mb-16 relative">
+        <div id="writing-meta" class="font-mono text-[11px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] text-text-muted mb-3 sm:mb-4 flex items-center justify-center gap-2 flex-wrap">
           <span>{formattedDate}</span>
           <span id="detail-last-read" class="hidden text-accent lowercase tracking-normal font-sans italic opacity-90"></span>
         </div>
 
-        <h1 class="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-[1.25] text-text-main font-normal tracking-tight italic mb-6 break-words">
+        <h1 id="writing-title" class="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-[1.3] text-text-main font-normal tracking-tight italic mb-6 break-words pb-2 pt-1 px-1">
           {post.title}
         </h1>
       </header>
 
       {showCover && (
-        <div class="mb-14 overflow-hidden rounded-sm border border-border-subtle/50">
+        <div id="writing-cover" class="mb-14 overflow-hidden rounded-sm border border-border-subtle/50">
           <img
             src={optimizedCover}
             alt={post.title}
@@ -92,8 +92,180 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
 </BaseLayout>
 
 <script>
+  import anime from 'animejs';
   import { setupDetailBackButton } from '../../lib/detail-helpers';
 
+  function splitTextToWords(el: HTMLElement): HTMLElement[] {
+    if (el.dataset.splitWords) {
+      return Array.from(el.querySelectorAll<HTMLElement>('.kinetic-word'));
+    }
+    el.dataset.splitWords = 'true';
+
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const textNodes: Node[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && node.nodeValue.trim() !== '') {
+        textNodes.push(node);
+      }
+    }
+
+    const collectedWordEls: HTMLElement[] = [];
+
+    textNodes.forEach((textNode) => {
+      const rawVal = textNode.nodeValue || '';
+      const fragment = document.createDocumentFragment();
+      const tokens = rawVal.split(/(\s+)/);
+
+      tokens.forEach((token) => {
+        if (token.trim() === '') {
+          fragment.appendChild(document.createTextNode(token));
+        } else {
+          const wordSpan = document.createElement('span');
+          wordSpan.className = 'kinetic-word inline-block will-change-transform';
+          wordSpan.textContent = token;
+          wordSpan.style.opacity = '0';
+          wordSpan.style.transform = 'translateY(18px)';
+
+          fragment.appendChild(wordSpan);
+          collectedWordEls.push(wordSpan);
+        }
+      });
+
+      textNode.parentNode?.replaceChild(fragment, textNode);
+    });
+
+    return collectedWordEls;
+  }
+
+  const initWritingTypographyAnimation = () => {
+    const metaEl = document.getElementById('writing-meta');
+    const titleEl = document.getElementById('writing-title');
+    const coverEl = document.getElementById('writing-cover');
+    const titleWords = titleEl ? splitTextToWords(titleEl) : [];
+
+    // Select reading prose elements only (exclude pre, code, iframe, table, etc.)
+    const proseElements = document.querySelectorAll<HTMLElement>(
+      'article.prose > p, article.prose > h2, article.prose > h3, article.prose > h4, article.prose > blockquote, article.prose > ul, article.prose > ol'
+    );
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (metaEl) metaEl.style.opacity = '1';
+      if (coverEl) coverEl.style.opacity = '1';
+      titleWords.forEach((w) => {
+        w.style.opacity = '1';
+        w.style.transform = 'none';
+      });
+      proseElements.forEach((p) => p.classList.add('writing-optical-in'));
+      return;
+    }
+
+    const entranceTimeline = anime.timeline({
+      easing: 'easeOutQuart',
+      complete: () => {
+        titleWords.forEach((word) => {
+          word.style.transition = 'color 0.2s ease, transform 0.2s ease';
+        });
+
+        const heroZone = document.getElementById('writing-hero-zone');
+        if (heroZone && titleWords.length > 0 && window.matchMedia('(pointer: fine)').matches) {
+          let rafId: number | null = null;
+          let lastX = 0;
+          let lastY = 0;
+
+          const onMouseMove = (e: MouseEvent) => {
+            lastX = e.clientX;
+            lastY = e.clientY;
+            if (rafId !== null) return;
+
+            rafId = requestAnimationFrame(() => {
+              rafId = null;
+              const radius = 90;
+              titleWords.forEach((word) => {
+                const rect = word.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const dist = Math.hypot(lastX - centerX, lastY - centerY);
+
+                if (dist < radius) {
+                  const norm = 1 - dist / radius;
+                  word.style.transform = `translateY(-${(norm * 3.5).toFixed(1)}px)`;
+                  word.style.color = 'var(--color-accent)';
+                } else {
+                  word.style.transform = 'translateY(0px)';
+                  word.style.color = '';
+                }
+              });
+            });
+          };
+
+          const onMouseLeave = () => {
+            if (rafId !== null) {
+              cancelAnimationFrame(rafId);
+              rafId = null;
+            }
+            titleWords.forEach((word) => {
+              word.style.transform = 'translateY(0px)';
+              word.style.color = '';
+            });
+          };
+
+          heroZone.addEventListener('mousemove', onMouseMove, { passive: true });
+          heroZone.addEventListener('mouseleave', onMouseLeave);
+        }
+      },
+    });
+
+    if (metaEl) {
+      metaEl.style.opacity = '0';
+      entranceTimeline.add({
+        targets: metaEl,
+        translateY: [12, 0],
+        opacity: [0, 1],
+        duration: 500,
+      }, 0);
+    }
+
+    if (titleWords.length > 0) {
+      entranceTimeline.add({
+        targets: titleWords,
+        translateY: [20, 0],
+        opacity: [0, 1],
+        duration: 800,
+        delay: anime.stagger(22),
+      }, 100);
+    }
+
+    if (coverEl) {
+      coverEl.style.opacity = '0';
+      entranceTimeline.add({
+        targets: coverEl,
+        translateY: [16, 0],
+        opacity: [0, 1],
+        duration: 650,
+      }, 450);
+    }
+
+    if (proseElements.length > 0 && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const target = entry.target as HTMLElement;
+              target.classList.add('writing-optical-in');
+              observer.unobserve(target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
+      );
+
+      proseElements.forEach((el) => {
+        el.classList.add('writing-optical-ready');
+        observer.observe(el);
+      });
+    }
+  };
   const setupCopyButtons = () => {
     document.querySelectorAll('.copy-terminal-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -188,6 +360,7 @@ const formattedDate = new Date(post.published).toLocaleDateString('en-US', {
     setupDetailBackButton('/#writing');
     setupCopyButtons();
     recordReadingHistory();
+    initWritingTypographyAnimation();
   };
 
   document.addEventListener('astro:page-load', initDetailPage);
