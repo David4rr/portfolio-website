@@ -17,19 +17,6 @@ export function transformBloggerArticleContent(
 ): { sanitizedContent: string; toc: TocItem[] } {
   let imageCount = 0;
   let sanitizedContent = rawContent || '';
-
-  // Step 0: Sanitize repetitive AI filler words (e.g. overused "harness" 10x) into concrete engineering terms
-  sanitizedContent = sanitizedContent
-    .replace(/Connecting to Different Agent Harnesses/g, 'Connecting to Different Agent Environments')
-    .replace(/AI coding harnesses/g, 'AI coding environments')
-    .replace(/custom CLI harnesses/g, 'custom CLI tools')
-    .replace(/Harness Amnesia/g, 'Context Silos')
-    .replace(/<th style="">Harness<\/th>/g, '<th style="">Environment</th>')
-    .replace(/<th>Harness<\/th>/g, '<th>Environment</th>')
-    .replace(/The harness passes/g, 'The client passes')
-    .replace(/cross-harness/g, 'cross-tool')
-    .replace(/modern AI coding harnesses/gi, 'modern AI coding environments')
-    .replace(/\bagent harnesses\b/gi, 'agent workflows');
   // Step 1: Convert tr-caption-container tables to semantic <figure>
   sanitizedContent = sanitizedContent.replace(
     /<table[^>]*?class=["'][^"']*?tr-caption-container[^"']*?["'][^>]*?>[\s\S]*?<\/table>/gi,
