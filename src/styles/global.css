@@ -149,6 +149,40 @@
   .card-polaroid { background-color: var(--color-bg-elevated); }
   :root.light .card-polaroid { background-color: var(--color-bg); }
 
+  /* Mobile Device Project Media Frame & Sizing Containment */
+  #project-media[data-is-mobile="true"],
+  .mobile-media-container {
+    max-width: 320px !important;
+  }
+
+  .card-stack-container[data-is-mobile="true"],
+  .mobile-stack-container {
+    max-width: 300px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .card-stack-container[data-is-mobile="true"] .card-stack-item,
+  .mobile-stack-container .card-stack-item {
+    border-radius: 26px !important;
+  }
+
+  .card-stack-container[data-is-mobile="true"] .card-stack-item img,
+  .mobile-stack-container .card-stack-item img {
+    border-radius: 22px !important;
+  }
+
+  #project-media[data-is-mobile="true"]:not(:has(.card-stack-container)),
+  .mobile-cover-container {
+    max-width: 300px !important;
+    border-radius: 26px !important;
+  }
+
+  #project-media[data-is-mobile="true"]:not(:has(.card-stack-container)) img,
+  .mobile-cover-container img {
+    border-radius: 22px !important;
+  }
+
   /* Editorial Prose Typography (Lists, Markers, Blockquotes) */
   .prose ul, article ul,
   .prose ol, article ol {

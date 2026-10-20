@@ -18,7 +18,7 @@ const { items } = Astro.props;
   <div
     id="project-cursor-image"
     style="transform: scale(0.5);"
-    class="w-[260px] sm:w-[320px] md:w-[380px] lg:w-[420px] xl:w-[450px] max-w-[calc(100vw-2rem)] max-h-[48vh] rounded-xl sm:rounded-2xl overflow-hidden opacity-0 shadow-2xl origin-center bg-bg border border-border-subtle relative pointer-events-none"
+    class="w-fit max-w-[260px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[420px] xl:max-w-[450px] max-h-[48vh] rounded-xl sm:rounded-2xl overflow-hidden opacity-0 shadow-2xl origin-center bg-bg border border-border-subtle relative pointer-events-none flex items-center justify-center"
   >
     {
       items.map((item) => {
@@ -28,7 +28,7 @@ const { items } = Astro.props;
           <img
             src={optimizedSrc}
             alt={`Preview of ${item.title}`}
-            class="w-full h-auto max-h-[48vh] object-contain absolute inset-0 hidden cursor-project-img"
+            class="w-auto h-auto max-h-[48vh] max-w-[260px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[420px] xl:max-w-[450px] object-contain absolute inset-0 hidden cursor-project-img select-none pointer-events-none"
             data-slug={item.slug}
             loading="eager"
             decoding="async"
@@ -101,6 +101,14 @@ const { items } = Astro.props;
       cachedHeight = cursorImg.offsetHeight || cachedHeight;
     };
     window.addEventListener('resize', updateDimensions, { passive: true, signal });
+
+    cursorImg.querySelectorAll<HTMLImageElement>('.cursor-project-img').forEach((img) => {
+      img.addEventListener('load', () => {
+        if (!img.classList.contains('hidden')) {
+          updateDimensions();
+        }
+      }, { passive: true, signal });
+    });
 
     const showProjectImage = (slug: string) => {
       let matched = false;

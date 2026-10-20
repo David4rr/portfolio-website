@@ -203,3 +203,16 @@ export function formatPoetryTitle(title: string): string {
   const mid = Math.ceil(title.length / 2);
   return `${title.slice(0, mid)}<span class="italic font-light pr-1">${title.slice(mid)}</span>`;
 }
+
+export function isMobileProject(project?: { type?: string; techStack?: string[] }): boolean {
+  if (!project) return false;
+  const typeStr = (project.type || '').toLowerCase();
+  const techStr = (project.techStack || []).join(' ').toLowerCase();
+
+  if (/\b(mobile|ios|android|phone|smartphone)\b/i.test(typeStr)) return true;
+
+  const hasMobileTech = /\b(react\s*native|flutter|swiftui|swift|kotlin|expo|capacitor|ionic)\b/i.test(techStr);
+  const isExplicitWeb = /\b(website|web\s*app|web)\b/i.test(typeStr) && !/\bmobile\b/i.test(typeStr);
+
+  return hasMobileTech && !isExplicitWeb;
+}

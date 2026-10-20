@@ -46,13 +46,16 @@ for (let i = 0; i < 12; i++) {
           <span>Engineering Cadence</span>
         </div>
         <h3 class="font-serif text-lg sm:text-xl text-text-main font-normal tracking-tight">
-          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 transition-all duration-500">520+</span>recorded commit events in the past 12 months
+          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 transition-all duration-500 animate-pulse">520+</span>recorded commit events in the past 12 months
         </h3>
       </div>
 
     </div>
 
-    <div class="overflow-x-auto scrollbar-none pb-2.5 pt-1.5 -mx-2 px-2 sm:mx-0 sm:px-1 touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+    <div
+      id="gh-heatmap-scroll-container"
+      class="overflow-x-auto scrollbar-none pb-2.5 pt-1.5 -mx-2 px-2 sm:mx-0 sm:px-1 touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch]"
+    >
       <div class="min-w-[720px] select-none pr-3.5 pl-0.5">
         <div class="grid grid-cols-53 text-[10px] font-sans text-text-muted/60 mb-2 pl-7 pointer-events-none">
           {Array.from({ length: totalWeeks }).map((_, colIdx) => {
@@ -72,9 +75,9 @@ for (let i = 0; i < 12; i++) {
             <span class="leading-none">Fri</span>
           </div>
 
-          <div id="gh-heatmap-grid" class="flex gap-[3px] flex-1">
+          <div id="gh-heatmap-grid" class="flex gap-[3px] flex-1 is-loading">
             {Array.from({ length: totalWeeks }).map((_, colIdx) => (
-              <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx}>
+              <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx} style={`--col-idx: ${colIdx};`}>
                 {Array.from({ length: daysPerWeek }).map((_, dayIdx) => (
                   <div
                     class="heatmap-cell aspect-square w-full rounded-[2px] bg-border-subtle/30 border border-border-subtle/20 hover:scale-125 hover:z-20 hover:ring-1 hover:ring-accent transition-transform duration-150"
@@ -146,118 +149,27 @@ for (let i = 0; i < 12; i++) {
     border-color: var(--accent);
     opacity: 1;
   }
+
+  :global(#gh-heatmap-grid.is-loading .heatmap-cell) {
+    animation: heatmap-shimmer 1.8s ease-in-out infinite;
+    animation-delay: calc(var(--col-idx, 0) * 20ms);
+  }
+
+  @keyframes heatmap-shimmer {
+    0%, 100% {
+      opacity: 0.25;
+      background-color: var(--border-subtle);
+      border-color: var(--border-subtle);
+    }
+    50% {
+      opacity: 0.75;
+      background-color: color-mix(in srgb, var(--accent) 30%, var(--border-subtle));
+      border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+  }
 </style>
 
 <script>
-  function initHeatmap() {
-    const root = document.getElementById("github-heatmap-root");
-    if (!root) return;
-
-    const username = root.dataset.username || "David4rr";
-    const totalCountEl = document.getElementById("gh-heatmap-total-count");
-    const gridEl = document.getElementById("gh-heatmap-grid");
-    const tooltip = document.getElementById("gh-heatmap-tooltip");
-    const tooltipText = document.getElementById("gh-heatmap-tooltip-text");
-
-    if (!gridEl) return;
-
-    const cells = Array.from(gridEl.querySelectorAll(".heatmap-cell")) as HTMLElement[];
-
-    // Delegated tooltip listeners
-    gridEl.addEventListener("mouseover", (e) => {
-      const target = e.target as HTMLElement | null;
-      const cell = target?.closest(".heatmap-cell") as HTMLElement | null;
-      if (!cell) return;
-
-      const count = cell.getAttribute("data-count");
-      const date = cell.getAttribute("data-date");
-      if (!date || !tooltip || !tooltipText) return;
-
-      const countNum = parseInt(count || "0", 10);
-      const formattedDate = formatDateString(date);
-      tooltipText.textContent = `${countNum === 0 ? "No" : countNum} ${countNum === 1 ? "contribution" : "contributions"} on ${formattedDate}`;
-
-      const rootRect = root.getBoundingClientRect();
-      const rect = cell.getBoundingClientRect();
-      const tooltipWidth = tooltip.offsetWidth || 180;
-
-      const targetLeft = rect.left - rootRect.left + rect.width / 2;
-      const minLeft = tooltipWidth / 2 + 24;
-      const maxLeft = rootRect.width - tooltipWidth / 2 - 24;
-      const clampedLeft = Math.max(minLeft, Math.min(targetLeft, maxLeft));
-
-      tooltip.style.left = `${clampedLeft}px`;
-      tooltip.style.top = `${rect.top - rootRect.top - 8}px`;
-      tooltip.style.opacity = "1";
-    });
-
-    gridEl.addEventListener("mouseout", (e) => {
-      const target = e.target as HTMLElement | null;
-      const cell = target?.closest(".heatmap-cell");
-      if (!cell || !tooltip) return;
-      tooltip.style.opacity = "0";
-    });
-
-    function formatDateString(isoStr: string): string {
-      try {
-        const [y, m, d] = isoStr.split("-").map(Number);
-        const dt = new Date(y, m - 1, d);
-        return dt.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        });
-      } catch {
-        return isoStr;
-      }
-    }
-
-    async function loadContributions() {
-      try {
-        const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`);
-        if (!res.ok) throw new Error("Failed to fetch contribution data");
-        const data = await res.json();
-
-        if (data.total && typeof data.total.lastYear === "number" && totalCountEl) {
-          totalCountEl.textContent = String(data.total.lastYear);
-        }
-
-        const contributions: Array<{ date: string; count: number; level: number }> =
-          data.contributions || [];
-
-        if (contributions.length === 0) return;
-
-        // Populate cells from end to beginning so today is at the bottom-right
-        const totalCells = cells.length;
-        const contribLen = contributions.length;
-        const offset = totalCells - contribLen;
-
-        requestAnimationFrame(() => {
-          contributions.forEach((day, i) => {
-            const cellIdx = offset >= 0 ? offset + i : i;
-            if (cellIdx >= 0 && cellIdx < totalCells) {
-              const cell = cells[cellIdx];
-              cell.setAttribute("data-level", String(day.level));
-              cell.setAttribute("data-count", String(day.count));
-              cell.setAttribute("data-date", day.date);
-            }
-          });
-        });
-      } catch (err) {
-        console.warn("GitHub heatmap live fetch error, fallback active:", err);
-      }
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          loadContributions();
-          observer.disconnect();
-        }
-      });
-    }, { rootMargin: '250px' });
-
-    observer.observe(root);
-  }
+  import { initHeatmap } from "../scripts/github-heatmap";
   document.addEventListener("astro:page-load", initHeatmap);
 </script>

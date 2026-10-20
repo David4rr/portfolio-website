@@ -198,8 +198,35 @@ function initProjectDetail() {
       observer.observe(el);
     });
   }
-  const container = document.querySelector('.card-stack-container');
+  // Responsive card stack and mobile containment
+  const container = document.querySelector('.card-stack-container') as HTMLElement | null;
   if (container) {
+    const isMobileAttr = container.getAttribute('data-is-mobile') === 'true';
+    const enforceMobileLayout = () => {
+      container.classList.add('mobile-stack-container');
+      if (mediaEl) mediaEl.classList.add('mobile-media-container');
+    };
+
+    if (isMobileAttr) {
+      enforceMobileLayout();
+    } else {
+      const firstImg = container.querySelector('img') as HTMLImageElement | null;
+      if (firstImg) {
+        const checkAspect = () => {
+          if (firstImg.naturalWidth && firstImg.naturalHeight) {
+            if (firstImg.naturalHeight > firstImg.naturalWidth * 1.15) {
+              enforceMobileLayout();
+            }
+          }
+        };
+        if (firstImg.complete) {
+          checkAspect();
+        } else {
+          firstImg.addEventListener('load', checkAspect, { once: true });
+        }
+      }
+    }
+
     const cards = Array.from(container.querySelectorAll('.card-stack-item')) as HTMLElement[];
     if (cards.length > 0) {
       cards.forEach((card, i) => {
@@ -325,6 +352,22 @@ function initProjectDetail() {
           });
         });
       });
+    }
+  } else if (mediaEl) {
+    const singleCoverImg = mediaEl.querySelector('img') as HTMLImageElement | null;
+    if (singleCoverImg && mediaEl.getAttribute('data-is-mobile') !== 'true') {
+      const checkCoverAspect = () => {
+        if (singleCoverImg.naturalWidth && singleCoverImg.naturalHeight) {
+          if (singleCoverImg.naturalHeight > singleCoverImg.naturalWidth * 1.15) {
+            mediaEl.classList.add('mobile-cover-container');
+          }
+        }
+      };
+      if (singleCoverImg.complete) {
+        checkCoverAspect();
+      } else {
+        singleCoverImg.addEventListener('load', checkCoverAspect, { once: true });
+      }
     }
   }
 }

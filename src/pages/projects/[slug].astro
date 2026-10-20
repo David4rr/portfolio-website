@@ -6,7 +6,7 @@ import Nav from '../../components/Nav.astro';
 import ScrollUpButton from '../../components/ScrollUpButton.astro';
 import VisitActionButton from '../../components/VisitActionButton.astro';
 import { getProjectsFromNotion, getProjectContent } from '../../lib/notion';
-import { optimizeImageUrl, resolveReturnLink } from '../../lib/detail-helpers';
+import { optimizeImageUrl, resolveReturnLink, isMobileProject } from '../../lib/detail-helpers';
 import { marked } from 'marked';
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
@@ -23,6 +23,8 @@ const mdContent = await getProjectContent(project.id);
 const rawHtml = await marked.parse(mdContent.replace(/[\u2014—]/g, ' - ').replace(/&mdash;/g, ' - '));
 const { returnHref, returnLabel } = resolveReturnLink(Astro.url.searchParams, '/#projects');
 
+const isMobile = isMobileProject(project);
+
 const htmlContent = (typeof rawHtml === 'string' ? rawHtml : '').replace(
   /<img\b([^>]*?)>/gi,
   (imgTag) => {
@@ -35,7 +37,11 @@ const htmlContent = (typeof rawHtml === 'string' ? rawHtml : '').replace(
     const titleText = titleMatch ? ` title="${titleMatch[1]}"` : '';
     const optimizedSrc = optimizeImageUrl(rawSrc, 1200);
 
-    return `<img src="${optimizedSrc}" alt="${altText}"${titleText} loading="lazy" decoding="async" data-image-component="" class="rounded-sm shadow-xl border border-border-subtle/30 mx-auto mt-12 mb-6 max-w-full h-auto" />`;
+    const imgClass = isMobile
+      ? 'rounded-[20px] shadow-xl border border-border-subtle/30 mx-auto mt-12 mb-6 max-w-[280px] sm:max-w-[310px] h-auto object-contain'
+      : 'rounded-sm shadow-xl border border-border-subtle/30 mx-auto mt-12 mb-6 max-w-full max-h-[min(650px,75vh)] w-auto object-contain';
+
+    return `<img src="${optimizedSrc}" alt="${altText}"${titleText} loading="lazy" decoding="async" data-image-component="" class="${imgClass}" />`;
   }
 );
 
@@ -92,10 +98,19 @@ const optimizedCover = optimizeImageUrl(
       </div>
 
       {optimizedGallery && optimizedGallery.length > 0 ? (
-        <div id="project-media" class="w-full max-w-2xl mx-auto mb-16 flex flex-col items-center">
+        <div
+          id="project-media"
+          class={`w-full mx-auto mb-16 flex flex-col items-center ${
+            isMobile ? 'max-w-[280px] sm:max-w-[300px] md:max-w-[320px]' : 'max-w-2xl'
+          }`}
+          data-is-mobile={isMobile ? 'true' : 'false'}
+        >
           <div
-            class="w-full relative cursor-pointer group card-stack-container mb-20 min-h-[220px]"
+            class={`w-full relative cursor-pointer group card-stack-container mb-20 ${
+              isMobile ? 'min-h-[360px] sm:min-h-[420px]' : 'min-h-[220px]'
+            }`}
             data-captions={JSON.stringify(project.galleryCaptions || [])}
+            data-is-mobile={isMobile ? 'true' : 'false'}
           >
             <Image
               src={optimizedGallery[0]}
@@ -109,7 +124,9 @@ const optimizedCover = optimizeImageUrl(
 
             {optimizedGallery.map((imgUrl, i) => (
               <div
-                class="card-stack-item absolute inset-0 rounded-sm overflow-hidden shadow-2xl p-1 card-polaroid border border-border-subtle will-change-transform origin-bottom flex items-center justify-center"
+                class={`card-stack-item absolute inset-0 overflow-hidden shadow-2xl p-1 card-polaroid border border-border-subtle will-change-transform origin-bottom flex items-center justify-center ${
+                  isMobile ? 'rounded-[24px] sm:rounded-[28px]' : 'rounded-sm'
+                }`}
                 style={{ zIndex: optimizedGallery.length - i }}
                 data-index={i}
               >
@@ -119,7 +136,9 @@ const optimizedCover = optimizeImageUrl(
                   inferSize={true}
                   loading="eager"
                   decoding="async"
-                  class="w-full h-full object-contain rounded-[1px] select-none"
+                  class={`w-full h-full object-contain select-none ${
+                    isMobile ? 'rounded-[20px] sm:rounded-[24px]' : 'rounded-[1px]'
+                  }`}
                 />
               </div>
             ))}
@@ -136,14 +155,24 @@ const optimizedCover = optimizeImageUrl(
           </div>
         </div>
       ) : (
-        <div id="project-media" class="w-full max-w-xl mx-auto relative mb-20 overflow-hidden rounded-sm opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30 flex items-center justify-center">
+        <div
+          id="project-media"
+          class={`w-full mx-auto relative mb-20 overflow-hidden shadow-2xl p-1 bg-border-subtle/20 border border-border-subtle/30 flex items-center justify-center opacity-90 sepia-[0.15] saturate-[0.7] hover:saturate-100 hover:opacity-100 transition-all duration-700 ${
+            isMobile
+              ? 'max-w-[280px] sm:max-w-[300px] md:max-w-[320px] rounded-[24px] sm:rounded-[28px]'
+              : 'max-w-xl rounded-sm'
+          }`}
+          data-is-mobile={isMobile ? 'true' : 'false'}
+        >
           <Image
             src={optimizedCover}
             alt={project.title}
             inferSize={true}
             loading="eager"
             decoding="async"
-            class="w-full h-auto object-contain rounded-[1px]"
+            class={`w-full h-auto object-contain ${
+              isMobile ? 'rounded-[20px] sm:rounded-[24px]' : 'rounded-[1px]'
+            }`}
           />
         </div>
       )}
