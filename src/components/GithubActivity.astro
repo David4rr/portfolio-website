@@ -168,5 +168,8 @@ const { username } = Astro.props;
     }, { once: true });
   }
 
+  if (document.readyState === "complete") {
+    initActivity();
+  }
   document.addEventListener('astro:page-load', initActivity);
 </script>

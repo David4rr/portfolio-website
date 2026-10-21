@@ -129,9 +129,9 @@ function initProjectDetail(): void {
       entranceTimeline.add(
         {
           targets: timelineEl,
-          translateY: [15, 0],
-          opacity: [0, 1],
-          duration: 550,
+          translateY: [10, 0],
+          opacity: [0.3, 1],
+          duration: 400,
         },
         0
       );
@@ -141,12 +141,12 @@ function initProjectDetail(): void {
       entranceTimeline.add(
         {
           targets: titleWords,
-          translateY: [20, 0],
-          opacity: [0, 1],
-          duration: 800,
-          delay: anime.stagger(24),
+          translateY: [12, 0],
+          opacity: [0.2, 1],
+          duration: 450,
+          delay: anime.stagger(15),
         },
-        100
+        50
       );
     }
 
@@ -154,12 +154,12 @@ function initProjectDetail(): void {
       entranceTimeline.add(
         {
           targets: descWords,
-          translateY: [15, 0],
-          opacity: [0, 1],
-          duration: 700,
-          delay: anime.stagger(12),
+          translateY: [10, 0],
+          opacity: [0.3, 1],
+          duration: 400,
+          delay: anime.stagger(8),
         },
-        350
+        150
       );
     }
 
@@ -167,11 +167,11 @@ function initProjectDetail(): void {
       entranceTimeline.add(
         {
           targets: tagsEl,
-          translateY: [12, 0],
-          opacity: [0, 1],
-          duration: 550,
+          translateY: [8, 0],
+          opacity: [0.3, 1],
+          duration: 350,
         },
-        500
+        150
       );
     }
 
@@ -179,14 +179,13 @@ function initProjectDetail(): void {
       entranceTimeline.add(
         {
           targets: mediaEl,
-          translateY: [20, 0],
-          opacity: [0, 1],
-          duration: 750,
+          translateY: [12, 0],
+          opacity: [0.3, 1],
+          duration: 450,
         },
-        600
+        150
       );
     }
-
     signal.addEventListener(
       'abort',
       () => {
@@ -227,5 +226,8 @@ function initProjectDetail(): void {
   }
 }
 
+if (document.readyState === 'complete') {
+  initProjectDetail();
+}
 document.addEventListener('astro:page-load', initProjectDetail);
 document.addEventListener('astro:before-swap', cleanupProjectDetail);

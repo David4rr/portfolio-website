@@ -203,5 +203,8 @@ for (let i = 0; i < 12; i++) {
 
 <script>
   import { initHeatmap } from "../scripts/github-heatmap";
+  if (document.readyState === "complete") {
+    initHeatmap();
+  }
   document.addEventListener("astro:page-load", initHeatmap);
 </script>

@@ -15,7 +15,7 @@ const { initialArt, framesData } = Astro.props;
 <script>
   const charsArray = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,"^`. '.split("");
 
-  document.addEventListener('astro:page-load', () => {
+  function initAsciiAvatar() {
     const avatar = document.getElementById('ascii-avatar');
     if (!avatar) return;
 
@@ -96,5 +96,10 @@ const { initialArt, framesData } = Astro.props;
       }
       abortController.abort();
     }, { once: true });
-  });
+  }
+
+  if (document.readyState === 'complete') {
+    initAsciiAvatar();
+  }
+  document.addEventListener('astro:page-load', initAsciiAvatar);
 </script>

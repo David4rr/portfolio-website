@@ -201,9 +201,9 @@ function initWritingDetail(): void {
     entranceTimeline.add(
       {
         targets: metaEl,
-        translateY: [12, 0],
-        opacity: [0, 1],
-        duration: 500,
+        translateY: [8, 0],
+        opacity: [0.3, 1],
+        duration: 400,
       },
       0
     );
@@ -213,12 +213,12 @@ function initWritingDetail(): void {
     entranceTimeline.add(
       {
         targets: titleWords,
-        translateY: [20, 0],
-        opacity: [0, 1],
-        duration: 800,
-        delay: anime.stagger(22),
+        translateY: [12, 0],
+        opacity: [0.2, 1],
+        duration: 450,
+        delay: anime.stagger(15),
       },
-      100
+      50
     );
   }
 
@@ -226,11 +226,11 @@ function initWritingDetail(): void {
     entranceTimeline.add(
       {
         targets: coverEl,
-        translateY: [16, 0],
-        opacity: [0, 1],
-        duration: 650,
+        translateY: [12, 0],
+        opacity: [0.3, 1],
+        duration: 450,
       },
-      450
+      150
     );
   }
 
@@ -265,6 +265,9 @@ function initWritingDetail(): void {
   }
 }
 
+if (document.readyState === 'complete') {
+  initWritingDetail();
+}
 document.addEventListener('astro:page-load', initWritingDetail);
 document.addEventListener('astro:before-swap', cleanupWritingDetail);
 window.addEventListener('pageshow', () => {
