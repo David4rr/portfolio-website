@@ -28,8 +28,10 @@ async function generate() {
       }
 
       const { data, info } = await sharp(buf)
-        .resize(80, 80, { fit: "cover" })
+        .resize(110, 110, { fit: "cover", position: "attention" })
         .ensureAlpha()
+        .normalize()
+        .sharpen({ sigma: 1.1 })
         .raw()
         .toBuffer({ resolveWithObject: true });
 
@@ -40,17 +42,21 @@ async function generate() {
           const offset = (y * info.width + x) * info.channels;
           const alpha = data[offset + info.channels - 1];
 
-          if (alpha < 128) {
+          if (alpha < 100) {
+            row += " ";
+            continue;
+          }
+
+          const r = data[offset];
+          const g = data[offset + 1];
+          const b = data[offset + 2];
+          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+
+          if (brightness > 230) {
             row += " ";
           } else {
-            const r = data[offset];
-            const g = data[offset + 1];
-            const b = data[offset + 2];
-            const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
-
-            const idx = Math.floor(
-              (brightness / 255) * (charsArray.length - 1),
-            );
+            const norm = brightness / 230;
+            const idx = Math.floor(norm * (charsArray.length - 2));
             row += charsArray[idx];
           }
         }

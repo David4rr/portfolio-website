@@ -9,7 +9,7 @@ const { initialArt, framesData } = Astro.props;
 <pre
   id="ascii-avatar"
   data-frames={framesData}
-  class="font-mono text-[clamp(4px,0.7vh,8px)] leading-[0.55] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity pt-2"
+  class="font-mono text-[clamp(2.8px,0.52vh,5.8px)] leading-[0.55] text-accent select-none whitespace-pre overflow-hidden cursor-pointer hover:opacity-80 transition-opacity pt-2 max-w-full"
 >{initialArt}</pre>
 
 <script>
@@ -33,7 +33,10 @@ const { initialArt, framesData } = Astro.props;
 
     let isAnimating = false;
     let currentFrameIdx = 0;
-    let intervalId;
+    let intervalId: number | undefined;
+
+    const abortController = new AbortController();
+    const signal = abortController.signal;
 
     avatar.addEventListener('click', () => {
       if (isAnimating) return;
@@ -50,8 +53,8 @@ const { initialArt, framesData } = Astro.props;
 
       const resolved = Array.from({ length: rows }, () => Array(cols).fill(false));
 
-      intervalId = setInterval(() => {
-        const swaps = Math.floor(totalChars * (0.05 + Math.random() * 0.05));
+      intervalId = window.setInterval(() => {
+        const swaps = Math.floor(totalChars * (0.08 + Math.random() * 0.05));
 
         for (let i = 0; i < swaps; i++) {
           const r = Math.floor(Math.random() * rows);
@@ -74,17 +77,24 @@ const { initialArt, framesData } = Astro.props;
 
         avatar.textContent = currentRows.join("\n");
 
-        if (charsResolved > totalChars * 0.9) {
-          clearInterval(intervalId);
+        if (charsResolved > totalChars * 0.88) {
+          if (intervalId !== undefined) {
+            clearInterval(intervalId);
+            intervalId = undefined;
+          }
           avatar.textContent = frames[targetFrameIdx].join("\n");
           currentFrameIdx = targetFrameIdx;
           isAnimating = false;
         }
-      }, 30);
-    });
+      }, 25);
+    }, { signal });
 
-    document.addEventListener('astro:before-preparation', () => {
-      clearInterval(intervalId);
+    document.addEventListener('astro:before-swap', () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+      }
+      abortController.abort();
     }, { once: true });
   });
 </script>
