@@ -46,7 +46,7 @@ for (let i = 0; i < 12; i++) {
           <span>Engineering Cadence</span>
         </div>
         <h3 class="font-serif text-lg sm:text-xl text-text-main font-normal tracking-tight">
-          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 transition-all duration-500 animate-pulse">520+</span>recorded commit events in the past 12 months
+          <span id="gh-heatmap-total-count" class="text-accent font-medium mr-1.5 animate-pulse">520+</span>recorded commit events in the past 12 months
         </h3>
       </div>
 
@@ -77,10 +77,10 @@ for (let i = 0; i < 12; i++) {
 
           <div id="gh-heatmap-grid" class="flex gap-[3px] flex-1 is-loading">
             {Array.from({ length: totalWeeks }).map((_, colIdx) => (
-              <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx} style={`--col-idx: ${colIdx};`}>
+              <div class="flex flex-col gap-[3px] flex-1" data-week={colIdx}>
                 {Array.from({ length: daysPerWeek }).map((_, dayIdx) => (
                   <div
-                    class="heatmap-cell aspect-square w-full rounded-[2px] bg-border-subtle/30 border border-border-subtle/20 hover:scale-125 hover:z-20 hover:ring-1 hover:ring-accent transition-transform duration-150"
+                    class="heatmap-cell aspect-square w-full rounded-[2px] bg-border-subtle/30 border border-border-subtle/20 hover:ring-1 hover:ring-accent transition-transform duration-150"
                     data-level="0"
                     data-count="0"
                     data-date=""
@@ -150,26 +150,63 @@ for (let i = 0; i < 12; i++) {
     opacity: 1;
   }
 
-  :global(#gh-heatmap-grid.is-loading .heatmap-cell) {
-    animation: heatmap-shimmer 1.8s ease-in-out infinite;
-    animation-delay: calc(var(--col-idx, 0) * 20ms);
+  /* GPU-composited single-layer sweep: 1 accelerated layer vs 371 repaints */
+  :global(#gh-heatmap-grid.is-loading) {
+    position: relative;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    border-radius: 4px;
   }
 
-  @keyframes heatmap-shimmer {
-    0%, 100% {
-      opacity: 0.25;
-      background-color: var(--border-subtle);
-      border-color: var(--border-subtle);
+  :global(#gh-heatmap-grid.is-loading::after) {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translate3d(-100%, 0, 0);
+    will-change: transform;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--accent) 10%, transparent) 35%,
+      color-mix(in srgb, var(--accent) 26%, transparent) 50%,
+      color-mix(in srgb, var(--accent) 10%, transparent) 65%,
+      transparent 100%
+    );
+    animation: heatmap-shimmer-sweep 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  @keyframes heatmap-shimmer-sweep {
+    0% {
+      transform: translate3d(-100%, 0, 0);
     }
-    50% {
-      opacity: 0.75;
-      background-color: color-mix(in srgb, var(--accent) 30%, var(--border-subtle));
-      border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    100% {
+      transform: translate3d(100%, 0, 0);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :global(#gh-heatmap-grid:not(.is-loading) .heatmap-cell:hover) {
+      transform: scale(1.25);
+      z-index: 20;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(#gh-heatmap-grid.is-loading::after) {
+      animation: none;
+      display: none;
     }
   }
 </style>
 
 <script>
   import { initHeatmap } from "../scripts/github-heatmap";
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initHeatmap, { once: true });
+  } else {
+    initHeatmap();
+  }
   document.addEventListener("astro:page-load", initHeatmap);
 </script>

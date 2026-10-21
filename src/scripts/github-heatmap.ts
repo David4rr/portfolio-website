@@ -1,6 +1,7 @@
 export function initHeatmap() {
   const root = document.getElementById("github-heatmap-root");
-  if (!root) return;
+  if (!root || root.dataset.initialized === "true") return;
+  root.dataset.initialized = "true";
 
   const username = root.dataset.username || "David4rr";
   const totalCountEl = document.getElementById("gh-heatmap-total-count");
@@ -29,9 +30,6 @@ export function initHeatmap() {
   // Immediate positioning across layout passes
   scrollToLatest();
   requestAnimationFrame(scrollToLatest);
-  setTimeout(scrollToLatest, 100);
-  setTimeout(scrollToLatest, 300);
-
   // Detect explicit user horizontal scrolling so we don't fight intentional history review
   scrollContainer?.addEventListener("touchstart", (e) => {
     if (e.touches[0]) {
@@ -44,7 +42,7 @@ export function initHeatmap() {
     if (e.touches[0]) {
       const dx = Math.abs(e.touches[0].clientX - touchStartX);
       const dy = Math.abs(e.touches[0].clientY - touchStartY);
-      if (dx > dy && dx > 15) {
+      if (dx > dy && dx > 8) {
         userScrolledHorizontally = true;
       }
     }
@@ -60,13 +58,16 @@ export function initHeatmap() {
     }
   }, { passive: true });
 
-  window.addEventListener("resize", () => {
-    scrollToLatest();
-  }, { passive: true });
+  let resizeTimer: number | undefined;
+  const onResize = () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      requestAnimationFrame(scrollToLatest);
+    }, 100);
+  };
 
-  window.addEventListener("orientationchange", () => {
-    setTimeout(scrollToLatest, 150);
-  }, { passive: true });
+  window.addEventListener("resize", onResize, { passive: true });
+  window.addEventListener("orientationchange", onResize, { passive: true });
 
   // --- Tooltip handlers ---
   gridEl.addEventListener("mouseover", (e: MouseEvent) => {
@@ -159,19 +160,17 @@ export function initHeatmap() {
       const contribLen = contributions.length;
       const offset = totalCells - contribLen;
 
-      requestAnimationFrame(() => {
-        gridEl?.classList.remove("is-loading");
-        contributions.forEach((day, i) => {
-          const cellIdx = offset >= 0 ? offset + i : i;
-          if (cellIdx >= 0 && cellIdx < totalCells) {
-            const cell = cells[cellIdx];
-            cell.setAttribute("data-level", String(day.level));
-            cell.setAttribute("data-count", String(day.count));
-            cell.setAttribute("data-date", day.date);
-          }
-        });
-        scrollToLatest();
+      gridEl?.classList.remove("is-loading");
+      contributions.forEach((day, i) => {
+        const cellIdx = offset >= 0 ? offset + i : i;
+        if (cellIdx >= 0 && cellIdx < totalCells) {
+          const cell = cells[cellIdx];
+          cell.setAttribute("data-level", String(day.level));
+          cell.setAttribute("data-count", String(day.count));
+          cell.setAttribute("data-date", day.date);
+        }
       });
+      scrollToLatest();
     } catch (err) {
       gridEl?.classList.remove("is-loading");
       if (totalCountEl) totalCountEl.classList.remove("animate-pulse");
@@ -190,4 +189,15 @@ export function initHeatmap() {
   }, { rootMargin: "250px" });
 
   observer.observe(root);
+  document.addEventListener(
+    "astro:before-preparation",
+    () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      observer.disconnect();
+      delete root.dataset.initialized;
+    },
+    { once: true }
+  );
 }

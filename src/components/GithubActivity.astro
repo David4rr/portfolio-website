@@ -56,15 +56,16 @@ const { username } = Astro.props;
     return "Contributed to";
   }
 
-  document.addEventListener('astro:page-load', () => {
+  function initActivity() {
     const container = document.getElementById('gh-activity-container');
     const list = document.getElementById('gh-activity-list');
-    if (!container || !list) return;
+    if (!container || !list || container.dataset.initialized === "true") return;
+    container.dataset.initialized = "true";
 
     const username = container.dataset.username;
     if (!username) return;
 
-    let interval: ReturnType<typeof setInterval> | null = null;
+    let interval: number | undefined;
     let isRunning = true;
 
     async function fetchActivity() {
@@ -134,6 +135,7 @@ const { username } = Astro.props;
     }
 
     function showError() {
+      list.removeAttribute('aria-busy');
       list.innerHTML = `
         <li class="flex items-center justify-between border-b border-border-subtle/50 pb-1 last:border-0 last:pb-0">
           <span class="flex items-center gap-3">
@@ -148,7 +150,7 @@ const { username } = Astro.props;
         if (entry.isIntersecting) {
           fetchActivity();
           if (!interval) {
-            interval = setInterval(fetchActivity, 600000);
+            interval = window.setInterval(fetchActivity, 600000);
           }
           observer.disconnect();
         }
@@ -160,10 +162,16 @@ const { username } = Astro.props;
     document.addEventListener('astro:before-preparation', () => {
       isRunning = false;
       observer.disconnect();
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
-      }
+      clearInterval(interval);
+      interval = undefined;
+      delete container.dataset.initialized;
     }, { once: true });
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initActivity, { once: true });
+  } else {
+    initActivity();
+  }
+  document.addEventListener('astro:page-load', initActivity);
 </script>
