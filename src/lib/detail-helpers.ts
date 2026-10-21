@@ -216,3 +216,43 @@ export function isMobileProject(project?: { type?: string; techStack?: string[] 
 
   return hasMobileTech && !isExplicitWeb;
 }
+
+export function splitTextToWords(el: HTMLElement): HTMLElement[] {
+  if (el.dataset.splitWords) {
+    return Array.from(el.querySelectorAll<HTMLElement>('.kinetic-word'));
+  }
+  el.dataset.splitWords = 'true';
+
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+  const textNodes: Node[] = [];
+  let node: Node | null;
+  while ((node = walker.nextNode())) {
+    if (node.nodeValue && node.nodeValue.trim() !== '') {
+      textNodes.push(node);
+    }
+  }
+
+  const collectedWordEls: HTMLElement[] = [];
+
+  textNodes.forEach((textNode) => {
+    const rawVal = textNode.nodeValue || '';
+    const fragment = document.createDocumentFragment();
+    const tokens = rawVal.split(/(\s+)/);
+
+    tokens.forEach((token) => {
+      if (token.trim() === '') {
+        fragment.appendChild(document.createTextNode(token));
+      } else {
+        const wordSpan = document.createElement('span');
+        wordSpan.className = 'kinetic-word inline-block will-change-transform';
+        wordSpan.textContent = token;
+        fragment.appendChild(wordSpan);
+        collectedWordEls.push(wordSpan);
+      }
+    });
+
+    textNode.parentNode?.replaceChild(fragment, textNode);
+  });
+
+  return collectedWordEls;
+}

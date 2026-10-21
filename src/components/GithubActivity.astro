@@ -168,10 +168,5 @@ const { username } = Astro.props;
     }, { once: true });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initActivity, { once: true });
-  } else {
-    initActivity();
-  }
   document.addEventListener('astro:page-load', initActivity);
 </script>

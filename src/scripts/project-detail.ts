@@ -1,65 +1,53 @@
 import anime from 'animejs';
-import { setupDetailBackButton } from '../lib/detail-helpers';
+import { setupDetailBackButton, splitTextToWords } from '../lib/detail-helpers';
+import { setupCardStack, setupSingleCoverAspect } from './card-stack';
 
-function splitTextToWords(el: HTMLElement): HTMLElement[] {
-  if (el.dataset.splitWords) {
-    return Array.from(el.querySelectorAll<HTMLElement>('.kinetic-word'));
+let detailAbortController: AbortController | null = null;
+
+function cleanupProjectDetail(): void {
+  if (detailAbortController) {
+    detailAbortController.abort();
+    detailAbortController = null;
   }
-  el.dataset.splitWords = 'true';
-
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-  const textNodes: Node[] = [];
-  let node: Node | null;
-  while ((node = walker.nextNode())) {
-    if (node.nodeValue && node.nodeValue.trim() !== '') {
-      textNodes.push(node);
-    }
-  }
-
-  const collectedWordEls: HTMLElement[] = [];
-
-  textNodes.forEach((textNode) => {
-    const rawVal = textNode.nodeValue || '';
-    const fragment = document.createDocumentFragment();
-    const tokens = rawVal.split(/(\s+)/);
-
-    tokens.forEach((token) => {
-      if (token.trim() === '') {
-        fragment.appendChild(document.createTextNode(token));
-      } else {
-        const wordSpan = document.createElement('span');
-        wordSpan.className = 'kinetic-word inline-block will-change-transform';
-        wordSpan.textContent = token;
-        wordSpan.style.opacity = '0';
-        wordSpan.style.transform = 'translateY(18px)';
-
-        fragment.appendChild(wordSpan);
-        collectedWordEls.push(wordSpan);
-      }
-    });
-
-    textNode.parentNode?.replaceChild(fragment, textNode);
-  });
-
-  return collectedWordEls;
 }
 
-function initProjectDetail() {
+function initProjectDetail(): void {
+  cleanupProjectDetail();
+
+  const titleEl = document.getElementById('project-title');
+  const mediaEl = document.getElementById('project-media');
+  if (!titleEl && !mediaEl) return;
+
+  detailAbortController = new AbortController();
+  const signal = detailAbortController.signal;
+
   setupDetailBackButton('/#projects');
 
   const timelineEl = document.getElementById('project-timeline');
-  const titleEl = document.getElementById('project-title');
   const descEl = document.querySelector<HTMLElement>('.hero-desc-writing');
   const tagsEl = document.getElementById('project-tags');
-  const mediaEl = document.getElementById('project-media');
   const proseElements = document.querySelectorAll<HTMLElement>('.prose > *');
 
   const titleWords = titleEl ? splitTextToWords(titleEl) : [];
   const descWords = descEl ? splitTextToWords(descEl) : [];
   const allHeroWords = [...titleWords, ...descWords];
 
-  // Accessibility: instant display if prefers-reduced-motion is requested
+  // Progressive enhancement failsafe: ensure elements are visible if timeline is delayed
+  const safetyTimer: number | undefined = window.setTimeout(() => {
+    if (signal.aborted) return;
+    allHeroWords.forEach((w) => {
+      w.style.opacity = '1';
+      w.style.transform = 'none';
+    });
+    if (timelineEl) timelineEl.style.opacity = '1';
+    if (tagsEl) tagsEl.style.opacity = '1';
+    if (mediaEl) mediaEl.style.opacity = '1';
+  }, 1000);
+
+  signal.addEventListener('abort', () => clearTimeout(safetyTimer), { once: true });
+
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    clearTimeout(safetyTimer);
     if (timelineEl) timelineEl.style.opacity = '1';
     if (tagsEl) tagsEl.style.opacity = '1';
     if (mediaEl) mediaEl.style.opacity = '1';
@@ -69,11 +57,12 @@ function initProjectDetail() {
     });
     proseElements.forEach((p) => p.classList.add('optical-focus-in'));
   } else {
-    // Unified, harmonic entrance timeline (Zero conflicting legacy animations)
     const entranceTimeline = anime.timeline({
       easing: 'easeOutQuart',
       complete: () => {
-        // Enable hover transitions only after entrance completes to avoid frame contention
+        if (signal.aborted) return;
+        clearTimeout(safetyTimer);
+
         allHeroWords.forEach((word) => {
           word.style.transition = 'color 0.2s ease, transform 0.2s ease';
         });
@@ -91,6 +80,7 @@ function initProjectDetail() {
 
             rafId = requestAnimationFrame(() => {
               rafId = null;
+              if (signal.aborted) return;
               const radius = 90;
               allHeroWords.forEach((word) => {
                 const rect = word.getBoundingClientRect();
@@ -121,61 +111,89 @@ function initProjectDetail() {
             });
           };
 
-          heroZone.addEventListener('mousemove', onMouseMove, { passive: true });
-          heroZone.addEventListener('mouseleave', onMouseLeave);
+          heroZone.addEventListener('mousemove', onMouseMove, { passive: true, signal });
+          heroZone.addEventListener('mouseleave', onMouseLeave, { signal });
+
+          signal.addEventListener(
+            'abort',
+            () => {
+              if (rafId !== null) cancelAnimationFrame(rafId);
+            },
+            { once: true }
+          );
         }
       },
     });
 
     if (timelineEl) {
-      timelineEl.style.opacity = '0';
-      entranceTimeline.add({
-        targets: timelineEl,
-        translateY: [15, 0],
-        opacity: [0, 1],
-        duration: 550,
-      }, 0);
+      entranceTimeline.add(
+        {
+          targets: timelineEl,
+          translateY: [15, 0],
+          opacity: [0, 1],
+          duration: 550,
+        },
+        0
+      );
     }
 
     if (titleWords.length > 0) {
-      entranceTimeline.add({
-        targets: titleWords,
-        translateY: [20, 0],
-        opacity: [0, 1],
-        duration: 800,
-        delay: anime.stagger(24),
-      }, 100);
+      entranceTimeline.add(
+        {
+          targets: titleWords,
+          translateY: [20, 0],
+          opacity: [0, 1],
+          duration: 800,
+          delay: anime.stagger(24),
+        },
+        100
+      );
     }
 
     if (descWords.length > 0) {
-      entranceTimeline.add({
-        targets: descWords,
-        translateY: [15, 0],
-        opacity: [0, 1],
-        duration: 700,
-        delay: anime.stagger(12),
-      }, 350);
+      entranceTimeline.add(
+        {
+          targets: descWords,
+          translateY: [15, 0],
+          opacity: [0, 1],
+          duration: 700,
+          delay: anime.stagger(12),
+        },
+        350
+      );
     }
 
     if (tagsEl) {
-      tagsEl.style.opacity = '0';
-      entranceTimeline.add({
-        targets: tagsEl,
-        translateY: [12, 0],
-        opacity: [0, 1],
-        duration: 550,
-      }, 500);
+      entranceTimeline.add(
+        {
+          targets: tagsEl,
+          translateY: [12, 0],
+          opacity: [0, 1],
+          duration: 550,
+        },
+        500
+      );
     }
 
     if (mediaEl) {
-      mediaEl.style.opacity = '0';
-      entranceTimeline.add({
-        targets: mediaEl,
-        translateY: [20, 0],
-        opacity: [0, 1],
-        duration: 750,
-      }, 600);
+      entranceTimeline.add(
+        {
+          targets: mediaEl,
+          translateY: [20, 0],
+          opacity: [0, 1],
+          duration: 750,
+        },
+        600
+      );
     }
+
+    signal.addEventListener(
+      'abort',
+      () => {
+        entranceTimeline.pause();
+      },
+      { once: true }
+    );
   }
 
   // Optical Fog-to-Focus for Article Prose
@@ -197,179 +215,17 @@ function initProjectDetail() {
       el.classList.add('optical-focus-ready');
       observer.observe(el);
     });
+
+    signal.addEventListener('abort', () => observer.disconnect(), { once: true });
   }
-  // Responsive card stack and mobile containment
+
   const container = document.querySelector('.card-stack-container') as HTMLElement | null;
   if (container) {
-    const isMobileAttr = container.getAttribute('data-is-mobile') === 'true';
-    const enforceMobileLayout = () => {
-      container.classList.add('mobile-stack-container');
-      if (mediaEl) mediaEl.classList.add('mobile-media-container');
-    };
-
-    if (isMobileAttr) {
-      enforceMobileLayout();
-    } else {
-      const firstImg = container.querySelector('img') as HTMLImageElement | null;
-      if (firstImg) {
-        const checkAspect = () => {
-          if (firstImg.naturalWidth && firstImg.naturalHeight) {
-            if (firstImg.naturalHeight > firstImg.naturalWidth * 1.15) {
-              enforceMobileLayout();
-            }
-          }
-        };
-        if (firstImg.complete) {
-          checkAspect();
-        } else {
-          firstImg.addEventListener('load', checkAspect, { once: true });
-        }
-      }
-    }
-
-    const cards = Array.from(container.querySelectorAll('.card-stack-item')) as HTMLElement[];
-    if (cards.length > 0) {
-      cards.forEach((card, i) => {
-        if (i > 0) {
-          anime.set(card, {
-            translateY: i * 12,
-            translateX: i * 4,
-            rotate: i % 2 === 0 ? i * 1.5 : -i * 1.5,
-            scale: 1 - i * 0.05,
-            opacity: 1,
-          });
-        }
-      });
-
-      const captionsAttr = container.getAttribute('data-captions');
-      const captions: string[] = captionsAttr ? JSON.parse(captionsAttr) : [];
-      const captionEl = document.getElementById('dynamic-caption');
-
-      function prepareCaption(text: string) {
-        if (!captionEl) return;
-        captionEl.innerHTML = '';
-        const words = text.replace(/\n/g, ' \n ').split(' ');
-        words.forEach((word) => {
-          if (word === '\n') {
-            const br = document.createElement('div');
-            br.className = 'w-full basis-full h-0 m-0 p-0';
-            captionEl.appendChild(br);
-          } else if (word.trim() !== '') {
-            const span = document.createElement('span');
-            span.className = 'caption-word inline-block mr-[0.25em] origin-center';
-            span.textContent = word;
-            captionEl.appendChild(span);
-          }
-        });
-      }
-
-      if (captionEl && captions.length > 0) {
-        prepareCaption(captions[0] || 'Project Fragment');
-      }
-
-      let isAnimating = false;
-
-      container.addEventListener('click', () => {
-        if (cards.length <= 1 || isAnimating) return;
-        isAnimating = true;
-
-        const topCard = cards.shift()!;
-        cards.push(topCard);
-
-        if (captionEl && captions.length > 0) {
-          const newIndexAttr = cards[0].getAttribute('data-index');
-          if (newIndexAttr !== null) {
-            const newIndex = parseInt(newIndexAttr, 10);
-            const oldWords = captionEl.querySelectorAll('.caption-word');
-
-            anime({
-              targets: oldWords.length > 0 ? oldWords : captionEl,
-              rotateX: [0, 90],
-              opacity: [1, 0],
-              duration: 150,
-              delay: oldWords.length > 0 ? anime.stagger(20) : 0,
-              easing: 'easeInSine',
-              complete: () => {
-                prepareCaption(captions[newIndex] || 'Project Fragment');
-                const newWords = captionEl.querySelectorAll('.caption-word');
-
-                anime({
-                  targets: newWords,
-                  rotateX: [-90, 0],
-                  opacity: [0, 1],
-                  duration: 250,
-                  delay: anime.stagger(30),
-                  easing: 'easeOutBack',
-                });
-              },
-            });
-          }
-        }
-
-        anime({
-          targets: topCard,
-          translateX: window.innerWidth < 768 ? 80 : 180,
-          translateY: window.innerWidth < 768 ? -15 : -30,
-          rotate: 15,
-          scale: 0.9,
-          opacity: 0,
-          easing: 'easeInQuad',
-          duration: 350,
-          complete: () => {
-            cards.forEach((c, index) => {
-              c.style.zIndex = String(cards.length - index);
-            });
-
-            const newIndex = cards.length - 1;
-            anime({
-              targets: topCard,
-              translateX: newIndex * 4,
-              translateY: newIndex * 12,
-              rotate: newIndex % 2 === 0 ? newIndex * 1.5 : -newIndex * 1.5,
-              scale: 1 - newIndex * 0.05,
-              opacity: 1,
-              easing: 'easeOutQuint',
-              duration: 600,
-              complete: () => {
-                isAnimating = false;
-              },
-            });
-          },
-        });
-
-        cards.forEach((card, i) => {
-          if (card === topCard) return;
-          anime({
-            targets: card,
-            translateY: i * 12,
-            translateX: i * 4,
-            rotate: i % 2 === 0 ? i * 1.5 : -i * 1.5,
-            scale: 1 - i * 0.05,
-            opacity: 1,
-            duration: 700,
-            delay: i === 0 ? 100 : 0,
-            easing: 'easeOutQuint',
-          });
-        });
-      });
-    }
+    setupCardStack(container, mediaEl, signal);
   } else if (mediaEl) {
-    const singleCoverImg = mediaEl.querySelector('img') as HTMLImageElement | null;
-    if (singleCoverImg && mediaEl.getAttribute('data-is-mobile') !== 'true') {
-      const checkCoverAspect = () => {
-        if (singleCoverImg.naturalWidth && singleCoverImg.naturalHeight) {
-          if (singleCoverImg.naturalHeight > singleCoverImg.naturalWidth * 1.15) {
-            mediaEl.classList.add('mobile-cover-container');
-          }
-        }
-      };
-      if (singleCoverImg.complete) {
-        checkCoverAspect();
-      } else {
-        singleCoverImg.addEventListener('load', checkCoverAspect, { once: true });
-      }
-    }
+    setupSingleCoverAspect(mediaEl, signal);
   }
 }
 
 document.addEventListener('astro:page-load', initProjectDetail);
+document.addEventListener('astro:before-swap', cleanupProjectDetail);
