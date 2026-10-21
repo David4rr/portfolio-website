@@ -1,6 +1,5 @@
 ---
 // ponytail: luxurious museum-print project detail page
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import ScrollUpButton from '../../components/ScrollUpButton.astro';
@@ -112,10 +111,9 @@ const optimizedCover = optimizeImageUrl(
             data-captions={JSON.stringify(project.galleryCaptions || [])}
             data-is-mobile={isMobile ? 'true' : 'false'}
           >
-            <Image
+            <img
               src={optimizedGallery[0]}
               alt=""
-              inferSize={true}
               loading="eager"
               decoding="async"
               class="w-full h-auto opacity-0 pointer-events-none block select-none"
@@ -130,10 +128,9 @@ const optimizedCover = optimizeImageUrl(
                 style={{ zIndex: optimizedGallery.length - i }}
                 data-index={i}
               >
-                <Image
+                <img
                   src={imgUrl}
                   alt={`${project.title} gallery ${i + 1}`}
-                  inferSize={true}
                   loading="eager"
                   decoding="async"
                   class={`w-full h-full object-contain select-none ${
@@ -164,10 +161,9 @@ const optimizedCover = optimizeImageUrl(
           }`}
           data-is-mobile={isMobile ? 'true' : 'false'}
         >
-          <Image
+          <img
             src={optimizedCover}
             alt={project.title}
-            inferSize={true}
             loading="eager"
             decoding="async"
             class={`w-full h-auto object-contain ${
