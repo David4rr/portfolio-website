@@ -1,6 +1,16 @@
 import type { TocItem } from '../components/TableOfContents.astro';
 import { optimizeImageUrl } from './detail-helpers';
 
+function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
 function createHeadingSlug(text: string): string {
   const base = text
     .toLowerCase()
@@ -102,7 +112,7 @@ export function transformBloggerArticleContent(
   sanitizedContent = sanitizedContent.replace(
     /<(h[2-4])\b([^>]*)>([\s\S]*?)<\/\1>/gi,
     (fullMatch, tag, attrs, innerHtml) => {
-      const cleanText = innerHtml.replace(/<[^>]*>/g, '').trim();
+      const cleanText = decodeHtmlEntities(innerHtml.replace(/<[^>]*>/g, '')).trim();
       if (!cleanText) return fullMatch;
 
       const baseSlug = createHeadingSlug(cleanText);

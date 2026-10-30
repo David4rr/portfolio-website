@@ -1,4 +1,5 @@
 import anime from 'animejs';
+import { initMobileToc } from './toc-mobile';
 
 interface LenisInstance {
   scrollTo: (target: number, options?: { duration?: number; onComplete?: () => void }) => void;
@@ -12,18 +13,11 @@ declare global {
   }
 }
 
-function toggleVisibilityPair(el: HTMLElement | null, visible: boolean) {
-  if (!el) return;
-  el.classList.toggle('opacity-100', visible);
-  el.classList.toggle('pointer-events-auto', visible);
-  el.classList.toggle('opacity-0', !visible);
-  el.classList.toggle('pointer-events-none', !visible);
-}
-
 function toggleClasses(el: Element | null | undefined, classes: string[], active: boolean) {
   if (!el) return;
   for (const cls of classes) el.classList.toggle(cls, active);
 }
+
 function initTocScrollIndicator() {
   let railEntranceAnim: anime.AnimeInstance | null = null;
   let mobileEntranceAnim: anime.AnimeInstance | null = null;
@@ -34,6 +28,7 @@ function initTocScrollIndicator() {
   const controller = new AbortController();
   const { signal } = controller;
 
+  // Inline TOC Expand/Collapse
   const inlineContainer = document.getElementById('toc-inline-container');
   const inlineHeader = document.getElementById('toc-inline-header');
   const inlineContent = document.getElementById('toc-inline-content');
@@ -71,70 +66,48 @@ function initTocScrollIndicator() {
     }, { signal });
   }
 
+  // Floating Rail & Track
   const rail = document.getElementById('toc-floating-rail');
+  const railTrack = document.getElementById('toc-rail-track');
   const indicator = document.getElementById('toc-rail-indicator');
   const progressText = document.getElementById('toc-rail-progress');
   const railNodes = document.querySelectorAll<HTMLElement>('.toc-rail-node');
-  const mobileContainer = document.getElementById('toc-mobile-container');
-  const mobileScrim = document.getElementById('toc-mobile-scrim');
-  const mobileHeader = document.getElementById('toc-mobile-header');
-  const mobilePillBtn = document.getElementById('toc-mobile-pill-btn');
-  const mobileExpandedHeader = document.getElementById('toc-mobile-expanded-header');
-  const mobileCloseBtn = document.getElementById('toc-mobile-close-btn');
-  const mobileBody = document.getElementById('toc-mobile-body');
-  const mobileActiveNum = document.getElementById('toc-mobile-active-num');
-  const mobileActiveTitle = document.getElementById('toc-mobile-active-title');
-  const mobileLinks = document.querySelectorAll<HTMLElement>('.toc-mobile-link');
   const headings = Array.from(document.querySelectorAll<HTMLElement>('article h2, article h3, article h4')).filter((h) => h.id);
   if (!headings.length) return;
 
-  let isMobileOpen = false;
-  const setMobileTocOpen = (open: boolean) => {
-    if (isMobileOpen === open || !mobileContainer) return;
-    isMobileOpen = open;
-    mobileScrim?.classList.toggle('pointer-events-none', !open);
-    mobileScrim?.classList.toggle('opacity-100', open);
+  const mobileToc = initMobileToc(signal);
 
-    const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
-    if (scrollToTopBtn) {
-      const showBtn = !open && window.scrollY > 300;
-      if (open) scrollToTopBtn.dataset.suppressed = 'true';
-      else delete scrollToTopBtn.dataset.suppressed;
-      scrollToTopBtn.style.transition = 'opacity 200ms ease, transform 200ms ease';
-      scrollToTopBtn.style.opacity = showBtn ? '1' : '0';
-      scrollToTopBtn.style.pointerEvents = showBtn ? 'auto' : 'none';
-      scrollToTopBtn.style.transform = open ? 'translateY(16px) scale(0.85)' : showBtn ? 'translateY(0px) scale(1)' : 'translateY(16px) scale(1)';
-      if (!open) setTimeout(() => { scrollToTopBtn.style.transition = ''; }, 250);
+  // Dynamic Mask to Prevent Awkward Vertical Cutoffs
+  const updateTrackMask = () => {
+    if (!railTrack) return;
+    const isScrollable = railTrack.scrollHeight > railTrack.clientHeight + 4;
+    if (!isScrollable) {
+      railTrack.style.maskImage = '';
+      railTrack.style.webkitMaskImage = '';
+      return;
     }
+    const atTop = railTrack.scrollTop <= 6;
+    const atBottom = railTrack.scrollTop + railTrack.clientHeight >= railTrack.scrollHeight - 6;
 
-    mobileContainer.style.width = open ? (window.innerWidth >= 640 ? '380px' : 'calc(100vw - 2rem)') : '210px';
-    mobileContainer.style.maxWidth = '380px';
-    mobileContainer.style.height = open ? `${Math.min(window.innerHeight * 0.58, 420)}px` : '44px';
-    mobileContainer.style.borderRadius = open ? '16px' : '9999px';
-    if (mobileHeader) mobileHeader.style.borderBottomColor = open ? 'rgba(255, 255, 255, 0.08)' : 'transparent';
-    mobilePillBtn?.classList.toggle('opacity-0', open);
-    mobilePillBtn?.classList.toggle('pointer-events-none', open);
-    mobilePillBtn?.setAttribute('aria-expanded', String(open));
-    toggleVisibilityPair(mobileExpandedHeader, open);
-    if (open) setTimeout(() => toggleVisibilityPair(mobileBody, true), 80);
-    else toggleVisibilityPair(mobileBody, false);
+    let mask = '';
+    if (atTop) {
+      mask = 'linear-gradient(to bottom, black calc(100% - 32px), transparent 100%)';
+    } else if (atBottom) {
+      mask = 'linear-gradient(to bottom, transparent 0%, black 28px, black 100%)';
+    } else {
+      mask = 'linear-gradient(to bottom, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%)';
+    }
+    railTrack.style.maskImage = mask;
+    railTrack.style.webkitMaskImage = mask;
   };
-  mobilePillBtn?.addEventListener('click', () => setMobileTocOpen(true), { signal });
-  mobileCloseBtn?.addEventListener('click', (e) => { e.stopPropagation(); setMobileTocOpen(false); }, { signal });
-  mobileScrim?.addEventListener('click', () => setMobileTocOpen(false), { signal });
-  document.addEventListener('click', (e: MouseEvent) => {
-    if (!isMobileOpen || !mobileContainer) return;
-    const target = e.target as Node;
-    if (!mobileContainer.contains(target) && !mobileScrim?.contains(target)) setMobileTocOpen(false);
-  }, { signal });
-  window.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isMobileOpen) setMobileTocOpen(false);
-  }, { signal });
+
+  railTrack?.addEventListener('scroll', updateTrackMask, { passive: true, signal });
 
   const updateActiveIndicator = (newIndex: number) => {
     if (newIndex === activeIndex || newIndex < 0 || newIndex >= headings.length) return;
     activeIndex = newIndex;
 
+    // Inline TOC active states
     inlineRows.forEach((row, idx) => {
       const numSpan = row.querySelector('.toc-inline-num');
       const active = idx === newIndex;
@@ -144,6 +117,7 @@ function initTocScrollIndicator() {
       toggleClasses(row.querySelector('.toc-inline-title'), ['text-text-main', 'font-medium'], active);
     });
 
+    // Floating Rail active states
     railNodes.forEach((node, idx) => {
       const numSpan = node.querySelector<HTMLElement>('.toc-rail-num');
       const titleSpan = node.querySelector<HTMLElement>('.toc-rail-title');
@@ -156,22 +130,33 @@ function initTocScrollIndicator() {
       if (active) titleSpan?.classList.remove('text-accent');
     });
 
-    if (indicator && railNodes[newIndex]) {
-      indicator.style.top = `${railNodes[newIndex].offsetTop}px`;
-      indicator.style.height = `${railNodes[newIndex].offsetHeight}px`;
+    const targetRailNode = railNodes[newIndex];
+    if (indicator && targetRailNode) {
+      indicator.style.top = `${targetRailNode.offsetTop}px`;
+      indicator.style.height = `${targetRailNode.offsetHeight}px`;
     }
 
-    if (headings[newIndex]) {
-      if (mobileActiveNum) mobileActiveNum.textContent = String(newIndex + 1).padStart(2, '0');
-      if (mobileActiveTitle) mobileActiveTitle.textContent = headings[newIndex].textContent?.trim() || '';
+    // Auto-scroll floating track so active section stays comfortably centered
+    if (railTrack && targetRailNode) {
+      const trackHeight = railTrack.clientHeight;
+      const scrollHeight = railTrack.scrollHeight;
+      if (scrollHeight > trackHeight) {
+        const nodeTop = targetRailNode.offsetTop;
+        const nodeHeight = targetRailNode.offsetHeight;
+        const idealScroll = nodeTop - trackHeight / 2 + nodeHeight / 2;
+        const maxScroll = scrollHeight - trackHeight;
+        const targetScroll = Math.max(0, Math.min(idealScroll, maxScroll));
+        if (Math.abs(railTrack.scrollTop - targetScroll) > 12) {
+          railTrack.scrollTo({
+            top: targetScroll,
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          });
+        }
+      }
     }
 
-    mobileLinks.forEach((link, idx) => {
-      const active = idx === newIndex;
-      toggleClasses(link, ['bg-accent/10', 'text-text-main', 'font-medium'], active);
-      toggleClasses(link.querySelector('.toc-mobile-item-num'), ['text-accent', 'font-bold'], active);
-      toggleClasses(link.querySelector('.toc-mobile-item-text'), ['text-text-main', 'font-serif', 'italic'], active);
-    });
+    // Mobile TOC active states
+    mobileToc?.updateActive(newIndex, headings[newIndex]?.textContent?.trim());
   };
 
   const findHeadingIndexForElement = (el: HTMLElement): number => {
@@ -203,7 +188,7 @@ function initTocScrollIndicator() {
       if (!target) return;
 
       e.preventDefault();
-      setMobileTocOpen(false);
+      mobileToc?.setOpen(false);
 
       const targetIdx = findHeadingIndexForElement(target);
       updateActiveIndicator(targetIdx);
@@ -245,6 +230,8 @@ function initTocScrollIndicator() {
     });
   };
 
+  const mobileContainer = document.getElementById('toc-mobile-container');
+
   const onScroll = () => {
     const scrollY = window.scrollY;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -254,10 +241,11 @@ function initTocScrollIndicator() {
     if (rail && pastThreshold !== isRailVisible) {
       isRailVisible = pastThreshold;
       railEntranceAnim = animateFloatingToc(rail, pastThreshold, railEntranceAnim, false);
+      if (pastThreshold) updateTrackMask();
     }
     if (mobileContainer && pastThreshold !== isMobileVisible) {
       isMobileVisible = pastThreshold;
-      if (!pastThreshold) setMobileTocOpen(false);
+      if (!pastThreshold) mobileToc?.setOpen(false);
       mobileEntranceAnim = animateFloatingToc(mobileContainer, pastThreshold, mobileEntranceAnim, true);
     }
     if (progressText && docHeight > 0) {
@@ -282,9 +270,10 @@ function initTocScrollIndicator() {
   };
 
   window.addEventListener('scroll', onScroll, { passive: true, signal });
-  window.addEventListener('resize', onScroll, { passive: true, signal });
+  window.addEventListener('resize', () => { onScroll(); updateTrackMask(); }, { passive: true, signal });
   window.lenis?.on('scroll', onScroll);
   onScroll();
+  updateTrackMask();
 
   document.addEventListener('astro:before-swap', () => {
     controller.abort();

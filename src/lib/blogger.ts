@@ -218,5 +218,5 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
   const posts = await getBlogPosts();
-  return posts.find((p) => p.slug === slug || p.id === slug);
+  return posts.find((p) => p.slug === slug || p.id === slug || slugify(p.title) === slug);
 }

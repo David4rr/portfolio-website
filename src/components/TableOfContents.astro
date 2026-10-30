@@ -85,7 +85,7 @@ const hasItems = items && items.length >= 2;
     {/* 2. Desktop Floating Anime.js Scroll Indicator Rail (Clean Frameless Floating Rail) */}
     <aside
       id="toc-floating-rail"
-      class="fixed left-4 xl:left-8 2xl:left-12 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col select-none pointer-events-auto opacity-0 transition-opacity duration-300 max-h-[85vh]"
+      class="fixed left-4 xl:left-8 2xl:left-12 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col select-none pointer-events-auto opacity-0 transition-opacity duration-300 max-h-[75vh]"
       aria-label="Reading section indicator"
     >
       <!-- Rail Header & Progress Counter -->
@@ -97,7 +97,7 @@ const hasItems = items && items.length >= 2;
       </div>
 
       <!-- Rail Items with Dynamic Cursor Track -->
-      <div id="toc-rail-track" class="relative flex flex-col py-2 pl-3 border-l border-border-subtle/40 overflow-y-auto max-h-[calc(85vh-2.5rem)] scrollbar-none">
+      <div id="toc-rail-track" class="relative flex flex-col py-2.5 pl-3 pr-2 border-l border-border-subtle/40 overflow-y-auto max-h-[calc(75vh-2.75rem)] overscroll-contain scroll-smooth">
         <!-- Animated Active Indicator Pin (Refined Editorial Margin Needle) -->
         <div
           id="toc-rail-indicator"
@@ -108,7 +108,7 @@ const hasItems = items && items.length >= 2;
         </div>
 
         <!-- Section Nodes -->
-        <div class="space-y-3.5" id="toc-rail-items-container">
+        <div class="space-y-2 xl:space-y-2.5" id="toc-rail-items-container">
           {items.map((item, idx) => {
             const num = String(idx + 1).padStart(2, '0');
             return (
@@ -119,14 +119,15 @@ const hasItems = items && items.length >= 2;
               >
                 <a
                   href={`#${item.id}`}
-                  class="toc-jump-link flex items-center gap-2.5 py-1 text-text-muted/60 hover:text-text-main transition-colors duration-200"
+                  class="toc-jump-link flex items-center gap-2.5 py-0.5 text-text-muted/60 hover:text-text-main transition-colors duration-200"
                   aria-label={`Jump to section ${num}: ${item.text}`}
+                  title={item.text}
                 >
                   <span class="toc-rail-num font-mono text-[11px] tabular-nums font-medium transition-all duration-300">
                     {num}
                   </span>
                   <!-- Expanding Title Ribbon on Hover -->
-                  <span class="toc-rail-title font-sans text-xs tracking-tight whitespace-nowrap overflow-hidden max-w-[95px] xl:max-w-[200px] 2xl:max-w-[230px] truncate opacity-70 group-hover:opacity-100 group-hover:text-accent transition-all duration-200">
+                  <span class="toc-rail-title font-sans text-xs tracking-tight whitespace-nowrap overflow-hidden max-w-[120px] xl:max-w-[240px] 2xl:max-w-[280px] truncate opacity-70 group-hover:opacity-100 group-hover:text-accent transition-all duration-200">
                     {item.text}
                   </span>
                 </a>

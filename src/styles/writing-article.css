@@ -197,3 +197,23 @@
   margin-bottom: 1.5rem;
   opacity: 0.85;
 }
+
+/* Editorial TOC Floating Rail Scrollbar */
+#toc-rail-track {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 20%, transparent) transparent;
+}
+#toc-rail-track::-webkit-scrollbar {
+  width: 3px;
+}
+#toc-rail-track::-webkit-scrollbar-track {
+  background: transparent;
+}
+#toc-rail-track::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 20%, transparent);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+#toc-rail-track:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+}
